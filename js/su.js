@@ -29,6 +29,11 @@ export function dereKur(sahne, dereler) {
     const yol = (veri.yol || []).map(dunya);
     if (ayna) yol.reverse();
     const aci = ayna ? Math.PI - EGIM : EGIM, yon = { x: Math.cos(aci), y: Math.sin(aci) };
+    // Köprü: görselin köprü bölgesi (su hariç) çizgi ve yaprakların üstüne tekrar çizilir; akıntı köprünün altından geçer
+    if (veri.kopru && sahne.textures.exists('manzara_on_kopru')) {
+      const [x0, y0, x1, y1] = veri.kopru, m = dunya([(x0 + x1) / 2, (y0 + y1) / 2]);
+      sahne.add.image(m.x, m.y, 'manzara_on_kopru').setScale(o.scaleX, o.scaleY).setFlipX(ayna).setDepth(o.depth + 0.8);
+    }
     // Akıntı çizgileri: her derede sürekli ~55 tane, her biri 1.6-2.6 sn yaşar
     const cizgiDogur = (ilk) => {
       const p = noktalar[Math.floor(Math.random() * noktalar.length)], im = sahne.add.image(p.x, p.y, 'su_cizgi')

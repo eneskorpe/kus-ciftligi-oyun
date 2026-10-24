@@ -79,6 +79,7 @@ class Koy extends Phaser.Scene {
     this.load.image('manzara_dag', 'assets/manzara/dag.png'); // ormanın ardındaki tepeler ve dağlar
     this.load.image('manzara_yan', 'assets/manzara/yan.png'); // sol ve sağ: çayır, korular, uzak çiftlik
     this.load.image('manzara_on', 'assets/manzara/on.png'); // ön: dere, sazlıklar, tahta köprü
+    this.load.image('manzara_on_kopru', 'assets/manzara/on_kopru.png'); // dere köprüsü (akıntının üstünde)
     this.load.json('manzara_on_su', 'assets/manzara/on_su.json'); // derenin orta çizgisi ve suyun iç noktaları
     for (const ad of KIR_CICEKLERI) this.load.image('kircicek_' + ad, `assets/kircicek/${ad}.png`);
     // Bina uyarı ikonları, balon çerçeveleri ve süre çubuğu
