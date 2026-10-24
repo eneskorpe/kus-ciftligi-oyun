@@ -21,7 +21,14 @@ export function dereKur(sahne, dereler) {
   const veri = sahne.cache.json.get('manzara_on_su');
   if (!dereler.length || !veri) return () => {};
   cizgiDokusu(sahne);
-  const cizgiler = [], yapraklar = [];
+  const cizgiler = [], yapraklar = [], kopruler = [];
+  // Nokta köprünün (ya da köprü bölgesindeki kıyı ve taşların) üstünde mi: köprü parçasının o pikseli dolu mu
+  const kopruUstunde = (x, y) => kopruler.some((k) => {
+    let u = (x - (k.x - k.displayWidth / 2)) / k.scaleX, v = (y - (k.y - k.displayHeight / 2)) / k.scaleY;
+    if (u < 0 || v < 0 || u >= k.width || v >= k.height) return false;
+    if (k.flipX) u = k.width - 1 - u;
+    return sahne.textures.getPixelAlpha(Math.floor(u), Math.floor(v), 'manzara_on_kopru') > 40;
+  });
 
   for (const { o, ayna } of dereler) {
     const dunya = ([u, v]) => ({ x: o.x + ((ayna ? 1 - u : u) - 0.5) * o.displayWidth, y: o.y + (v - 0.5) * o.displayHeight });
@@ -32,7 +39,7 @@ export function dereKur(sahne, dereler) {
     // Köprü: görselin köprü bölgesi (su hariç) çizgi ve yaprakların üstüne tekrar çizilir; akıntı köprünün altından geçer
     if (veri.kopru && sahne.textures.exists('manzara_on_kopru')) {
       const [x0, y0, x1, y1] = veri.kopru, m = dunya([(x0 + x1) / 2, (y0 + y1) / 2]);
-      sahne.add.image(m.x, m.y, 'manzara_on_kopru').setScale(o.scaleX, o.scaleY).setFlipX(ayna).setDepth(o.depth + 0.8);
+      kopruler.push(sahne.add.image(m.x, m.y, 'manzara_on_kopru').setScale(o.scaleX, o.scaleY).setFlipX(ayna).setDepth(o.depth + 0.8));
     }
     // Akıntı çizgileri: her derede sürekli ~55 tane, her biri 1.6-2.6 sn yaşar
     const cizgiDogur = (ilk) => {
@@ -52,7 +59,7 @@ export function dereKur(sahne, dereler) {
       sahne.tweens.add({ targets: s, scale: r(0.3, 0.55), duration: 320, yoyo: true, ease: 'Sine.easeInOut', onComplete: () => s.destroy() });
     } });
   }
-  sahne.dere = { cizgiler, yapraklar }; // deneme için
+  sahne.dere = { cizgiler, yapraklar, kopruUstunde }; // deneme için
 
   return (zaman, dt) => {
     const s = dt / 1000;
@@ -61,10 +68,12 @@ export function dereKur(sahne, dereler) {
       C.yas += s;
       const t = C.yas / C.omur;
       if (t >= 1) { C.im.destroy(); cizgiler.splice(i, 1); C.ac(); continue; }
-      const d = C.yas * C.hiz;
-      C.im.setPosition(C.x0 + C.yon.x * d, C.y0 + C.yon.y * d).setAlpha(C.en * Math.sin(Math.PI * t)); // yavaşça belirir, söner
+      const d = C.yas * C.hiz, x = C.x0 + C.yon.x * d, y = C.y0 + C.yon.y * d, yari = C.im.displayWidth * 0.42;
+      // Köprünün altına girince görünmez, köprüden çıkınca kaldığı yerden görünür (ortası ve iki ucu denetlenir)
+      const altta = kopruUstunde(x, y) || kopruUstunde(x + C.yon.x * yari, y + C.yon.y * yari) || kopruUstunde(x - C.yon.x * yari, y - C.yon.y * yari);
+      C.im.setPosition(x, y).setAlpha(altta ? 0 : C.en * Math.sin(Math.PI * t)); // yavaşça belirir, söner
     }
-    for (const Y of yapraklar) Y.ilerle(s, zaman);
+    for (const Y of yapraklar) { Y.ilerle(s, zaman); if (kopruUstunde(Y.im.x, Y.im.y)) Y.im.setAlpha(0); }
   };
 }
 
@@ -75,7 +84,7 @@ function yaprakKur(sahne, yol, derinlik, bas) {
   const doku = 'dekor_yaprak' + (1 + Math.floor(Math.random() * 6));
   const im = sahne.add.image(0, 0, sahne.textures.exists(doku) ? doku : 'yaprak').setDepth(derinlik);
   im.setScale(r(11, 15) / im.width);
-  const Y = { d: bas * top, hiz: r(22, 34), kay: r(-8, 8), faz: Math.random() * 6, don: r(-40, 40) };
+  const Y = { im, d: bas * top, hiz: r(22, 34), kay: r(-8, 8), faz: Math.random() * 6, don: r(-40, 40) };
   Y.ilerle = (s, zaman) => {
     Y.d += Y.hiz * s;
     if (Y.d > top) { Y.d = 0; Y.kay = r(-8, 8); }
