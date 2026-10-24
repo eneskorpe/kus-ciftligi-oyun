@@ -1,6 +1,6 @@
 // tools/pot_yap.py görselleri 2'nin katı boyutlu tuvallere yerleştirir (mipmap için).
 // Burada her görselin çerçevesi asıl boyutuna geri kırpılır; oyundaki ölçüler değişmez.
-const KLASORLER = [['assets/dekor', 'dekor_'], ['assets/binalar', 'bina_'], ['assets/arayuz', 'ui_'], ['assets/kunduz', 'kunduz_'], ['assets/insaat', 'insaat_']];
+const KLASORLER = [['assets/dekor', 'dekor_'], ['assets/binalar', 'bina_'], ['assets/arayuz', 'ui_'], ['assets/kunduz', 'kunduz_'], ['assets/insaat', 'insaat_'], ['assets/manzara', 'manzara_']];
 
 export function potYukle(sahne) {
   for (const [klasor, on] of KLASORLER) sahne.load.json('pot_' + on, `${klasor}/pot.json`);

@@ -7,7 +7,7 @@ import * as M from './mekanik.js';
 import { arayuzKur, bildirim } from './arayuz.js';
 import { efektleriKur } from './efekt.js';
 import { gorselleriYukle } from './kusGorsel.js';
-import { HARITA, DUNYA_G, DUNYA_Y, izoEkran, karoKoseleri } from './izo.js';
+import { HARITA, KARO_G, DUNYA_G, DUNYA_Y, izoEkran, karoKoseleri } from './izo.js';
 import { binaKur, susKur } from './binalar.js';
 import { gunIsigiKur } from './gunIsigi.js';
 import { potYukle, potUygula, potBellek } from './pot.js';
@@ -47,6 +47,7 @@ const KOY_OBJELERI = [
 
 // Bina geliştirme kapsülünün boyu (dünya pikseli)
 const KAPSUL = { w: 150, h: 34 };
+const MANZARA_PARALAKS = 0.12; // uzak manzaranın kamerayla birlikte kayma oranı
 
 // Çimene serpiştirilen minik kır çiçekleri (assets/kircicek)
 const KIR_CICEKLERI = ['papatya', 'dugun', 'unutmabeni', 'pembe_yonca', 'menekse', 'kadife', 'beyaz_yonca', 'kume', 'can', 'yaban_gulu', 'karahindiba', 'tohum_topu'];
@@ -74,6 +75,9 @@ class Koy extends Phaser.Scene {
     for (const tip of ['kulucka', 'tuzak', 'kusevi', 'yemlik', 'agac', 'kunduz']) this.load.image('bina_' + tip, `assets/binalar/${tip}.png`);
     for (const ad of ['govde', 'bas', 'bas_mutlu', 'on_kol', 'arka_kol', 'bacak', 'kuyruk', 'tahta', 'alet_kutusu']) this.load.image('kunduz_' + ad, `assets/kunduz/${ad}.png`); // Kunduz Usta
     for (const ad of ['iskele_merdivenli', 'iskele_kucuk', 'malzeme', 'toz']) this.load.image('insaat_' + ad, `assets/insaat/${ad}.png`); // inşaat
+    this.load.image('manzara_dag', 'assets/manzara/dag.png'); // ormanın ardındaki tepeler ve dağlar
+    this.load.image('manzara_yan', 'assets/manzara/yan.png'); // sol ve sağ: çayır, korular, uzak çiftlik
+    this.load.image('manzara_on', 'assets/manzara/on.png'); // ön: dere, sazlıklar, tahta köprü
     for (const ad of KIR_CICEKLERI) this.load.image('kircicek_' + ad, `assets/kircicek/${ad}.png`);
     // Bina uyarı ikonları, balon çerçeveleri ve süre çubuğu
     for (const ad of ['kafes', 'yumurta', 'altin_yigini', 'bos_yem', 'balon', 'balon_hazir', 'cubuk_cerceve', 'cubuk_dolgu']) this.load.image('ui_' + ad, `assets/arayuz/${ad}.png`);
@@ -92,6 +96,7 @@ class Koy extends Phaser.Scene {
     const susler = YERLESIM.susler.filter(([tip]) => tip !== 'cicek').map(([tip, i, j]) => susKur(this, tip === 'agac' ? 'agac_koy' : tip, i, j, rnd));
     for (const [tip, i, j] of YERLESIM.susler) if (tip === 'cicek') this.cicekKumesi(i + 0.5, j + 0.5, rnd);
     this.ormanKur(rnd);
+    this.manzaraKur();
     this.koyObjeleri = [];
     this.dekorSerpistir(rnd);
     this.konmaYerleriKur(susler.filter((g) => g.texture && g.texture.key === 'dekor_fener'));
@@ -145,6 +150,7 @@ class Koy extends Phaser.Scene {
     this.isciGuncelle(zaman, Math.min(dt, 50));
     this.bocekGuncelle(zaman, Math.min(dt, 50));
     this.gorunurlukGuncelle();
+    this.manzaraGuncelle();
   }
 
   saatYaz() {
@@ -327,6 +333,36 @@ class Koy extends Phaser.Scene {
   }
 
   // Köyün çevresini dışa doğru sıklaşan bir orman sarar; ön taraf (ekranın altı) daha seyrek
+  // Uzak manzara: ormanın ardında tepeler ve dağlar (köy bir vadinin içinde). Alt kenarı yumuşak, ormanın arkasında kalır.
+  // Kamera kayınca manzara biraz onunla birlikte kayar (MANZARA_PARALAKS): uzakta olduğu hissi
+  manzaraKur() {
+    // Yanlar: ormanın dışındaki çayır (sol köşe ve aynası sağ köşe). Yer düzleminde, ağaçların altında; kenarları çimene karışır
+    if (this.textures.exists('manzara_yan')) {
+      for (const [i, j, ayna] of [[-11, 6, false], [6, -11, true]]) {
+        const p = izoEkran(i, j), y = this.add.image(p.x, p.y, 'manzara_yan').setFlipX(ayna).setDepth(-99997);
+        y.setScale(1700 / y.width);
+      }
+    }
+    // Ön: dere köyün ön iki kenarı boyunca akar (sol ön ve aynası sağ ön); dere görselde sol üstten sağ alta iner
+    if (this.textures.exists('manzara_on')) {
+      for (const [i, j, ayna] of [[9, 28, false], [28, 13, true]]) { // sağdaki kaydırıldı: iki köprü simetrik görünmesin
+        const p = izoEkran(i, j), o = this.add.image(p.x, p.y, 'manzara_on').setFlipX(ayna).setDepth(-99997);
+        o.setScale(2200 / o.width);
+      }
+    }
+    if (!this.textures.exists('manzara_dag')) return;
+    const ust = izoEkran(-4, -4), en = (HARITA + 30) * KARO_G; // alt kenarı ormanın içinde, iki yanı ekran kenarlarını aşar
+    const im = this.add.image(ust.x, ust.y, 'manzara_dag').setOrigin(0.5, 1).setDepth(izoEkran(-8, -8).y);
+    im.setScale(en / im.width);
+    this.manzara = { im, x: im.x, y: im.y, merkez: izoEkran(HARITA / 2, HARITA / 2) };
+  }
+  manzaraGuncelle() {
+    const M = this.manzara;
+    if (!M) return;
+    const c = this.cameras.main.midPoint;
+    M.im.setPosition(M.x + (c.x - M.merkez.x) * MANZARA_PARALAKS, M.y + (c.y - M.merkez.y) * MANZARA_PARALAKS);
+  }
+
   ormanKur(rnd) {
     for (let i = -7; i < HARITA + 7; i++) {
       for (let j = -7; j < HARITA + 7; j++) {
@@ -335,10 +371,12 @@ class Koy extends Phaser.Scene {
         const on = i >= HARITA || j >= HARITA;
         if (on && d < 2) continue;
         const ti = i + (rnd() - 0.5) * 0.6, tj = j + (rnd() - 0.5) * 0.6;
+        // Orman duvar gibi durmasın: köye yakın sıralar seyrek, dışa doğru sıklaşır ama en fazla %50; ara ara küçük açıklıklar.
         // Öndeki uzun ağaçlar köyü kapatmasın: ön tarafta yakın sıralarda sadece çalı, ağaçlar seyrek
-        const agacSansi = on ? (d < 4 ? 0 : 0.1 + 0.08 * d) : Math.min(0.8, 0.18 + 0.14 * d);
+        const aciklik = Math.sin(i * 1.7 + j * 0.9) + Math.sin(i * 0.6 - j * 1.3) > 1.2; // doğal dağılımlı boşluklar
+        const agacSansi = aciklik ? 0.04 : on ? (d < 4 ? 0 : 0.06 + 0.05 * d) : Math.min(0.5, 0.1 + 0.08 * d);
         if (rnd() < agacSansi) susKur(this, 'agac_orman', ti, tj, rnd);
-        else if (rnd() < (on ? 0.35 : 0.45)) this.caliKoy(ti, tj, rnd);
+        else if (rnd() < (aciklik ? 0.12 : on ? 0.3 : 0.35)) this.caliKoy(ti, tj, rnd);
         if (rnd() < 0.5) this.tutamKoy(i + rnd(), j + rnd(), rnd);
         if (d <= 2 && rnd() < 0.06) { const p = izoEkran(i + rnd(), j + rnd()); dekorKoy(this, 'mantar', p.x, p.y, 38 + rnd() * 16, rnd() < 0.5); }
         if (d <= 3 && rnd() < 0.07) { const p = izoEkran(i + rnd(), j + rnd()); dekorKoy(this, Phaser.Utils.Array.GetRandom(DEKOR_GRUP.orman), p.x, p.y, 60 + rnd() * 30, rnd() < 0.5); }
@@ -374,7 +412,7 @@ class Koy extends Phaser.Scene {
   }
   // Ekran dışında kalan sabit objeler (ağaç, çalı, çiçek, taş, bina) çizilmez; kamera oynadıkça güncellenir
   gorunurlukKur() {
-    const haric = /^dekor_(tavsan|kelebek|ari|yaprak)/;
+    const haric = /^(dekor_(tavsan|kelebek|ari|yaprak)|manzara_)/; // manzara kamerayla kayar, kendi yerini bilir
     this.sabitler = this.children.list
       .filter((o) => (o.type === 'Image' && o.texture && !haric.test(o.texture.key) && o.depth < 90000))
       .map((o) => ({ o, r: o.getBounds() }));
@@ -490,7 +528,9 @@ class Koy extends Phaser.Scene {
     const cam = this.cameras.main;
     cam.setBackgroundColor('#5f9e48');
     // Kamera köy ve çevresindeki ormanla sınırlı; ötesindeki boşluk görünmez
-    const sol = izoEkran(-3, HARITA + 3).x, sag = izoEkran(HARITA + 3, -3).x, ust = izoEkran(-3, -3).y - 260, alt = izoEkran(HARITA + 3, HARITA + 3).y;
+    // Yukarı kaydırınca ormanın ardındaki tepeler ve dağlar görünür (manzaranın gökyüzü kısmına kadar)
+    const ust = this.manzara ? this.manzara.y - this.manzara.im.displayHeight * 0.8 : izoEkran(-3, -3).y - 260;
+    const sol = izoEkran(-3, HARITA + 3).x, sag = izoEkran(HARITA + 3, -3).x, alt = izoEkran(HARITA + 3, HARITA + 3).y;
     cam.setBounds(sol, ust, sag - sol, alt - ust);
     this.sinir = { w: sag - sol, h: alt - ust };
     this.kullaniciZoom = Phaser.Math.Clamp(window.innerWidth / 1500, 0.42, 0.85);
