@@ -2,6 +2,9 @@
 const ANAHTAR = 'kusCiftligi_v1';
 const parametre = new URLSearchParams(location.search);
 export const HIZ = Math.max(1, +parametre.get('hiz') || 1);
+// Test sürümü (GitHub Pages test adresi ya da ?sinirsiz): altın ve elmas sınırsız, harcamalar düşmez.
+// Gerçek yayına geçerken bu satır kaldırılmalı (DEVAM.md'de not var).
+export const SINIRSIZ = location.hostname.endsWith('github.io') || parametre.has('sinirsiz');
 const acilis = Date.now();
 export const simdi = () => acilis + (Date.now() - acilis) * HIZ;
 export const DAKIKA = 60000;
@@ -42,6 +45,7 @@ if (parametre.has('altin') || parametre.has('elmas')) {
   parametre.delete('altin'); parametre.delete('elmas');
   history.replaceState(null, '', location.pathname + (parametre.toString() ? '?' + parametre : ''));
 }
+if (SINIRSIZ) { D.altin = Math.max(D.altin, 999999); D.elmas = Math.max(D.elmas, 99999); }
 D.binalar.kunduz = D.binalar.kunduz || { sv: 1 }; // Kunduz Usta'nın evi (geliştirilmez)
 D.ikramlar = D.ikramlar ||{ dari: 5, ay: 3, meyve: 1, bal: 0, kalsiyum: 0, test: 0 };
 
@@ -79,6 +83,7 @@ export function xpEkle(miktar) {
 }
 
 export function harca(altin = 0, elmas = 0) {
+  if (SINIRSIZ) return true; // test sürümünde hiçbir şey eksilmez
   if (D.altin < altin) { bildir('Yeterli altının yok 🪙'); return false; }
   if (D.elmas < elmas) { bildir('Yeterli elmasın yok 💎'); return false; }
   D.altin -= altin; D.elmas -= elmas;
