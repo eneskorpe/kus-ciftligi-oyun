@@ -18,8 +18,10 @@ function parcaKopya(sahne, b, ad, [x, y, w, h, ox, oy]) {
   const n = b.nesne, doku = n.texture;
   if (!doku.has(ad)) doku.add(ad, 0, x, y, w, h);
   const s = n.scaleX, px = x + ox * w, py = y + oy * h;
-  return sahne.add.image(n.x + (px - n.originX * n.width) * s, n.y + (py - n.originY * n.height) * s, doku.key, ad)
+  const im = sahne.add.image(n.x + (px - n.originX * n.width) * s, n.y + (py - n.originY * n.height) * s, doku.key, ad)
     .setOrigin(ox, oy).setScale(s).setDepth(n.depth + 1);
+  (b.ekler = b.ekler || []).push(im); // bina zıplarken gizlenir (koy.js binaZipla)
+  return im;
 }
 const yerDonustur = (n, px, py) => ({ x: n.x + (px - n.originX * n.width) * n.scaleX, y: n.y + (py - n.originY * n.height) * n.scaleY });
 

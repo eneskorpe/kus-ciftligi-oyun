@@ -566,7 +566,15 @@ class Koy extends Phaser.Scene {
           n.y = tabanY * (1 - n.scaleY); n.x = merkezX * (1 - n.scaleX);
         } });
     } else {
-      this.tweens.add({ targets: n, scaleY: n.scaleY * 1.06, duration: 90, yoyo: true, ease: 'Sine.easeOut' });
+      // Zıplama her zaman binanın asıl boyundan başlar (üst üste dokununca bina uzayıp kalmasın).
+      // Üstündeki ayrı parçalar (sallanan yumurtalar, kafes) zıplarken gizlenir: altlarındaki bina görselinde aynıları var
+      if (n.tabanOlcekY === undefined) n.tabanOlcekY = n.scaleY;
+      this.tweens.killTweensOf(n);
+      n.scaleY = n.tabanOlcekY;
+      const ekler = bina.ekler || [];
+      for (const e of ekler) e.setAlpha(0);
+      this.tweens.add({ targets: n, scaleY: n.tabanOlcekY * 1.06, duration: 90, yoyo: true, ease: 'Sine.easeOut',
+        onComplete: () => { n.scaleY = n.tabanOlcekY; for (const e of ekler) e.setAlpha(1); } });
     }
   }
 }
