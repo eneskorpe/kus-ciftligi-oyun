@@ -3,6 +3,8 @@
 // 2) Akıntıya kapılmış yapraklar: derenin orta çizgisi boyunca süzülür, hafifçe döner ve sallanır.
 // 3) Pırıltılar: güneş suda ara sıra parlar.
 // Suyun iç noktaları ve orta çizgi assets/manzara/on_su.json'dan (görselden çıkarıldı; tools yerine tek seferlik betikle).
+import { HARITA, ekranIzo } from './izo.js';
+
 const r = (a, b) => a + Math.random() * (b - a);
 const EGIM = Math.atan2(0.48, 1); // derenin görseldeki genel akış yönü (sol üstten sağ alta)
 
@@ -32,7 +34,9 @@ export function dereKur(sahne, dereler) {
 
   for (const { o, ayna } of dereler) {
     const dunya = ([u, v]) => ({ x: o.x + ((ayna ? 1 - u : u) - 0.5) * o.displayWidth, y: o.y + (v - 0.5) * o.displayHeight });
-    const noktalar = (veri.noktalar || []).map(dunya);
+    // Köyün içine taşan kısmı kesildiği için (tools/manzara_temizle.py) suyun sadece görünür kalan noktaları kullanılır
+    const gorunur = (p) => { const t = ekranIzo(p.x, p.y); return Math.max(-t.i, -t.j, t.i - HARITA, t.j - HARITA) > 6; };
+    const noktalar = (veri.noktalar || []).map(dunya).filter(gorunur);
     const yol = (veri.yol || []).map(dunya);
     if (ayna) yol.reverse();
     const aci = ayna ? Math.PI - EGIM : EGIM, yon = { x: Math.cos(aci), y: Math.sin(aci) };

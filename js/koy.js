@@ -79,6 +79,7 @@ class Koy extends Phaser.Scene {
     this.load.image('manzara_dag', 'assets/manzara/dag.png'); // ormanın ardındaki tepeler ve dağlar
     this.load.image('manzara_yan', 'assets/manzara/yan.png'); // sol ve sağ: çayır, korular, uzak çiftlik
     this.load.image('manzara_on', 'assets/manzara/on.png'); // ön: dere, sazlıklar, tahta köprü
+    this.load.image('manzara_on_sag', 'assets/manzara/on_sag.png'); // sağ öndeki dere (aynalı)
     this.load.image('manzara_on_kopru', 'assets/manzara/on_kopru.png'); // dere köprüsü (akıntının üstünde)
     this.load.json('manzara_on_su', 'assets/manzara/on_su.json'); // derenin orta çizgisi ve suyun iç noktaları
     for (const ad of KIR_CICEKLERI) this.load.image('kircicek_' + ad, `assets/kircicek/${ad}.png`);
@@ -351,7 +352,8 @@ class Koy extends Phaser.Scene {
     if (this.textures.exists('manzara_on')) {
       const dereler = [];
       for (const [i, j, ayna] of [[9, 28, false], [28, 13, true]]) { // sağdaki kaydırıldı: iki köprü simetrik görünmesin
-        const p = izoEkran(i, j), o = this.add.image(p.x, p.y, 'manzara_on').setFlipX(ayna).setDepth(-99997);
+        // Sağdaki doku önceden aynalanmış ve köyün içine taşan kısmı kesilmiş ayrı görsel (tools/manzara_temizle.py)
+        const p = izoEkran(i, j), o = this.add.image(p.x, p.y, ayna ? 'manzara_on_sag' : 'manzara_on').setDepth(-99997);
         o.setScale(2200 / o.width);
         dereler.push({ o, ayna });
       }
