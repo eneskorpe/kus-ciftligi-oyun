@@ -37,7 +37,7 @@ export function dereKur(sahne, dereler) {
     // Köyün içine taşan kısmı kesildiği için (tools/manzara_temizle.py) suyun sadece görünür kalan noktaları kullanılır
     const gorunur = (p) => { const t = ekranIzo(p.x, p.y); return Math.max(-t.i, -t.j, t.i - HARITA, t.j - HARITA) > 6; };
     const noktalar = (veri.noktalar || []).map(dunya).filter(gorunur);
-    const yol = (veri.yol || []).map(dunya);
+    const yol = (veri.yol || []).map(dunya).filter(gorunur); // süsler sadece görünen suda akar
     if (ayna) yol.reverse();
     const aci = ayna ? Math.PI - EGIM : EGIM, yon = { x: Math.cos(aci), y: Math.sin(aci) };
     // Köprü: görselin köprü bölgesi (su hariç) çizgi ve yaprakların üstüne tekrar çizilir; akıntı köprünün altından geçer
@@ -54,7 +54,7 @@ export function dereKur(sahne, dereler) {
       cizgiler.push(C);
     };
     if (noktalar.length) for (let n = 0; n < 55; n++) cizgiDogur(true);
-    if (yol.length > 1) for (let n = 0; n < 3; n++) yapraklar.push(yaprakKur(sahne, yol, o.depth + 0.6, Math.random()));
+    if (yol.length > 1) for (let n = 0; n < 5; n++) yapraklar.push(yaprakKur(sahne, yol, o.depth + 0.6, Math.random()));
     // Pırıltılar
     sahne.time.addEvent({ delay: 450, loop: true, callback: () => {
       if (Math.random() < 0.45 || !noktalar.length) return;
@@ -81,17 +81,30 @@ export function dereKur(sahne, dereler) {
   };
 }
 
-// Akıntıyla süzülen yaprak: orta çizgi boyunca ilerler, sonda kaybolup baştan doğar
+// Derede yüzen süsler (assets/dere, Gemini): nilüferler iri, ağır ve az döner; çiçek ve taç yaprakları küçük, hızlı ve döner
+const DERE_SUSLERI = [
+  ['nilufer', 22, 28, 12, 18, 10], ['nilufer_beyaz', 24, 30, 12, 17, 8], ['nilufer_pembe', 24, 30, 12, 17, 8], ['nilufer_cift', 24, 30, 12, 18, 10],
+  ['cicek_beyaz', 13, 17, 20, 28, 45], ['cicek_pembe', 13, 17, 20, 28, 45], ['tac_yapraklari', 13, 16, 24, 32, 60], ['dal', 18, 22, 18, 24, 25],
+]; // [doku, en küçük, en büyük boy (px), hız aralığı, en fazla dönüş (derece/sn)]
+
+// Akıntıyla süzülen süs: orta çizgi boyunca ilerler, sonda kaybolup baştan (yeni bir süs olarak) doğar
 function yaprakKur(sahne, yol, derinlik, bas) {
   const uz = []; let top = 0;
   for (let i = 1; i < yol.length; i++) { top += Math.hypot(yol[i].x - yol[i - 1].x, yol[i].y - yol[i - 1].y); uz.push(top); }
-  const doku = 'dekor_yaprak' + (1 + Math.floor(Math.random() * 6));
-  const im = sahne.add.image(0, 0, sahne.textures.exists(doku) ? doku : 'yaprak').setDepth(derinlik);
-  im.setScale(r(11, 15) / im.width);
-  const Y = { im, d: bas * top, hiz: r(22, 34), kay: r(-8, 8), faz: Math.random() * 6, don: r(-40, 40) };
+  const im = sahne.add.image(0, 0, '__WHITE').setDepth(derinlik);
+  const Y = { im, d: bas * top, kay: 0, faz: Math.random() * 6 };
+  const sec = () => { // yeni süs seç
+    const gorsel = sahne.textures.exists('dere_nilufer');
+    const [ad, b0, b1, h0, h1, don] = DERE_SUSLERI[Math.floor(Math.random() * DERE_SUSLERI.length)];
+    if (gorsel) im.setTexture('dere_' + ad).setScale(r(b0, b1) * 1.3 / 128);
+    else { const d = 'dekor_yaprak' + (1 + Math.floor(Math.random() * 6)); im.setTexture(sahne.textures.exists(d) ? d : 'yaprak').setScale(r(11, 15) / 64); }
+    im.setAngle(r(0, 360));
+    Object.assign(Y, { hiz: r(h0, h1), don: r(-don, don), kay: r(-8, 8) });
+  };
+  sec();
   Y.ilerle = (s, zaman) => {
     Y.d += Y.hiz * s;
-    if (Y.d > top) { Y.d = 0; Y.kay = r(-8, 8); }
+    if (Y.d > top) { Y.d = 0; sec(); }
     let i = uz.findIndex((u) => u >= Y.d); if (i < 0) i = uz.length - 1;
     const a = yol[i], b = yol[i + 1], u0 = i ? uz[i - 1] : 0, t = (Y.d - u0) / Math.max(1, uz[i] - u0);
     const x = a.x + (b.x - a.x) * t, y = a.y + (b.y - a.y) * t;

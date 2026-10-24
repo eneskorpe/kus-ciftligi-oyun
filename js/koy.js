@@ -81,6 +81,7 @@ class Koy extends Phaser.Scene {
     this.load.image('manzara_on', 'assets/manzara/on.png'); // ön: dere, sazlıklar, tahta köprü
     this.load.image('manzara_on_sag', 'assets/manzara/on_sag.png'); // sağ öndeki dere (aynalı)
     this.load.image('manzara_on_kopru', 'assets/manzara/on_kopru.png'); // dere köprüsü (akıntının üstünde)
+    for (const ad of ['nilufer', 'nilufer_beyaz', 'nilufer_pembe', 'nilufer_cift', 'cicek_beyaz', 'cicek_pembe', 'tac_yapraklari', 'dal']) this.load.image('dere_' + ad, `assets/dere/${ad}.png`); // derede yüzen süsler
     this.load.json('manzara_on_su', 'assets/manzara/on_su.json'); // derenin orta çizgisi ve suyun iç noktaları
     for (const ad of KIR_CICEKLERI) this.load.image('kircicek_' + ad, `assets/kircicek/${ad}.png`);
     // Bina uyarı ikonları, balon çerçeveleri ve süre çubuğu
@@ -421,7 +422,7 @@ class Koy extends Phaser.Scene {
   }
   // Ekran dışında kalan sabit objeler (ağaç, çalı, çiçek, taş, bina) çizilmez; kamera oynadıkça güncellenir
   gorunurlukKur() {
-    const haric = /^(dekor_(tavsan|kelebek|ari|yaprak)|manzara_)/; // manzara kamerayla kayar, kendi yerini bilir
+    const haric = /^(dekor_(tavsan|kelebek|ari|yaprak)|manzara_|dere_|su_cizgi)/; // hareket edenler (manzara, dere süsleri, akıntı çizgileri) gizlenmez
     this.sabitler = this.children.list
       .filter((o) => (o.type === 'Image' && o.texture && !haric.test(o.texture.key) && o.depth < 90000))
       .map((o) => ({ o, r: o.getBounds() }));
