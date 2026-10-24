@@ -17,6 +17,7 @@ import { binaCanlilikKur } from './binaCanlilik.js';
 import { dokunmaTepkisiKur } from './dokunTepki.js';
 import { zeminKatmanlariKur } from './zemin.js';
 import { isciKur } from './isci.js';
+import { dereKur } from './su.js';
 import { KusEvi } from './kusevi.js';
 import { kuseviArayuzKur } from './kuseviArayuz.js';
 import { dekorlariYukle, dekorKoy, DEKOR_GRUP } from './dekor.js';
@@ -78,6 +79,7 @@ class Koy extends Phaser.Scene {
     this.load.image('manzara_dag', 'assets/manzara/dag.png'); // ormanın ardındaki tepeler ve dağlar
     this.load.image('manzara_yan', 'assets/manzara/yan.png'); // sol ve sağ: çayır, korular, uzak çiftlik
     this.load.image('manzara_on', 'assets/manzara/on.png'); // ön: dere, sazlıklar, tahta köprü
+    this.load.json('manzara_on_su', 'assets/manzara/on_su.json'); // derenin orta çizgisi ve suyun iç noktaları
     for (const ad of KIR_CICEKLERI) this.load.image('kircicek_' + ad, `assets/kircicek/${ad}.png`);
     // Bina uyarı ikonları, balon çerçeveleri ve süre çubuğu
     for (const ad of ['kafes', 'yumurta', 'altin_yigini', 'bos_yem', 'balon', 'balon_hazir', 'cubuk_cerceve', 'cubuk_dolgu']) this.load.image('ui_' + ad, `assets/arayuz/${ad}.png`);
@@ -151,6 +153,7 @@ class Koy extends Phaser.Scene {
     this.bocekGuncelle(zaman, Math.min(dt, 50));
     this.gorunurlukGuncelle();
     this.manzaraGuncelle();
+    if (this.dereGuncelle) this.dereGuncelle(zaman, Math.min(dt, 50));
   }
 
   saatYaz() {
@@ -345,10 +348,13 @@ class Koy extends Phaser.Scene {
     }
     // Ön: dere köyün ön iki kenarı boyunca akar (sol ön ve aynası sağ ön); dere görselde sol üstten sağ alta iner
     if (this.textures.exists('manzara_on')) {
+      const dereler = [];
       for (const [i, j, ayna] of [[9, 28, false], [28, 13, true]]) { // sağdaki kaydırıldı: iki köprü simetrik görünmesin
         const p = izoEkran(i, j), o = this.add.image(p.x, p.y, 'manzara_on').setFlipX(ayna).setDepth(-99997);
         o.setScale(2200 / o.width);
+        dereler.push({ o, ayna });
       }
+      this.dereGuncelle = dereKur(this, dereler); // akan su, yapraklar, pırıltılar (su.js)
     }
     if (!this.textures.exists('manzara_dag')) return;
     const ust = izoEkran(-4, -4), en = (HARITA + 30) * KARO_G; // alt kenarı ormanın içinde, iki yanı ekran kenarlarını aşar
