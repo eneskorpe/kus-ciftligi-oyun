@@ -1,0 +1,56 @@
+{
+ "govde": {
+  "w": 266,
+  "h": 239,
+  "tabanX": 133.0,
+  "tabanY": 238
+ },
+ "bas": {
+  "w": 304,
+  "h": 280,
+  "tabanX": 148.5,
+  "tabanY": 279
+ },
+ "bas_mutlu": {
+  "w": 303,
+  "h": 283,
+  "tabanX": 149.0,
+  "tabanY": 282
+ },
+ "on_kol": {
+  "w": 264,
+  "h": 251,
+  "tabanX": 95.0,
+  "tabanY": 250
+ },
+ "arka_kol": {
+  "w": 187,
+  "h": 197,
+  "tabanX": 136.5,
+  "tabanY": 196
+ },
+ "bacak": {
+  "w": 186,
+  "h": 236,
+  "tabanX": 122.0,
+  "tabanY": 235
+ },
+ "kuyruk": {
+  "w": 267,
+  "h": 181,
+  "tabanX": 170.5,
+  "tabanY": 180
+ },
+ "tahta": {
+  "w": 309,
+  "h": 132,
+  "tabanX": 48.5,
+  "tabanY": 131
+ },
+ "alet_kutusu": {
+  "w": 272,
+  "h": 216,
+  "tabanX": 190.0,
+  "tabanY": 215
+ }
+}

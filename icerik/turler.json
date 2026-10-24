@@ -1,0 +1,66 @@
+﻿{
+  "turler": {
+    "ev_sercesi": {
+      "ad": "Ev Serçesi",
+      "tanim": "Minik gövdesi ve pıtır pıtır zıplayışıyla çiftliğin en neşeli sabah habercisidir. Bahçedeki kırıntıları toplarken neşeli cıvıltılarıyla herkese enerji saçar.",
+      "gercekBilgi": "Ev serçeleri binlerce yıldır insan yerleşimleriyle iç içe yaşayan, son derece sosyal ve uyumlu kuşlardır.",
+      "kisilik": "Neşeli ve kıpır kıpır",
+      "sevdigiYem": "Ekmek kırıntısı ve buğday tohumu",
+      "yumurta": "Üzerinde minik kahverengi benekleri olan krem rengi pıtırcık yumurta."
+    },
+    "saka": {
+      "ad": "Saka",
+      "tanim": "Kırmızı maskesi ve kanatlarındaki altın sarısı şeritleriyle çiftliğin zarif süsüdür. Çiçeklerin üstünde bir cambaz gibi baş aşağı durup şarkı söylemeye bayılır.",
+      "gercekBilgi": "Saka kuşları, sivri gagaları sayesinde özellikle deve dikeni gibi zorlu tohumları ustalıkla ayıklayabilir.",
+      "kisilik": "Zarif ve yetenekli",
+      "sevdigiYem": "Deve dikeni tohumu",
+      "yumurta": "Açık mavi zemin üzerine kızıl çillerle süslenmiş zarif bir yumurta."
+    },
+    "kanarya": {
+      "ad": "Kanarya",
+      "tanim": "Güneşin sarısını tüylerinde taşıyan, melodik şakımalarıyla çiftliğin havasını anında ısıtan minik bir sanatçıdır. Güneşi gördüğü an en güzel bestelerini seslendirir.",
+      "gercekBilgi": "Kanaryalar 17. yüzyıldan bu yana eşsiz ötüşleri ve neşeli şarkıları nedeniyle dünyanın dört bir yanında sevilerek yetiştirilir.",
+      "kisilik": "Müziksever ve cana yakın",
+      "sevdigiYem": "Ak darı ve ballı yem çubuğu",
+      "yumurta": "Güneş gibi parıldayan, uçuk pastel sarısı pürüzsüz yumurta."
+    },
+    "muhabbet": {
+      "ad": "Muhabbet Kuşu",
+      "tanim": "Fosforlu dalgalı tüyleri ve bitmek bilmeyen merakıyla çiftliğin dedikodu merkezidir. Kim nerede ne yemiş, anında öğrenip herkesle paylaşmak ister.",
+      "gercekBilgi": "Doğal yaşam alanı Avustralya olan muhabbet kuşları yüzlerce farklı sesi ve kelimeyi hafızasına alıp taklit edebilir.",
+      "kisilik": "Meraklı ve geveze",
+      "sevdigiYem": "Salkım darı",
+      "yumurta": "Bembeyaz, pürüzsüz ve minyatür bir inci tanesini andıran sevimli yumurta."
+    },
+    "sultan": {
+      "ad": "Sultan Papağanı",
+      "tanim": "Başındaki gururlu sarı tepeliği ve utangaç turuncu yanaklarıyla çiftliğin asil beyefendisidir. Sevindiğinde tepesini dikleştirip şirin ıslıklar çalar.",
+      "gercekBilgi": "Sultan papağanları duygularını başlarının üstündeki ibik tüylerini dikleştirip indirerek ifade ederler.",
+      "kisilik": "Gururlu ve duygusal",
+      "sevdigiYem": "Ay çekirdeği",
+      "yumurta": "Sıcak fildişi tonunda, dokunduğunda sıcacık hissettiren oval yumurta."
+    },
+    "cennet": {
+      "ad": "Cennet Papağanı",
+      "tanim": "Aşkın ve sadakatin canlı simgesi olan bu renk cümbüşü bücür, eşinden bir an olsun ayrılmaz. Birbirlerinin tüylerini tararken çiftliğin en sevimli karesini oluştururlar.",
+      "gercekBilgi": "İngilizcede 'Lovebird' (Aşk Kuşu) olarak anılan bu papağanlar, eşlerine ömür boyu bağlı kalmalarıyla tanınır.",
+      "kisilik": "Romantik ve oyuncu",
+      "sevdigiYem": "Tatlı incir ve elma dilimleri",
+      "yumurta": "Gökkuşağı gibi ışıltılı pembe tonlara sahip, kadife dokulu yumurta."
+    },
+    "ketzal": {
+      "ad": "Ketzal",
+      "tanim": "Zümrüt yeşili göz alıcı kuyruğu ve yakut göğsüyle bulutların arasından süzülen antik bir masal kuşu. Çiftliğe ayak bastığı anda etrafına altın ışıltılar saçar.",
+      "gercekBilgi": "Orta Amerika mitolojisinde özgürlüğün ve kutsallığın sembolü olan Ketzal, asla kafeste yaşayamamasıyla ünlüdür.",
+      "kisilik": "Gizemli ve asil",
+      "sevdigiYem": "Vahşi mini avokado ve orman meyveleri",
+      "yumurta": "Derin zümrüt yeşili renginde, üzerinde altın tozları parıldayan efsanevi yumurta."
+    }
+  },
+  "ketzalIpuclari": [
+    "Kadim efsaneler der ki; cennetin rengiyle sarayın taçlı asilzadesi aynı yuvada birleşmedikçe o zümrüt kuyruk görünmez evlat...",
+    "Sıradan tüylerle o ulu kuşa varamazsın; her iki soyun da güneş altında inci gibi parıldayan görkemli tüylere sahip olması gerekir.",
+    "O zümrüt kuşu derme çatma bir yuvada beklemek beyhudedir; kuluçkanın çatısı en yüksek ustalığa, yani üçüncü seviyeye ermelidir.",
+    "Gündüzün gürültüsünde efsaneler doğmaz; o iki sevdalı kanat yalnızca ay göğün en tepesindeyken, derin gecede kavuşmalıdır."
+  ]
+}

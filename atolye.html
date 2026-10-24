@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#bfe6fb">
+  <title>Kuş Atölyesi</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; background: #bfe6fb; font: 15px/1.4 system-ui, "Segoe UI", sans-serif; color: #3a2a35;
+      -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+    body { display: flex; flex-direction: column; height: 100dvh; }
+    #oyun { flex: 1; min-height: 0; touch-action: none; }
+    #panel { background: #fffaf0; border-top: 3px solid #3a2a35; padding: 10px 14px 14px; display: flex; flex-direction: column; gap: 9px;
+      max-height: 48dvh; overflow-y: auto; }
+    @media (orientation: landscape) and (min-width: 800px) {
+      body { flex-direction: row; }
+      #panel { width: 380px; max-height: none; border-top: 0; border-left: 3px solid #3a2a35; }
+    }
+    .baslik { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px; }
+    #kusAd { font-size: 21px; font-weight: 800; }
+    #nadirlik { font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: 99px; background: #9aa3ad; color: #fff; }
+    #nadirlik[data-nadirlik="Nadir"] { background: #3d86e0; }
+    #nadirlik[data-nadirlik="Epik"] { background: #9b51e0; }
+    #nadirlik[data-nadirlik="Efsanevi"] { background: linear-gradient(90deg, #f2a516, #f5d36a); color: #3a2a35; }
+    #kondisyon { font-size: 13px; color: #6b5a63; width: 100%; }
+    .dugmeler { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; }
+    button, select { font: inherit; font-weight: 700; color: #3a2a35; background: #ffe7a8; border: 2.5px solid #3a2a35; border-radius: 12px;
+      padding: 8px 4px; cursor: pointer; box-shadow: 0 3px 0 #3a2a35; }
+    button:active { transform: translateY(2px); box-shadow: 0 1px 0 #3a2a35; }
+    .dugmeler button { font-size: 13.5px; }
+    .ayar { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+    select { background: #fff; padding: 7px 6px; box-shadow: none; min-width: 0; width: 100%; }
+    #panel { overflow-x: hidden; }
+    #rastgele { grid-column: 1 / -1; background: #c8f0b0; }
+    label { font-size: 13px; font-weight: 700; }
+    input[type=range] { width: 100%; accent-color: #e48a2a; }
+    #tanim { margin: 0; font-size: 13.5px; color: #4f4048; }
+    #tanim i { display: block; margin-top: 4px; color: #7a6a72; }
+    .ipucu { font-size: 12px; color: #8a7a82; margin: 0; }
+    #kontrol { border-top: 2px dashed #e3d6bf; padding-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+    .kBaslik { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    #onayDurum { font-size: 12px; font-weight: 800; padding: 2px 9px; border-radius: 99px; }
+    #onayDurum.onayli { background: #c8f0b0; } #onayDurum.bekliyor { background: #ffe0a8; }
+    .kTasarim { display: flex; gap: 8px; align-items: center; }
+    .kTasarim img { width: 120px; height: 120px; object-fit: contain; background: #fff; border: 2px solid #e3d6bf; border-radius: 10px; }
+    .kParcalar { display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 6px; }
+    .kParcalar figure { margin: 0; background: #fff; border: 2px solid #e3d6bf; border-radius: 10px; padding: 4px; text-align: center; }
+    .kParcalar figure.uyari { border-color: #f2a516; background: #fff6e0; }
+    .kParcalar img { width: 100%; height: 56px; object-fit: contain; }
+    .kParcalar figcaption { font-size: 10.5px; font-weight: 700; line-height: 1.2; }
+    .kListe { margin: 0; padding-left: 18px; font-size: 12.5px; color: #5a4a52; }
+    .kNot { font-size: 12.5px; margin: 0; color: #5a4a52; }
+    .kDugmeler { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    #kKarsilastir.acik { background: #c8f0b0; }
+  </style>
+</head>
+<body>
+  <div id="oyun"></div>
+  <div id="panel">
+    <div class="baslik"><span id="kusAd">…</span><span id="nadirlik"></span><span id="kondisyon"></span></div>
+    <div class="dugmeler">
+      <button data-eylem="ucusGosterisi">🕊️ Uç</button>
+      <button data-eylem="tune">🌿 Tüne</button>
+      <button data-eylem="ye">🌾 Ye</button>
+      <button data-eylem="sevil">💗 Sev</button>
+      <button data-eylem="kulucka">🥚 Kuluçka</button>
+      <button data-eylem="kanatCirp">🪽 Kanat çırp</button>
+    </div>
+    <div class="ayar">
+      <select id="tur" aria-label="Tür"></select>
+      <select id="mutasyon" aria-label="Renk geni"></select>
+      <button id="rastgele">🎲 Rastgele kuş üret</button>
+    </div>
+    <div>
+      <label id="tuyEtiket" for="tuy">Tüy değeri</label>
+      <input id="tuy" type="range" min="0" max="1" step="0.001">
+    </div>
+    <p id="tanim"></p>
+    <p class="ipucu">İpucu: Kuşa dokunursan sevilir, çimenlere dokunursan oraya gider.</p>
+    <div id="kontrol">
+      <div class="kBaslik"><b>🔍 Çizim kontrolü</b><span id="onayDurum"></span></div>
+      <div id="kIcerik"></div>
+    </div>
+  </div>
+  <script src="vendor/phaser.min.js"></script>
+  <script type="module" src="js/atolye.js"></script>
+</body>
+</html>

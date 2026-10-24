@@ -1,0 +1,26 @@
+{
+ "balon": {
+  "w": 464,
+  "h": 512,
+  "tabanX": 231.0,
+  "tabanY": 511
+ },
+ "balon_hazir": {
+  "w": 462,
+  "h": 512,
+  "tabanX": 229.5,
+  "tabanY": 511
+ },
+ "cubuk_cerceve": {
+  "w": 512,
+  "h": 121,
+  "tabanX": 255.0,
+  "tabanY": 120
+ },
+ "cubuk_dolgu": {
+  "w": 512,
+  "h": 90,
+  "tabanX": 255.5,
+  "tabanY": 89
+ }
+}

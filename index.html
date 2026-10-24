@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#4f8f45">
+  <title>Kuş Çiftliği</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; overflow: hidden; background: #4f8f45; font: 15px/1.35 system-ui, "Segoe UI", sans-serif;
+      color: #3a2a35; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+    #oyun { position: fixed; inset: 0; touch-action: none; }
+    .kutu { background: #fffaf0; border: 3px solid #3a2a35; border-radius: 16px; box-shadow: 0 4px 0 #3a2a35; }
+    #ust { position: fixed; top: max(10px, env(safe-area-inset-top)); left: 10px; right: 10px; display: flex; gap: 8px; pointer-events: none; }
+    #ust > * { pointer-events: auto; }
+    .sayac { flex: none; display: flex; align-items: center; gap: 6px; padding: 4px 12px 4px 6px; font-weight: 800; font-size: 16px; height: 42px; }
+    .sayac .ik { font-size: 22px; }
+    .sayac img.ik { width: 30px; height: 30px; margin: -2px 0; filter: drop-shadow(0 1.5px 0 rgba(58,42,53,.2)); }
+    #sv { flex: 1; max-width: 240px; gap: 8px; }
+    #sv b { background: #3a2a35; color: #ffe7a8; border-radius: 10px; padding: 1px 8px; font-size: 14px; }
+    #xp { flex: 1; height: 14px; background: #e3d6bf; border-radius: 99px; overflow: hidden; border: 2px solid #3a2a35; }
+    #xpDolu { height: 100%; background: linear-gradient(#7ad35a, #4fae3e); }
+    .yan { position: fixed; display: flex; flex-direction: column; gap: 10px; }
+    #sol { left: 10px; top: calc(max(10px, env(safe-area-inset-top)) + 60px); }
+    #sag { right: 10px; bottom: max(12px, env(safe-area-inset-bottom)); flex-direction: row; }
+    /* İkon butonları: Gemini ikonu (assets/arayuz) + krem-bal rengi tombul kutu; üstte parlak, altta koyu iç kenar */
+    .ikonDugme { width: 66px; height: 66px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+      font: 900 9.5px system-ui, sans-serif; letter-spacing: -0.2px; color: #4a3040; cursor: pointer; padding: 2px 0 0; text-decoration: none;
+      background: linear-gradient(#fff6d9 0%, #ffe6a3 55%, #f5cf7a 100%); border-radius: 18px;
+      box-shadow: inset 0 3px 0 rgba(255,255,255,.75), inset 0 -4px 0 rgba(176,116,48,.28), 0 4px 0 #3a2a35, 0 7px 10px rgba(30,20,30,.28);
+      transition: transform .08s; text-shadow: 0 1px 0 rgba(255,255,255,.7); }
+    .ikonDugme img.ik { width: 40px; height: 40px; margin: 0; filter: drop-shadow(0 2px 0 rgba(58,42,53,.22)); pointer-events: none;
+      transition: transform .15s; }
+    .ikonDugme:hover img.ik { transform: scale(1.08) rotate(-3deg); }
+    .ikonDugme:active { transform: translateY(3px); box-shadow: inset 0 3px 0 rgba(255,255,255,.75), inset 0 -2px 0 rgba(176,116,48,.28), 0 1px 0 #3a2a35; }
+    .ikonDugme span { font-size: 26px; line-height: 1.1; }
+    .kucukDugme img.ik { width: 30px; height: 30px; display: block; }
+    #binaPanel { position: fixed; left: 50%; bottom: -320px; transform: translateX(-50%); width: min(460px, calc(100% - 20px));
+      padding: 14px 16px 16px; transition: bottom .25s ease; }
+    #binaPanel.acik { bottom: max(12px, env(safe-area-inset-bottom)); }
+    #binaPanel h2 { margin: 0; font-size: 21px; display: flex; align-items: center; gap: 8px; }
+    #panelSeviye { font-size: 12px; background: #3a2a35; color: #ffe7a8; border-radius: 99px; padding: 2px 9px; }
+    #panelAciklama { margin: 6px 0 12px; font-size: 14px; color: #5a4a52; }
+    #binaPanel { max-height: 70dvh; overflow-y: auto; }
+    .dugmeler { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+    #panelIcerik p, #modalIc p { margin: 6px 0; }
+    #binaPanel button, #modalIc button, #panelKapat { font: 800 14px system-ui, sans-serif; color: #3a2a35; background: #ffe7a8; border: 2.5px solid #3a2a35;
+      border-radius: 12px; padding: 9px 12px; box-shadow: 0 3px 0 #3a2a35; cursor: pointer; }
+    button.ana { background: #c8f0b0 !important; }
+    button.tehlike { background: #ffb4a8 !important; }
+    button:disabled { opacity: .45; cursor: default; }
+    .cubuk { display: inline-block; width: 70px; height: 9px; background: #e3d6bf; border-radius: 99px; overflow: hidden; border: 1.5px solid #3a2a35; vertical-align: middle; }
+    .is .cubuk { width: 100%; height: 14px; margin-top: 4px; }
+    .cubuk i { display: block; height: 100%; }
+    .jeton { display: inline-block; flex: none; border-radius: 50%; border: 3px solid #3a2a35; vertical-align: middle; box-shadow: inset -4px -5px 0 rgba(0,0,0,.12); }
+    .satir, .yuva, .yem { display: flex; align-items: center; gap: 10px; padding: 8px; border: 2px solid #e3d6bf; border-radius: 12px; margin: 6px 0; background: #fff; }
+    .ks { flex: 1; min-width: 0; font-size: 14px; }
+    .ks small { color: #6b5a63; }
+    .bars { font-size: 12px; }
+    .eylem { display: flex; flex-direction: column; gap: 5px; align-items: stretch; }
+    .eylem button { padding: 5px 8px !important; font-size: 12.5px !important; }
+    .erkek { color: #3d86e0; } .disi { color: #e0518a; }
+    .bos { flex: 1; color: #8a7a82; font-weight: 700; }
+    .yem .yi { font-size: 30px; } .yem > span:nth-child(2) { flex: 1; font-size: 14px; } .yem.kilit { opacity: .55; }
+    .hazir { font-weight: 800; font-size: 17px; color: #2f7d2a; }
+    .ipucu { color: #9b51e0; font-weight: 700; }
+    .gelistir { margin-top: 12px; padding-top: 10px; border-top: 2px dashed #e3d6bf; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .gelistir small { color: #6b5a63; flex: 1; min-width: 140px; }
+    .cift { font-weight: 700; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .rozet { font-size: 11px; font-weight: 800; padding: 1px 8px; border-radius: 99px; background: #9aa3ad; color: #fff; }
+    .rozet[data-n="Nadir"] { background: #3d86e0; } .rozet[data-n="Epik"] { background: #9b51e0; }
+    .rozet[data-n="Efsanevi"] { background: linear-gradient(90deg, #f2a516, #f5d36a); color: #3a2a35; }
+    .ans.gizli { background: #f3eee4; }
+    #modal { position: fixed; inset: 0; background: rgba(30,20,30,.45); display: none; align-items: center; justify-content: center; padding: 14px; z-index: 20; }
+    #modal.acik { display: flex; }
+    #modalIc { position: relative; width: min(480px, 100%); max-height: 86dvh; overflow-y: auto; overflow-x: hidden; padding: 14px 16px; }
+    #modalIc h3 { margin: 0 34px 8px 0; }
+    #modalIc .kapat { position: absolute; right: 10px; top: 10px; padding: 3px 9px; background: #fff; }
+    .kart { text-align: center; }
+    .kart h3 { margin: 8px 0 0 !important; font-size: 22px; }
+    .kart .dugmeler { justify-content: center; }
+    .kartJeton { margin-top: 6px; animation: zipla .6s ease-out; }
+    @keyframes zipla { 0% { transform: scale(.3); } 70% { transform: scale(1.15); } 100% { transform: scale(1); } }
+    .yeniTur { font-weight: 900; color: #9b51e0; letter-spacing: 1px; }
+    .ikonDugme { position: relative; }
+    #gorevRozet { position: absolute; top: -8px; right: -8px; min-width: 22px; height: 22px; border-radius: 99px; background: #e5484d; color: #fff;
+      font: 800 12px system-ui, sans-serif; display: none; align-items: center; justify-content: center; border: 2.5px solid #3a2a35; font-style: normal; }
+    .nine { display: flex; gap: 10px; align-items: center; background: #fff3d6; border: 2px solid #e8cf98; border-radius: 14px; padding: 8px 10px; }
+    .nine p { margin: 2px 0 0 !important; font-size: 14px; font-style: italic; color: #5a4a52; }
+    .nineYuz { font-size: 40px; }
+    .gorev.hazirG { border-color: #7ad35a; background: #f1fbe9; }
+    .gorev.alindi { opacity: .55; }
+    .baslik2 { margin-top: 12px !important; }
+    @media (max-width: 520px) { #saatKutu { display: none; } }
+    .kucukDugme { cursor: pointer; padding: 4px 9px !important; font-size: 18px; color: #3a2a35; }
+    .kredi { font-size: 13px; } .kredi p { margin: 4px 0 !important; } .kredi a { color: #3d6fb0; }
+    /* --- Kuş Evi ekranı --- */
+    #kuseviUI { display: none; }
+    body.kusevi-modu #kuseviUI { display: block; }
+    body.kusevi-modu #sol, body.kusevi-modu #sag, body.kusevi-modu #binaPanel { display: none; }
+    .ikonDugme.gecis { width: 78px; height: 78px; font-size: 11px; background: linear-gradient(#ecffd9 0%, #c3eea0 55%, #94d46e 100%);
+      box-shadow: inset 0 3px 0 rgba(255,255,255,.75), inset 0 -4px 0 rgba(60,120,40,.3), 0 4px 0 #3a2a35, 0 7px 10px rgba(30,20,30,.28); }
+    .ikonDugme.gecis img.ik { width: 50px; height: 50px; }
+    .ikonDugme.gecis span { font-size: 32px; }
+    #kKart { position: fixed; top: calc(max(10px, env(safe-area-inset-top)) + 54px); left: 96px; right: 10px; padding: 7px 12px; font-size: 14px; }
+    .kkUst { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+    .kkUst b { font-size: 18px; } .kkUst > span:not(.rozet):not(.kkEtki) { color: #6b5a63; }
+    .kkEtki { margin-left: auto; font-size: 18px; }
+    .kkAlt { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: center; margin-top: 3px; font-size: 13px; color: #5a4a52; }
+    .kkBar { white-space: nowrap; }
+    #kAvatar { position: fixed; left: 10px; top: calc(max(10px, env(safe-area-inset-top)) + 54px); bottom: calc(max(12px, env(safe-area-inset-bottom)) + 104px);
+      width: 76px; overflow-y: auto; padding: 6px 4px; display: flex; flex-direction: column; gap: 6px; align-items: center; }
+    .kAv { flex: none; position: relative; width: 62px; padding: 3px 0 2px !important; border: 2.5px solid #e3d6bf !important; border-radius: 12px !important; background: #fff !important;
+      box-shadow: none !important; display: flex; flex-direction: column; align-items: center; cursor: pointer; }
+    .kAv.secili { border-color: #f2a516 !important; background: #fff3d6 !important; }
+    .kAv small { font-size: 10px; font-weight: 800; max-width: 58px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .kAv i { position: absolute; top: -4px; right: -4px; font-style: normal; font-size: 14px; }
+    .kAv.bos { height: 56px; justify-content: center; color: #c8b9a0; font-size: 22px; font-weight: 800; border-style: dashed !important; }
+    #kEylem { position: fixed; right: 10px; top: calc(max(10px, env(safe-area-inset-top)) + 140px); display: flex; flex-direction: column; gap: 8px; }
+    #kEylem .ikonDugme { width: 60px; height: 60px; font-size: 9.5px; } #kEylem .ikonDugme img.ik { width: 36px; height: 36px; }
+    #kTepsi { position: fixed; left: 10px; right: 96px; bottom: max(12px, env(safe-area-inset-bottom)); height: 84px; display: flex; gap: 6px;
+      overflow-x: auto; padding: 6px; align-items: stretch; }
+    .kIkram { flex: 0 0 72px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 2px !important;
+      background: #fff !important; border: 2.5px solid #e3d6bf !important; border-radius: 12px !important; box-shadow: none !important; cursor: pointer; font: inherit; color: #3a2a35; }
+    .kIkram img { width: 34px; height: 34px; object-fit: contain; } .kIkram small { font-size: 9.5px; font-weight: 700; line-height: 1.1; text-align: center; }
+    .kIkram b { font-size: 11px; background: #3a2a35; color: #ffe7a8; border-radius: 99px; padding: 0 7px; }
+    .kIkram.yok { opacity: .75; } .kIkram.yok b { background: #c9b48f; color: #3a2a35; }
+    #dKoyeDon { position: fixed; right: 10px; bottom: max(12px, env(safe-area-inset-bottom)); }
+    .ikramBuyuk { width: 96px; height: 96px; object-fit: contain; }
+    .sekmeler { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+    .sekmeler button { padding: 6px 10px !important; font-size: 13px !important; }
+    #reklam { position: fixed; inset: 0; background: rgba(0,0,0,.75); display: none; align-items: center; justify-content: center; z-index: 30; }
+    #reklam.acik { display: flex; }
+    #reklam .kutu { padding: 24px 30px; text-align: center; font-weight: 800; font-size: 20px; }
+    #reklam b { font-size: 40px; }
+    #panelKapat { position: absolute; right: 10px; top: 10px; padding: 3px 9px; background: #fff; }
+    /* Kapat düğmeleri: kutusuz, sadece Gemini kırmızı X ikonu */
+    #panelKapat, #modalIc button.kapat { padding: 0 !important; background: none !important; border: 0 !important; box-shadow: none !important; right: 8px; top: 8px; line-height: 0; }
+    #panelKapat img, #modalIc button.kapat img { width: 34px; height: 34px; filter: drop-shadow(0 2px 0 rgba(58,42,53,.3)); transition: transform .1s; }
+    #panelKapat:active img, #modalIc button.kapat:active img { transform: scale(.88); }
+    img.satirIk { width: 1.25em; height: 1.25em; vertical-align: -0.3em; margin: 0 1px; }
+    #bildirim { position: fixed; left: 50%; top: 70px; transform: translate(-50%, -20px); opacity: 0; transition: .2s; padding: 9px 16px;
+      font-weight: 700; pointer-events: none; white-space: nowrap; }
+    #bildirim.acik { opacity: 1; transform: translate(-50%, 0); }
+  </style>
+</head>
+<body>
+  <div id="oyun"></div>
+  <div id="ust">
+    <div id="sv" class="kutu sayac"><img class="ik" src="assets/arayuz/yildiz.png" alt=""><b>Sv <span id="seviye">1</span></b><div id="xp"><div id="xpDolu"></div></div></div>
+    <div class="kutu sayac"><img class="ik" src="assets/arayuz/altin.png" alt="Altın"><span id="altin">0</span></div>
+    <div class="kutu sayac"><img class="ik" src="assets/arayuz/elmas.png" alt="Elmas"><span id="elmas">0</span></div>
+    <button class="kutu sayac kucukDugme" id="dSes" title="Ses aç/kapat"><img class="ik" src="assets/arayuz/ses_acik.png" alt="Ses"></button>
+    <button class="kutu sayac kucukDugme" id="dBilgi" title="Emeği geçenler"><img class="ik" src="assets/arayuz/bilgi.png" alt="Bilgi"></button>
+    <div class="kutu sayac" id="saatKutu"><img class="ik" id="saatIkon" src="assets/arayuz/gunes.png" alt=""><span id="saat">12:00</span></div>
+  </div>
+  <div id="sol" class="yan">
+    <button id="dGorevler" class="kutu ikonDugme"><img class="ik" src="assets/arayuz/gorevler.png" alt="">Görevler<i id="gorevRozet"></i></button>
+    <button id="dAnsiklopedi" class="kutu ikonDugme"><img class="ik" src="assets/arayuz/ansiklopedi.png" alt="">Ansiklopedi</button>
+  </div>
+  <div id="sag" class="yan">
+    <a class="kutu ikonDugme" href="atolye.html"><img class="ik" src="assets/arayuz/atolye.png" alt="">Atölye</a>
+    <button id="dKuslar" class="kutu ikonDugme"><img class="ik" src="assets/arayuz/kuslarim.png" alt="">Kuşlarım</button>
+    <button class="kutu ikonDugme" data-yakinda="Market bir sonraki adımda geliyor."><img class="ik" src="assets/arayuz/market.png" alt="">Market</button>
+    <button id="dKusevi" class="kutu ikonDugme gecis"><img class="ik" src="assets/arayuz/kusevi.png" alt="">Kuş Evi</button>
+  </div>
+  <div id="kuseviUI">
+    <div id="kKart" class="kutu"></div>
+    <div id="kAvatar" class="kutu"></div>
+    <div id="kEylem">
+      <button class="kutu ikonDugme" data-kusevi="sev"><img class="ik" src="assets/arayuz/sev.png" alt="">Sev</button>
+      <button class="kutu ikonDugme" data-kusevi="tara"><img class="ik" src="assets/arayuz/tuy_tara.png" alt="">Tüy tara</button>
+      <button class="kutu ikonDugme" data-kusevi="defter"><img class="ik" src="assets/arayuz/defter.png" alt="">Defter</button>
+    </div>
+    <div id="kTepsi" class="kutu"></div>
+    <button id="dKoyeDon" class="kutu ikonDugme gecis"><img class="ik" src="assets/arayuz/koye_don.png" alt="">Köye Dön</button>
+  </div>
+  <div id="binaPanel" class="kutu">
+    <button id="panelKapat"><img src="assets/arayuz/kapat.png" alt="Kapat"></button>
+    <h2><span id="panelIkon"></span><span id="panelAd"></span><span id="panelSeviye"></span></h2>
+    <p id="panelAciklama"></p>
+    <div id="panelIcerik"></div>
+  </div>
+  <div id="modal"><div id="modalIc" class="kutu"></div></div>
+  <div id="reklam"><div class="kutu">📺 Reklam (deneme)<br><small>Gerçek reklam ileride buraya bağlanacak</small><br><b>3</b></div></div>
+  <div id="bildirim" class="kutu"></div>
+  <script src="vendor/phaser.min.js"></script>
+  <script type="module" src="js/koy.js"></script>
+</body>
+</html>

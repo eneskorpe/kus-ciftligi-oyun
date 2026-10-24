@@ -1,0 +1,302 @@
+{
+ "cimen_kucuk": {
+  "w": 189,
+  "h": 137,
+  "tabanX": 84.0,
+  "tabanY": 136
+ },
+ "cimen_orta": {
+  "w": 281,
+  "h": 213,
+  "tabanX": 133.2,
+  "tabanY": 212
+ },
+ "cimen_uzun": {
+  "w": 319,
+  "h": 312,
+  "tabanX": 167.1,
+  "tabanY": 311
+ },
+ "cali_kucuk": {
+  "w": 232,
+  "h": 213,
+  "tabanX": 120.8,
+  "tabanY": 212
+ },
+ "cali_cicekli": {
+  "w": 327,
+  "h": 291,
+  "tabanX": 169.6,
+  "tabanY": 290
+ },
+ "egrelti": {
+  "w": 345,
+  "h": 301,
+  "tabanX": 114.0,
+  "tabanY": 300
+ },
+ "yonca": {
+  "w": 344,
+  "h": 207,
+  "tabanX": 181.2,
+  "tabanY": 206
+ },
+ "saz": {
+  "w": 304,
+  "h": 360,
+  "tabanX": 154.4,
+  "tabanY": 359
+ },
+ "cali_oval": {
+  "w": 343,
+  "h": 242,
+  "tabanX": 241.2,
+  "tabanY": 241
+ },
+ "fener": {
+  "w": 128,
+  "h": 360,
+  "tabanX": 65.5,
+  "tabanY": 359
+ },
+ "cicek_papatya": {
+  "w": 330,
+  "h": 306,
+  "tabanX": 184.7,
+  "tabanY": 305
+ },
+ "cicek_sari": {
+  "w": 336,
+  "h": 311,
+  "tabanX": 91.5,
+  "tabanY": 310
+ },
+ "cicek_mavi": {
+  "w": 337,
+  "h": 299,
+  "tabanX": 197.2,
+  "tabanY": 298
+ },
+ "gelincik": {
+  "w": 356,
+  "h": 331,
+  "tabanX": 195.7,
+  "tabanY": 330
+ },
+ "lavanta": {
+  "w": 353,
+  "h": 348,
+  "tabanX": 175.7,
+  "tabanY": 347
+ },
+ "aycicegi": {
+  "w": 337,
+  "h": 326,
+  "tabanX": 148.0,
+  "tabanY": 325
+ },
+ "kadife": {
+  "w": 356,
+  "h": 328,
+  "tabanX": 190.9,
+  "tabanY": 327
+ },
+ "mantar": {
+  "w": 334,
+  "h": 326,
+  "tabanX": 186.5,
+  "tabanY": 325
+ },
+ "cicek_kasa": {
+  "w": 358,
+  "h": 318,
+  "tabanX": 224.0,
+  "tabanY": 317
+ },
+ "tas_kucuk": {
+  "w": 187,
+  "h": 159,
+  "tabanX": 91.0,
+  "tabanY": 158
+ },
+ "kaya_yosunlu": {
+  "w": 329,
+  "h": 282,
+  "tabanX": 160.9,
+  "tabanY": 281
+ },
+ "tas_grubu": {
+  "w": 267,
+  "h": 216,
+  "tabanX": 156.0,
+  "tabanY": 215
+ },
+ "kutuk": {
+  "w": 304,
+  "h": 269,
+  "tabanX": 191.5,
+  "tabanY": 268
+ },
+ "kutuk_yatik": {
+  "w": 360,
+  "h": 223,
+  "tabanX": 82.0,
+  "tabanY": 222
+ },
+ "basamak_tas": {
+  "w": 298,
+  "h": 226,
+  "tabanX": 203.5,
+  "tabanY": 225
+ },
+ "odun_yigini": {
+  "w": 326,
+  "h": 250,
+  "tabanX": 134.5,
+  "tabanY": 249
+ },
+ "kaya_egrelti": {
+  "w": 324,
+  "h": 307,
+  "tabanX": 153.5,
+  "tabanY": 306
+ },
+ "tavsan_yuvasi": {
+  "w": 326,
+  "h": 202,
+  "tabanX": 154.6,
+  "tabanY": 201
+ },
+ "bank": {
+  "w": 357,
+  "h": 309,
+  "tabanX": 96.0,
+  "tabanY": 308
+ },
+ "tabela": {
+  "w": 276,
+  "h": 356,
+  "tabanX": 133.0,
+  "tabanY": 355
+ },
+ "saman": {
+  "w": 351,
+  "h": 347,
+  "tabanX": 180.6,
+  "tabanY": 346
+ },
+ "fici": {
+  "w": 252,
+  "h": 326,
+  "tabanX": 125.5,
+  "tabanY": 325
+ },
+ "el_arabasi": {
+  "w": 360,
+  "h": 277,
+  "tabanX": 50.5,
+  "tabanY": 276
+ },
+ "kus_banyosu": {
+  "w": 289,
+  "h": 320,
+  "tabanX": 144.0,
+  "tabanY": 319
+ },
+ "sandiklar": {
+  "w": 342,
+  "h": 338,
+  "tabanX": 110.5,
+  "tabanY": 337
+ },
+ "cit_yukari": {
+  "w": 320,
+  "h": 311,
+  "tabanX": 24.5,
+  "tabanY": 310
+ },
+ "cit_asagi": {
+  "w": 319,
+  "h": 313,
+  "tabanX": 292.5,
+  "tabanY": 312
+ },
+ "agac_cam": {
+  "w": 336,
+  "h": 527,
+  "tabanX": 175.4,
+  "tabanY": 526
+ },
+ "agac_hus": {
+  "w": 362,
+  "h": 509,
+  "tabanX": 182.0,
+  "tabanY": 508
+ },
+ "agac_elma": {
+  "w": 380,
+  "h": 454,
+  "tabanX": 188.0,
+  "tabanY": 453
+ },
+ "agac_cicekli": {
+  "w": 412,
+  "h": 479,
+  "tabanX": 212.9,
+  "tabanY": 478
+ },
+ "agac_sogut": {
+  "w": 422,
+  "h": 473,
+  "tabanX": 182.0,
+  "tabanY": 472
+ },
+ "fidan": {
+  "w": 233,
+  "h": 388,
+  "tabanX": 114.5,
+  "tabanY": 387
+ },
+ "golet": {
+  "w": 700,
+  "h": 435,
+  "tabanX": 356.0,
+  "tabanY": 434
+ },
+ "yaprak1": {
+  "w": 85,
+  "h": 96,
+  "tabanX": 5.0,
+  "tabanY": 95
+ },
+ "yaprak2": {
+  "w": 77,
+  "h": 96,
+  "tabanX": 6.0,
+  "tabanY": 95
+ },
+ "yaprak3": {
+  "w": 80,
+  "h": 96,
+  "tabanX": 4.0,
+  "tabanY": 95
+ },
+ "yaprak4": {
+  "w": 83,
+  "h": 96,
+  "tabanX": 5.0,
+  "tabanY": 95
+ },
+ "yaprak5": {
+  "w": 80,
+  "h": 96,
+  "tabanX": 4.5,
+  "tabanY": 95
+ },
+ "yaprak6": {
+  "w": 76,
+  "h": 96,
+  "tabanX": 5.0,
+  "tabanY": 95
+ }
+}

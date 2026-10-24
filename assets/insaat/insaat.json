@@ -1,0 +1,32 @@
+{
+ "iskele_buyuk": {
+  "w": 427,
+  "h": 512,
+  "tabanX": 157.8,
+  "tabanY": 511
+ },
+ "iskele_kucuk": {
+  "w": 462,
+  "h": 462,
+  "tabanX": 229.0,
+  "tabanY": 461
+ },
+ "malzeme": {
+  "w": 505,
+  "h": 281,
+  "tabanX": 168.0,
+  "tabanY": 280
+ },
+ "toz": {
+  "w": 391,
+  "h": 353,
+  "tabanX": 186.2,
+  "tabanY": 352
+ },
+ "iskele_merdivenli": {
+  "w": 488,
+  "h": 512,
+  "tabanX": 117.5,
+  "tabanY": 511
+ }
+}
