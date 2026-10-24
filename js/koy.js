@@ -27,7 +27,7 @@ const DPR = Math.min(window.devicePixelRatio || 1, 2);
 // Harita yerleşimi (karo koordinatları)
 const YERLESIM = {
   binalar: [['kulucka', 7, 3], ['tuzak', 2, 8], ['kusevi', 12, 5], ['yemlik', 8, 11], ['kunduz', 15, 10]],
-  susler: [['agac', 1, 2], ['agac', 4, 0], ['agac', 15, 2], ['agac', 16, 5], ['agac', 0, 12], ['agac', 3, 15], ['agac', 15, 14],
+  susler: [['agac', 1, 2], ['agac', 4, 0], ['agac', 15, 2], ['agac', 16, 5], ['agac', 0, 12], ['agac', 3, 15], // (15,14) ağacı kaldırıldı: göletin önünü kapatıyordu
     ['agac', 12, 16], ['agac', 11, 1], // (17,10) ağacı kaldırıldı: Kunduz evinin su çarkını kapatıyordu ['agac', 6, 16], ['agac', 16, 16], ['agac', 1, 5],
     ['kaya', 5, 6], ['kaya', 2, 13], ['kaya', 10, 15],
     ['fener', 7, 7], ['fener', 9, 15], ['fener', 4, 11], ['fener', 12, 10], ['fener', 11, 13],
