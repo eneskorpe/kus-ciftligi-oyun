@@ -4,6 +4,7 @@
 // 3) Pırıltılar: güneş suda ara sıra parlar.
 // Suyun iç noktaları ve orta çizgi assets/manzara/on_su.json'dan (görselden çıkarıldı; tools yerine tek seferlik betikle).
 import { HARITA, ekranIzo } from './izo.js';
+import { dekorKoy } from './dekor.js';
 
 const r = (a, b) => a + Math.random() * (b - a);
 const EGIM = Math.atan2(0.48, 1); // derenin görseldeki genel akış yönü (sol üstten sağ alta)
@@ -37,6 +38,18 @@ export function dereKur(sahne, dereler) {
     // Köyün içine taşan kısmı kesildiği için (tools/manzara_temizle.py) suyun sadece görünür kalan noktaları kullanılır
     const gorunur = (p) => { const t = ekranIzo(p.x, p.y); return Math.max(-t.i, -t.j, t.i - HARITA, t.j - HARITA) > 6; };
     const noktalar = (veri.noktalar || []).map(dunya).filter(gorunur);
+    // Kıyı sazlıkları: görselin silikleşen geçiş bandında (köy kenarından 4-8 karo) ve ötesinde seyrek, gerçek saz dekoru.
+    // Silik görünen kıyıyı örter; rüzgârda sallanır, dokununca hışırdar (dekorKoy → canlilik, dokunTepki)
+    const uzak = (p) => { const t = ekranIzo(p.x, p.y); return Math.max(-t.i, -t.j, t.i - HARITA, t.j - HARITA); };
+    const konan = [];
+    const [kx0, ky0, kx1, ky1] = veri.kopru || [0, 0, 0, 0];
+    const kopruIci = ([u, v]) => u > kx0 + 0.04 && u < kx1 - 0.04 && v > ky0 + 0.04 && v < ky1 - 0.04; // köprünün üstüne saz konmasın
+    for (const p of (veri.kiyi || []).filter((n) => !kopruIci(n)).map(dunya)) {
+      const d = uzak(p), sik = d > 4 && d < 8 ? 60 : 150; // bantta sık, ötede seyrek
+      if (d < 4 || konan.some((q) => Math.hypot(q.x - p.x, (q.y - p.y) * 2) < sik)) continue;
+      konan.push(p);
+      dekorKoy(sahne, 'saz', p.x, p.y, r(40, 58), Math.random() < 0.5);
+    }
     const yol = (veri.yol || []).map(dunya);
     if (ayna) yol.reverse();
     const aci = ayna ? Math.PI - EGIM : EGIM, yon = { x: Math.cos(aci), y: Math.sin(aci) };
