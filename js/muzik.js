@@ -8,9 +8,9 @@
 // ilk dokunuşta başlar; ses düğmesi ve sekme gizlenince durur.
 import { sesKapaliMi, sesSeviyesi } from './ses.js';
 
-const MUZIK_EN = 0.4, ORTAM_EN = 0.6;          // ayar %100'deyken en yüksek ses (varsayılan ayarla müzik ~0.14, ortam ~0.3)
+const MUZIK_EN = 0.28, ORTAM_EN = 0.42;        // ayar %100'deyken en yüksek ses (varsayılan ayarla müzik ~0.10, ortam ~0.21; kullanıcı kısık istedi)
 const ARA = [3000, 5000], YUMUSAK = 1200;       // parçalar arası sessizlik, açılış/kapanış süresi (ms)
-const ORTAM_ADET = 4, ORTAM_GECIS = 4;          // ortam parçası sayısı, parçalar arası karışma süresi (sn)
+const ORTAM_ADET = 18, ORTAM_GECIS = 4;         // ortam parçası sayısı, parçalar arası karışma süresi (sn)
 
 let liste = [], sira = [], sonCalan = null, bekleme = null, basladi = false, geceMi = () => false;
 const oynatici = new Audio();
@@ -92,7 +92,7 @@ export function muzikKur(gece) {
   if (muzikKur.kuruldu) return;
   muzikKur.kuruldu = true;
   if (gece) geceMi = gece;
-  fetch('assets/muzik/liste.json').then((r) => r.json()).then((j) => { liste = j; karistir(); }).catch(() => {});
+  fetch('assets/muzik/liste.json').then((r) => r.json()).then((j) => { liste = j; karistir(); if (basladi) devam(); }).catch(() => {}); // liste geç yüklendiyse ilk dokunuş boşa gitmesin
   const ilkDokunus = () => { if (basladi) return; basladi = true; devam(); };
   window.addEventListener('pointerdown', ilkDokunus);
   window.addEventListener('keydown', ilkDokunus);
