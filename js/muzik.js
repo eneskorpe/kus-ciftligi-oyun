@@ -8,7 +8,7 @@
 // ilk dokunuşta başlar; ses düğmesi ve sekme gizlenince durur.
 import { sesKapaliMi, sesSeviyesi } from './ses.js';
 
-const MUZIK_EN = 0.28, ORTAM_EN = 0.42;        // ayar %100'deyken en yüksek ses (varsayılan ayarla müzik ~0.10, ortam ~0.21; kullanıcı kısık istedi)
+const MUZIK_EN = 0.28, ORTAM_EN = 0.85;        // ayar %100'deyken en yüksek ses (varsayılan ayarla müzik ~0.10 kısık, doğa sesi ~0.43)
 const ARA = [3000, 5000], YUMUSAK = 1200;       // parçalar arası sessizlik, açılış/kapanış süresi (ms)
 const ORTAM_ADET = 18, ORTAM_GECIS = 4;         // ortam parçası sayısı, parçalar arası karışma süresi (sn)
 
