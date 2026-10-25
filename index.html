@@ -139,6 +139,15 @@
     #panelKapat img, #modalIc button.kapat img { width: 34px; height: 34px; filter: drop-shadow(0 2px 0 rgba(58,42,53,.3)); transition: transform .1s; }
     #panelKapat:active img, #modalIc button.kapat:active img { transform: scale(.88); }
     img.satirIk { width: 1.25em; height: 1.25em; vertical-align: -0.3em; margin: 0 1px; }
+    /* Ses ayar paneli: üst çubuktaki ses düğmesiyle açılır */
+    #sesPanel { position: fixed; top: calc(max(10px, env(safe-area-inset-top)) + 54px); left: 50%; transform: translateX(-50%); z-index: 15;
+      width: min(300px, calc(100% - 20px)); padding: 12px 14px; display: none; flex-direction: column; gap: 10px; }
+    #sesPanel.acik { display: flex; }
+    #sesPanel label { display: grid; grid-template-columns: 1fr; gap: 2px; font-weight: 800; font-size: 14px; }
+    #sesPanel label span { display: flex; justify-content: space-between; }
+    #sesPanel input[type=range] { width: 100%; accent-color: #5fc04a; }
+    #sesPanel i { font-style: normal; font-size: 12px; color: #6b5a63; justify-self: end; margin-top: -2px; }
+    #sKapat { font: 800 14px system-ui, sans-serif; color: #3a2a35; background: #ffe7a8; border: 2.5px solid #3a2a35; border-radius: 12px; padding: 8px; box-shadow: 0 3px 0 #3a2a35; cursor: pointer; }
     #bildirim { position: fixed; left: 50%; top: 70px; transform: translate(-50%, -20px); opacity: 0; transition: .2s; padding: 9px 16px;
       font-weight: 700; pointer-events: none; white-space: nowrap; }
     #bildirim.acik { opacity: 1; transform: translate(-50%, 0); }
@@ -150,7 +159,7 @@
     <div id="sv" class="kutu sayac"><img class="ik" src="assets/arayuz/yildiz.png" alt=""><b>Sv <span id="seviye">1</span></b><div id="xp"><div id="xpDolu"></div></div></div>
     <div class="kutu sayac"><img class="ik" src="assets/arayuz/altin.png" alt="Altın"><span id="altin">0</span></div>
     <div class="kutu sayac"><img class="ik" src="assets/arayuz/elmas.png" alt="Elmas"><span id="elmas">0</span></div>
-    <button class="kutu sayac kucukDugme" id="dSes" title="Ses aç/kapat"><img class="ik" src="assets/arayuz/ses_acik.png" alt="Ses"></button>
+    <button class="kutu sayac kucukDugme" id="dSes" title="Ses ayarları"><img class="ik" src="assets/arayuz/ses_acik.png" alt="Ses"></button>
     <button class="kutu sayac kucukDugme" id="dBilgi" title="Emeği geçenler"><img class="ik" src="assets/arayuz/bilgi.png" alt="Bilgi"></button>
     <div class="kutu sayac" id="saatKutu"><img class="ik" id="saatIkon" src="assets/arayuz/gunes.png" alt=""><span id="saat">12:00</span></div>
   </div>
@@ -184,6 +193,12 @@
   <div id="modal"><div id="modalIc" class="kutu"></div></div>
   <div id="reklam"><div class="kutu">📺 Reklam (deneme)<br><small>Gerçek reklam ileride buraya bağlanacak</small><br><b>3</b></div></div>
   <div id="bildirim" class="kutu"></div>
+  <div id="sesPanel" class="kutu">
+    <b>Ses ayarları</b>
+    <label><span>🎶 Müzik</span><input type="range" id="sMuzik" min="0" max="100" step="5"><i id="sMuzikY"></i></label>
+    <label><span>🐦 Doğa sesleri</span><input type="range" id="sEfekt" min="0" max="100" step="5"><i id="sEfektY"></i></label>
+    <button id="sKapat"></button>
+  </div>
   <script src="vendor/phaser.min.js"></script>
   <script type="module" src="js/koy.js"></script>
 </body>

@@ -139,7 +139,7 @@ class Koy extends Phaser.Scene {
     binaCanlilikKur(this, this.binalar);
     this.dokunTepki = dokunmaTepkisiKur(this);
     this.isciGuncelle = isciKur(this); // Kunduz Usta
-    muzikKur(); // oyun müziği (karışık, tekrarsız liste)
+    muzikKur(() => this.gunIsigi && this.gunIsigi.gece > 0.6); // oyun müziği ve doğa sesi (gece kuşlar susar)
     cevreSesleriKur(this, () => this.gunIsigi && this.gunIsigi.gece > 0.6); // ara sıra uzaktan serçe cıvıltısı
     this.time.addEvent({ delay: 1000, loop: true, callback: () => this.saatYaz() });
 

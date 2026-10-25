@@ -10,6 +10,16 @@ export function sesAyarla(acik) {
   window.dispatchEvent(new Event('sesDegisti')); // müzik çalar dinler (muzik.js)
 }
 
+// Ses düzeyleri (oyuncunun ayarı, 0-1): müzik ve doğa/efekt sesleri ayrı. Varsayılanlar kısık: müzik arkada alttan çalsın
+const SEVIYE = { muzik: 0.35, efekt: 0.5 };
+try { Object.assign(SEVIYE, JSON.parse(localStorage.getItem('kusCiftligi_sesSeviye')) || {}); } catch { /* yok */ }
+export const sesSeviyesi = (tur) => SEVIYE[tur];
+export function sesSeviyesiAyarla(tur, deger) {
+  SEVIYE[tur] = Math.max(0, Math.min(1, deger));
+  try { localStorage.setItem('kusCiftligi_sesSeviye', JSON.stringify(SEVIYE)); } catch { /* yok */ }
+  window.dispatchEvent(new Event('sesDegisti'));
+}
+
 const r = (a, b) => a + Math.random() * (b - a);
 
 // Serçe cıvıltısı türevleri. Her nota: t başlangıç, d süre (sn), f0 → f1 frekans (Hz), v şiddet (0-1)
@@ -34,7 +44,7 @@ export function cevreSesiCal(sahne, ses = 0.06) {
   const notalar = TUREVLER[Math.floor(Math.random() * TUREVLER.length)]();
   const kayma = r(0.92, 1.08); // her serçe biraz farklı perdede
   const bas = ctx.currentTime + 0.05, cikis = ctx.createGain();
-  cikis.gain.value = ses * r(0.7, 1.1);
+  cikis.gain.value = ses * r(0.7, 1.1) * SEVIYE.efekt * 2; // efekt ayarı (varsayılan 0.5 = eski düzey)
   // Sesin geldiği yön: sağdan ya da soldan
   const yon = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
   if (yon) { yon.pan.value = r(-0.8, 0.8); cikis.connect(yon).connect(yonetici.destination || ctx.destination); }
@@ -63,7 +73,7 @@ export function dokunmaSesi(sahne, tur, ses = 0.05) {
   if (kapali || !ctx || yonetici.locked || document.hidden) return;
   if (ctx.state === 'suspended') ctx.resume();
   const cikis = ctx.createGain(), bas = ctx.currentTime + 0.01, hedef = yonetici.destination || ctx.destination;
-  cikis.gain.value = ses;
+  cikis.gain.value = ses * SEVIYE.efekt * 2;
   cikis.connect(hedef);
   if (tur === 'hisirti') {
     // Bant geçiren süzgeçten geçmiş, birkaç kez kabarıp sönen beyaz gürültü

@@ -5,7 +5,7 @@ import { YEMLER, MUT_ADI, fenotip, kusGen, kusDegeri, tarifBul } from './genetik
 import * as M from './mekanik.js';
 import { BINALAR } from './binalar.js';
 import * as G from './gorevler.js';
-import { sesKapaliMi, sesAyarla } from './ses.js';
+import { sesKapaliMi, sesAyarla, sesSeviyesi, sesSeviyesiAyarla } from './ses.js';
 
 const $ = (s) => document.querySelector(s);
 let oyun, gorevPencereAcik = false, acikBina = null, secim = { e: null, d: null }, kartAcik = false;
@@ -25,8 +25,17 @@ export function arayuzKur(o) {
   $('#dGorevler').onclick = gorevlerAc;
   $('#dBilgi').onclick = krediAc;
   const sesDugme = () => { $('#dSes img').src = `assets/arayuz/${sesKapaliMi() ? 'ses_kapali' : 'ses_acik'}.png`; };
-  $('#dSes').onclick = () => { sesAyarla(sesKapaliMi()); sesDugme(); bildirim(sesKapaliMi() ? '🔇 Sesler kapalı' : '🔊 Sesler açık'); };
-  sesDugme();
+  // Ses düğmesi ayar panelini açar: müzik ve doğa sesleri için ayrı düzey, tek dokunuşla hepsini kapat/aç
+  const sesPanelCiz = () => {
+    for (const [id, tur] of [['sMuzik', 'muzik'], ['sEfekt', 'efekt']]) { $('#' + id).value = Math.round(sesSeviyesi(tur) * 100); $('#' + id + 'Y').textContent = '%' + $('#' + id).value; }
+    $('#sKapat').textContent = sesKapaliMi() ? '🔊 Sesleri aç' : '🔇 Bütün sesleri kapat';
+    sesDugme();
+  };
+  $('#dSes').onclick = (e) => { e.stopPropagation(); $('#sesPanel').classList.toggle('acik'); sesPanelCiz(); };
+  for (const [id, tur] of [['sMuzik', 'muzik'], ['sEfekt', 'efekt']]) $('#' + id).oninput = (e) => { sesSeviyesiAyarla(tur, e.target.value / 100); sesPanelCiz(); };
+  $('#sKapat').onclick = () => { sesAyarla(sesKapaliMi()); sesPanelCiz(); };
+  document.addEventListener('pointerdown', (e) => { if (!e.target.closest('#sesPanel, #dSes')) $('#sesPanel').classList.remove('acik'); });
+  sesPanelCiz();
   document.querySelectorAll('[data-yakinda]').forEach((b) => { b.onclick = () => bildirim(b.dataset.yakinda); });
   setInterval(() => { if (acikBina) panelCiz(); }, 1000);
   hudGuncelle();
@@ -256,7 +265,7 @@ function krediAc() {
   const bag = (url, metin) => (url ? `<a href="${url}" target="_blank" rel="noopener">${metin}</a>` : metin);
   modalAc(`${kapat()}<h3>ℹ️ Emeği geçenler</h3><div class="kredi">
     <p><b>🎶 Müzik</b></p><p>• Mara Records (Suno ile üretildi)</p>
-    <p><b>🎵 Kuş sesleri</b></p><p>• Oyunun kendi kodunda üretilir.</p>
+    <p><b>🎵 Kuş sesleri</b></p><p>• Yakın cıvıltılar oyunun kendi kodunda üretilir, uzak doğa sesi ElevenLabs ile üretildi.</p>
     <p><b>🛠️ Yazılım</b></p><p>• ${bag('https://phaser.io', 'Phaser 3')} — MIT Lisansı, © Phaser Studio Inc.</p>
     <p><b>🎨 Görseller ve metinler</b></p><p>• Oyun için Google Gemini ile üretilmiştir.</p></div>`);
 }
