@@ -255,6 +255,7 @@ function gorevlerCiz() {
 function krediAc() {
   const bag = (url, metin) => (url ? `<a href="${url}" target="_blank" rel="noopener">${metin}</a>` : metin);
   modalAc(`${kapat()}<h3>ℹ️ Emeği geçenler</h3><div class="kredi">
+    <p><b>🎶 Müzik</b></p><p>• Mara Records (Suno ile üretildi)</p>
     <p><b>🎵 Kuş sesleri</b></p><p>• Oyunun kendi kodunda üretilir.</p>
     <p><b>🛠️ Yazılım</b></p><p>• ${bag('https://phaser.io', 'Phaser 3')} — MIT Lisansı, © Phaser Studio Inc.</p>
     <p><b>🎨 Görseller ve metinler</b></p><p>• Oyun için Google Gemini ile üretilmiştir.</p></div>`);

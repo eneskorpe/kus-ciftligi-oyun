@@ -7,6 +7,7 @@ export const sesKapaliMi = () => kapali;
 export function sesAyarla(acik) {
   kapali = !acik;
   try { localStorage.setItem('kusCiftligi_ses', kapali ? 'kapali' : 'acik'); } catch { /* yok */ }
+  window.dispatchEvent(new Event('sesDegisti')); // müzik çalar dinler (muzik.js)
 }
 
 const r = (a, b) => a + Math.random() * (b - a);

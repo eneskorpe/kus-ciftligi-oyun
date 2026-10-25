@@ -18,6 +18,7 @@ import { dokunmaTepkisiKur } from './dokunTepki.js';
 import { zeminKatmanlariKur } from './zemin.js';
 import { isciKur } from './isci.js';
 import { dereKur } from './su.js';
+import { muzikKur } from './muzik.js';
 import { KusEvi } from './kusevi.js';
 import { kuseviArayuzKur } from './kuseviArayuz.js';
 import { dekorlariYukle, dekorKoy, DEKOR_GRUP } from './dekor.js';
@@ -138,6 +139,7 @@ class Koy extends Phaser.Scene {
     binaCanlilikKur(this, this.binalar);
     this.dokunTepki = dokunmaTepkisiKur(this);
     this.isciGuncelle = isciKur(this); // Kunduz Usta
+    muzikKur(); // oyun müziği (karışık, tekrarsız liste)
     cevreSesleriKur(this, () => this.gunIsigi && this.gunIsigi.gece > 0.6); // ara sıra uzaktan serçe cıvıltısı
     this.time.addEvent({ delay: 1000, loop: true, callback: () => this.saatYaz() });
 
