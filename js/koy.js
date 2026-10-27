@@ -8,7 +8,8 @@ import { arayuzKur, bildirim } from './arayuz.js';
 import { efektleriKur } from './efekt.js';
 import { gorselleriYukle } from './kusGorsel.js';
 import { HARITA, KARO_G, DUNYA_G, DUNYA_Y, izoEkran, karoKoseleri } from './izo.js';
-import { binaKur, susKur } from './binalar.js';
+import { binaKur, susKur, BINALAR } from './binalar.js';
+import { otomatikYollar, sabitEngeller, sabitYollar } from './yollar.js';
 import { gunIsigiKur } from './gunIsigi.js';
 import { potYukle, potUygula, potBellek } from './pot.js';
 import { cevreSesleriKur, dokunmaSesi } from './ses.js';
@@ -55,15 +56,9 @@ const MANZARA_PARALAKS = 0.12; // uzak manzaranın kamerayla birlikte kayma oran
 // Çimene serpiştirilen minik kır çiçekleri (assets/kircicek)
 const KIR_CICEKLERI = ['papatya', 'dugun', 'unutmabeni', 'pembe_yonca', 'menekse', 'kadife', 'beyaz_yonca', 'kume', 'can', 'yaban_gulu', 'karahindiba', 'tohum_topu'];
 
-// Taş yol karoları
-function yolKarolari() {
-  const yol = new Set(), ekle = (i, j) => yol.add(i + ',' + j);
-  for (let j = 6; j < HARITA; j++) ekle(8, j);
-  for (let i = 2; i <= 8; i++) ekle(i, 10);
-  for (let i = 9; i <= 14; i++) ekle(i, 9);
-  for (let i = 7; i <= 10; i++) for (let j = 11; j <= 13; j++) ekle(i, j);
-  return yol;
-}
+// Binaların yerleri (oyuncunun taşıdıkları kayıttan) ve bunlara göre otomatik taş yollar (yollar.js)
+const binaYerleri = () => YERLESIM.binalar.map(([tip, i, j]) => { const [a, b] = (D.yerlesim || {})[tip] || [i, j]; return { tip, i: a, j: b, w: BINALAR[tip].boyut[0], d: BINALAR[tip].boyut[1] }; });
+const yolKarolari = () => otomatikYollar(binaYerleri(), sabitEngeller(YERLESIM.susler, KOY_OBJELERI));
 
 class Koy extends Phaser.Scene {
   constructor() { super('koy'); }
@@ -99,7 +94,7 @@ class Koy extends Phaser.Scene {
     this.yol = yolKarolari();
     this.zeminCiz(rnd);
 
-    this.binalar = YERLESIM.binalar.map(([tip, i, j]) => binaKur(this, tip, ...((D.yerlesim || {})[tip] || [i, j]), rnd)); // oyuncunun taşıdığı yerler (duzenle.js)
+    this.binalar = binaYerleri().map((y) => binaKur(this, y.tip, y.i, y.j, rnd)); // oyuncunun taşıdığı yerler (duzenle.js)
     // Çiçek noktaları Gemini çiçek kümeleriyle değişti; diğer süsler (ağaç, kaya, fener) yerinde
     const susler = YERLESIM.susler.filter(([tip]) => tip !== 'cicek').map(([tip, i, j]) => susKur(this, tip === 'agac' ? 'agac_koy' : tip, i, j, rnd));
     for (const [tip, i, j] of YERLESIM.susler) if (tip === 'cicek') this.cicekKumesi(i + 0.5, j + 0.5, rnd);
@@ -147,7 +142,7 @@ class Koy extends Phaser.Scene {
     cevreSesleriKur(this, () => this.gunIsigi && this.gunIsigi.gece > 0.6); // ara sıra uzaktan serçe cıvıltısı
     this.time.addEvent({ delay: 1000, loop: true, callback: () => this.saatYaz() });
 
-    this.duzen = duzenleKur(this, YERLESIM, KOY_OBJELERI); // köyü düzenleme modu (bina taşıma)
+    this.duzen = duzenleKur(this, sabitYollar(), sabitEngeller(YERLESIM.susler, KOY_OBJELERI)); // köyü düzenleme modu (bina taşıma)
     this.kameraKur();
     this.gorunurlukKur();
     this.game.events.emit('hazir', this);
