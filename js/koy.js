@@ -641,7 +641,8 @@ const oyun = new Phaser.Game({
   backgroundColor: '#4f8f45',
   scale: { mode: Phaser.Scale.NONE, zoom: 1 / DPR },
   // Mipmap: küçük gösterilen görsellerin kenarları yumuşar, ekran kartı daha az çalışır
-  render: { antialias: true, mipmapFilter: 'LINEAR_MIPMAP_LINEAR', powerPreference: 'high-performance' },
+  render: { antialias: true, roundPixels: false, // yuvarlama kapalı: yavaş sallanan ağaçlar piksel piksel atlamasın, kayarak hareket etsin
+            mipmapFilter: 'LINEAR_MIPMAP_LINEAR', powerPreference: 'high-performance' },
   scene: [Koy, KusEvi],
 });
 window.oyun = oyun; // tarayıcı konsolundan deneme yapabilmek için
