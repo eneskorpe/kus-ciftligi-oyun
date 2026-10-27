@@ -56,12 +56,15 @@ const MANZARA_PARALAKS = 0.12; // uzak manzaranın kamerayla birlikte kayma oran
 // Çimene serpiştirilen minik kır çiçekleri (assets/kircicek)
 const KIR_CICEKLERI = ['papatya', 'dugun', 'unutmabeni', 'pembe_yonca', 'menekse', 'kadife', 'beyaz_yonca', 'kume', 'can', 'yaban_gulu', 'karahindiba', 'tohum_topu'];
 
+// Köy süsleri, Kunduz Usta'nın kaldırdıkları hariç (D.kaldirilan: 'agac,1,2')
+const suslerGuncel = () => YERLESIM.susler.filter(([tip, i, j]) => !(D.kaldirilan || []).includes(`${tip},${i},${j}`));
+
 // Binaların yerleri (oyuncunun taşıdıkları kayıttan) ve bunlara göre otomatik taş yollar (yollar.js)
 const binaYerleri = () => YERLESIM.binalar.map(([tip, i, j]) => { const [a, b] = (D.yerlesim || {})[tip] || [i, j]; return { tip, i: a, j: b, w: BINALAR[tip].boyut[0], d: BINALAR[tip].boyut[1] }; });
 // Oyuncunun fırçayla döşediği (ekle) ve kaldırdığı (sil) yollar D.yollar'da; silinen karoya otomatik yol da girmez
 const yolKarolari = () => {
   const Y = D.yollar || { ekle: [], sil: [] };
-  return otomatikYollar(binaYerleri(), new Set([...sabitEngeller(YERLESIM.susler, KOY_OBJELERI), ...Y.sil]), Y.ekle);
+  return otomatikYollar(binaYerleri(), new Set([...sabitEngeller(suslerGuncel(), KOY_OBJELERI), ...Y.sil]), Y.ekle);
 };
 
 class Koy extends Phaser.Scene {
@@ -100,8 +103,14 @@ class Koy extends Phaser.Scene {
 
     this.binalar = binaYerleri().map((y) => binaKur(this, y.tip, y.i, y.j, rnd)); // oyuncunun taşıdığı yerler (duzenle.js)
     // Çiçek noktaları Gemini çiçek kümeleriyle değişti; diğer süsler (ağaç, kaya, fener) yerinde
-    const susler = YERLESIM.susler.filter(([tip]) => tip !== 'cicek').map(([tip, i, j]) => susKur(this, tip === 'agac' ? 'agac_koy' : tip, i, j, rnd));
-    for (const [tip, i, j] of YERLESIM.susler) if (tip === 'cicek') this.cicekKumesi(i + 0.5, j + 0.5, rnd);
+    // susNesneleri: Kunduz Usta'nın kaldırabileceği ağaç ve kayalar (duzenle.js dokun, isci.js)
+    this.susNesneleri = [];
+    const susler = suslerGuncel().filter(([tip]) => tip !== 'cicek').map(([tip, i, j]) => {
+      const n = susKur(this, tip === 'agac' ? 'agac_koy' : tip, i, j, rnd);
+      if (tip !== 'fener' && n && n.type === 'Image') this.susNesneleri.push({ tip, i, j, n, anahtar: `${tip},${i},${j}` });
+      return n;
+    });
+    for (const [tip, i, j] of suslerGuncel()) if (tip === 'cicek') this.cicekKumesi(i + 0.5, j + 0.5, rnd);
     this.ormanKur(rnd);
     this.manzaraKur();
     this.koyObjeleri = [];
@@ -146,7 +155,8 @@ class Koy extends Phaser.Scene {
     cevreSesleriKur(this, () => this.gunIsigi && this.gunIsigi.gece > 0.6); // ara sıra uzaktan serçe cıvıltısı
     this.time.addEvent({ delay: 1000, loop: true, callback: () => this.saatYaz() });
 
-    this.duzen = duzenleKur(this, sabitYollar(), sabitEngeller(YERLESIM.susler, KOY_OBJELERI)); // köyü düzenleme modu (bina taşıma)
+    this.engel = sabitEngeller(suslerGuncel(), KOY_OBJELERI); // kaldırılan dekor buradan silinir (isci.js)
+    this.duzen = duzenleKur(this, sabitYollar(), this.engel); // köyü düzenleme modu (bina taşıma)
     this.kameraKur();
     this.gorunurlukKur();
     this.game.events.emit('hazir', this);
@@ -504,7 +514,7 @@ class Koy extends Phaser.Scene {
     }
     // Binaların arkasında 2 karo boş kalır: uzun çiçekler çatının arkasından taşmasın
     for (const b of this.binalar) for (let i = b.i - 2; i <= b.i + b.tanim.boyut[0]; i++) for (let j = b.j - 2; j <= b.j + b.tanim.boyut[1]; j++) dolu.add(i + ',' + j);
-    for (const [, i, j] of YERLESIM.susler) dolu.add(i + ',' + j);
+    for (const [, i, j] of suslerGuncel()) dolu.add(i + ',' + j);
     for (let i = 6; i <= 11; i++) for (let j = 10; j <= 14; j++) dolu.add(i + ',' + j);
     for (let i = 0; i < HARITA; i++) {
       for (let j = 0; j < HARITA; j++) {
@@ -581,7 +591,7 @@ class Koy extends Phaser.Scene {
     });
     this.input.on('pointerup', (p) => {
       if (this.duzen.surukluyor) return this.duzen.birak();
-      if (this.duzen.aktif) return; // düzenleme modunda binaya dokunmak panel açmaz
+      if (this.duzen.aktif) { if (!suruklendi) this.duzen.dokun(p); return; } // düzenleme modunda: ağaç/kayaya dokununca Kunduz kaldırsın mı
       if (!suruklendi && !this.input.pointer2.isDown) this.dokun(p.worldX, p.worldY);
     });
     this.input.on('wheel', (p, _n, _dx, dy) => this.yakinlastir(p.x, p.y, dy > 0 ? 0.9 : 1.1));

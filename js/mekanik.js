@@ -144,6 +144,7 @@ export function gelistir(tip) {
   const B = D.binalar[tip];
   if (B.sv >= MAKS_SV) return bildir('Bina en yüksek seviyede');
   if (D.insaat) return bildir('🦫 Kunduz Usta şu an başka bir binada çalışıyor');
+  if (D.temizlik) return bildir('🦫 Kunduz Usta şu an köyde bir dekoru kaldırıyor');
   if (!harca(GELISTIRME_FIYATI[B.sv + 1])) return;
   D.insaat = { tip, sv: B.sv + 1, bas: simdi(), bitis: simdi() + GELISTIRME_DK[B.sv + 1] * DAKIKA };
   bildir('🦫 Kunduz Usta yola çıktı!');
@@ -155,6 +156,29 @@ function insaatBitir() {
   D.insaat = null;
   xpEkle(50);
   bildir(`⬆️ Seviye ${B.sv} oldu!`);
+}
+
+// --- Dekor kaldırma: Kunduz Usta köydeki ağaç ve kayaları kaldırır; türüne ve boyutuna göre altın kazandırır ---
+// Kaldırılan dekorlar D.kaldirilan'a ('agac,1,2' gibi) yazılır; o karo bina, yol ve fırça için boşalır (koy.js suslerGuncel)
+export function temizlikBilgi(doku, boy) {
+  if (doku === 'dekor_tas_kucuk') return { ad: 'Küçük taş', ikon: '🪨', altin: 15, xp: 5, sn: 30 };
+  if (/kaya|tas/.test(doku)) return { ad: 'Kaya', ikon: '🪨', altin: 30, xp: 8, sn: 60 };
+  return { ad: 'Ağaç', ikon: '🌳', altin: Math.round(30 + boy / 6), xp: 12, sn: 120 }; // büyük ağaç daha çok altın
+}
+export function temizlikBaslat(anahtar, bilgi) {
+  if (D.insaat || D.temizlik) { bildir('🦫 Kunduz Usta şu an başka bir işte'); return false; }
+  D.temizlik = { anahtar, ad: bilgi.ad, altin: bilgi.altin, xp: bilgi.xp, bas: simdi(), bitis: simdi() + bilgi.sn * 1000 };
+  bildir('🦫 Kunduz Usta işe koyuldu!');
+  degisti();
+  return true;
+}
+function temizlikBitir() {
+  const T = D.temizlik;
+  D.temizlik = null;
+  (D.kaldirilan = D.kaldirilan || []).push(T.anahtar);
+  D.altin += T.altin;
+  xpEkle(T.xp);
+  bildir(`🦫 ${T.ad} kaldırıldı! +${T.altin} 🪙`);
 }
 
 // --- Hızlandırma ---
@@ -181,6 +205,7 @@ export function tik() {
   const t = simdi(), saat = Math.min(t - D.son, 24 * 60 * DAKIKA) / (60 * DAKIKA);
   let degisim = false;
   if (D.insaat && t >= D.insaat.bitis) { insaatBitir(); degisim = true; }
+  if (D.temizlik && t >= D.temizlik.bitis) { temizlikBitir(); degisim = true; }
   const K = D.kulucka;
   if (K && K.asama === 'ciftlesme' && t >= K.bitis) {
     const a = kusBul(K.aId), b = kusBul(K.bId);

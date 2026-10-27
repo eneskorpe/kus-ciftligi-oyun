@@ -10,6 +10,8 @@ import { D, degisti } from './durum.js';
 import { HARITA, izoEkran, ekranIzo, karoKoseleri } from './izo.js';
 import { dokunmaSesi } from './ses.js';
 import { bildirim } from './arayuz.js';
+import { temizlikBilgi, temizlikBaslat, kalanSure } from './mekanik.js';
+import { sureYazi } from './durum.js';
 
 const $ = (s) => document.querySelector(s);
 
@@ -106,6 +108,7 @@ export function duzenleKur(sahne, sabitYol, sabitEngel) {
     if (kaydet && S.degisti) degisti();
     fircaAyarla(false);
     document.body.classList.remove('duzen-modu');
+    kart.classList.remove('acik');
     S.aktif = false;
     if (!S.degisti) { for (const g of [izgara, alan, onizleme]) if (g) g.destroy(); izgara = alan = onizleme = null; return; }
     // Köy yeni yerlere (ya da vazgeçildiyse eski yerlere) göre baştan kurulur; kamera yerinde kalır
@@ -125,7 +128,7 @@ export function duzenleKur(sahne, sabitYol, sabitEngel) {
     const b = sahne.binalar.filter((x) => x.nesne.getBounds().contains(p.worldX, p.worldY)).sort((a, c) => c.nesne.depth - a.nesne.depth)[0];
     if (!b) return;
     const t = ekranIzo(p.worldX, p.worldY), [i, j] = b.konum || [b.i, b.j];
-    Object.assign(S, { surukluyor: true, b, ofs: [Math.floor(t.i) - i, Math.floor(t.j) - j], bas: [i, j], son: [i, j] });
+    Object.assign(S, { surukluyor: true, b, ofs: [Math.floor(t.i) - i, Math.floor(t.j) - j], ilk: [i, j], son: [i, j] });
     b.tasiniyor = true;
     for (const n of (b.ekler || [])) n.setVisible(false);
     sahne.tweens.add({ targets: b.nesne, scaleY: b.nesne.scaleY * 1.04, duration: 90, yoyo: true });
@@ -151,7 +154,7 @@ export function duzenleKur(sahne, sabitYol, sabitEngel) {
       if (i !== b.i || j !== b.j) { b.yeni = [i, j]; S.degisti = true; } else delete b.yeni;
       dokunmaSesi(sahne, 'yerlesti', 0.1);
     } else { // konamaz: eski yerine döner
-      yereKoy(b, ...S.bas);
+      yereKoy(b, ...S.ilk);
       dokunmaSesi(sahne, 'olmaz', 0.1);
       bildirim('Buraya konamaz: başka bina, meydan, ağaç ya da obje var');
     }
@@ -164,8 +167,25 @@ export function duzenleKur(sahne, sabitYol, sabitEngel) {
   const fircaAyarla = (acik) => {
     S.firca = acik;
     $('#duzFirca').classList.toggle('secili', acik);
-    $('#duzIpucu').textContent = acik ? 'Çimene sürükle: yol döşer · Yola sürükle: yolu kaldırır' : 'Binaya basılı tut ve sürükle';
+    $('#duzIpucu').textContent = acik ? 'Çimene sürükle: yol döşer · Yola sürükle: yolu kaldırır' : 'Binaya basılı tut ve sürükle · Ağaç ya da kayaya dokun: Kunduz kaldırsın';
   };
+  // Ağaç ya da kayaya dokununca: Kunduz Usta kaldırsın mı? (süre ve altın ödülü kartta)
+  const kart = $('#temizlikKart');
+  S.dokun = (p) => {
+    if (S.firca) return;
+    const s = (sahne.susNesneleri || []).filter((x) => x.n.active && x.n.getBounds().contains(p.worldX, p.worldY)).sort((a, c) => c.n.depth - a.n.depth)[0];
+    if (!s) return kart.classList.remove('acik');
+    const T = D.temizlik;
+    if (T && T.anahtar === s.anahtar) return bildirim(`🦫 Kunduz Usta bunu kaldırıyor · ${sureYazi(kalanSure(T))}`);
+    const B = temizlikBilgi(s.n.texture.key, s.n.displayHeight);
+    $('#tkBaslik').textContent = `${B.ikon} ${B.ad}`;
+    $('#tkBilgi').innerHTML = `Kunduz Usta kaldırsın mı?<br>⏱ ${sureYazi(B.sn * 1000)} · Ödül: +${B.altin} 🪙`;
+    $('#tkTamam').onclick = () => { kart.classList.remove('acik'); if (temizlikBaslat(s.anahtar, B)) dokunmaSesi(sahne, 'yerlesti', 0.1); };
+    kart.classList.add('acik');
+    dokunmaSesi(sahne, 'pop', 0.09);
+  };
+  $('#tkVazgec').onclick = () => kart.classList.remove('acik');
+
   $('#duzFirca').onclick = () => fircaAyarla(!S.firca);
   $('#dDuzenle').onclick = () => (S.aktif ? kapat(true) : ac());
   $('#duzKaydet').onclick = () => kapat(true);

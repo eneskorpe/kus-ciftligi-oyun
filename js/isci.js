@@ -1,7 +1,7 @@
 // Kunduz Usta: bina geliştirilince göletin yanındaki evinden çıkar, taş yolları tercih ederek binaya yürür,
 // iskele kurup çekiçle çalışır (ara sıra binanın öbür köşesine geçer), iş bitince sevinir ve evine döner.
 // Görseller gelene kadar kodla çizilir; parça iskeleti (gövde, baş, kollar, bacaklar, kuyruk) Gemini parçalarına hazırdır.
-import { D } from './durum.js';
+import { D, simdi, sureYazi } from './durum.js';
 import { HARITA, izoEkran, ekranIzo } from './izo.js';
 import { dokunmaSesi } from './ses.js';
 
@@ -143,7 +143,7 @@ export function isciKur(sahne) {
   const isNoktalari = (b) => [{ x: b.k.alt.x - (b.k.alt.x - b.k.sol.x) * 0.35, y: b.k.alt.y - (b.k.alt.y - b.k.sol.y) * 0.35 + 4 },
     { x: b.k.alt.x + (b.k.sag.x - b.k.alt.x) * 0.35, y: b.k.alt.y - (b.k.alt.y - b.k.sag.y) * 0.35 + 4 }];
   const S = { durum: 'evde', yol: [], hedefBina: null, noktaNo: 0, sonraki: 0, vurus: 0, faz: 0, sonInsaat: D.insaat && D.insaat.tip,
-    yuksek: false, tasiyor: false };
+    yuksek: false, tasiyor: false, sonTemizlik: D.temizlik && D.temizlik.anahtar, hedefSus: null };
   let iskele = null, isNo = 0; // isNo: her yeni iş ya da bitişte artar, eski çalışma döngüsü kendiliğinden durur
   const iskeleVar = () => sahne.textures.exists('insaat_iskele_kucuk');
   // İskelenin binadaki ölçüsü ve üstündeki noktalar (görsel kesrinden dünya noktasına; ölçüler insaat/iskele_*.png'den).
@@ -303,9 +303,44 @@ export function isciKur(sahne) {
     }
   };
 
+  // --- Dekor kaldırma (mekanik.js temizlikBaslat): usta ağacın/kayanın yanına yürür, çalışır; süre dolunca dekor devrilip kaybolur ---
+  const susBul = (anahtar) => (sahne.susNesneleri || []).find((s) => s.anahtar === anahtar && s.n.active);
+  let sayac = null; // dekorun üstünde kalan süre
+  const temizlikBaslat = (s, dogrudan) => {
+    S.hedefBina = null; S.hedefSus = s;
+    const yon = kapi.x < s.n.x ? -1 : 1, hedef = { x: s.n.x + yon * Math.max(34, s.n.displayWidth * 0.3), y: s.n.y + 8 };
+    if (sayac) sayac.destroy();
+    sayac = sahne.add.text(s.n.x, s.n.y - s.n.displayHeight - 6, '', { fontFamily: 'Nunito, system-ui', fontSize: '22px', fontStyle: '800', color: '#4f3a22',
+      backgroundColor: '#fff6dd', padding: { x: 10, y: 4 } }).setOrigin(0.5, 1).setDepth(150000);
+    const basla = () => { yuz(s.n.x - kok.x); S.durum = 'calis'; };
+    if (dogrudan) { kok.setPosition(hedef.x, hedef.y).setVisible(true).setAlpha(1); basla(); return; }
+    if (S.durum === 'evde') evdenCik(() => git(hedef, basla)); else git(hedef, basla);
+  };
+  const temizlikBitti = (s) => {
+    isNo++;
+    sahne.tweens.killTweensOf(kok);
+    if (sayac) { sayac.destroy(); sayac = null; }
+    S.hedefSus = null;
+    if (s) {
+      const n = s.n, yon = n.x > kok.x ? 1 : -1;
+      sahne.sallananlar = (sahne.sallananlar || []).filter((x) => x.n !== n);
+      for (let k = 0; k < 6; k++) toz(n.x + (Math.random() - 0.5) * n.displayWidth * 0.6, n.y - Math.random() * 10, 2);
+      dokunmaSesi(sahne, s.tip === 'agac' ? 'hisirti' : 'tak', 0.08);
+      // Ağaç devrilir, kaya ufalanır; sonra kaybolur
+      sahne.tweens.add({ targets: n, angle: s.tip === 'agac' ? 80 * yon : 0, scaleY: s.tip === 'agac' ? n.scaleY : 0, alpha: 0, duration: 700, ease: 'Quad.easeIn', onComplete: () => n.destroy() });
+      if (sahne.engel) sahne.engel.delete(s.i + ',' + s.j); // düzenle modunda o karo artık boş
+      sahne.efekt('yildiz', { x: n.x, y: n.y - 40 }, 8, 0xffe27a);
+    }
+    if (S.durum === 'evde') return;
+    sevin(null, eveDon);
+  };
+
   kok.setVisible(false);
+  // Kapalıyken biten kaldırma işlerinin dekorları sessizce kalkar
+  for (const s of sahne.susNesneleri || []) if ((D.kaldirilan || []).includes(s.anahtar)) { sahne.sallananlar = (sahne.sallananlar || []).filter((x) => x.n !== s.n); s.n.destroy(); }
+  if (D.temizlik) { const s = susBul(D.temizlik.anahtar); if (s) temizlikBaslat(s, true); }
   if (D.insaat) { const b = sahne.binalar.find((x) => x.tip === D.insaat.tip); if (b) isBaslat(b, true); }
-  sahne.isci = { S, kok, isBaslat }; // deneme için
+  sahne.isci = { S, kok, isBaslat, temizlikBaslat }; // deneme için
 
   return (zaman, dt) => {
     const s = dt / 1000, I = D.insaat;
@@ -321,6 +356,19 @@ export function isciKur(sahne) {
         }
       }
     }
+    // Dekor kaldırma işi geldi / bitti
+    const T = D.temizlik;
+    if (T && T.anahtar !== S.sonTemizlik) {
+      S.sonTemizlik = T.anahtar;
+      const s = susBul(T.anahtar);
+      if (s) temizlikBaslat(s);
+    }
+    if (!T && S.sonTemizlik) {
+      const s = susBul(S.sonTemizlik);
+      S.sonTemizlik = null;
+      temizlikBitti(s);
+    }
+    if (sayac && T) sayac.setText('🦫 ' + sureYazi(T.bitis - simdi()));
     // İş bitti (süre doldu ya da elmasla bitirildi)
     if (!I && S.sonInsaat) {
       const b = sahne.binalar.find((x) => x.tip === S.sonInsaat);
@@ -350,7 +398,7 @@ export function isciKur(sahne) {
       K.govde.y = 0;
     } else if (S.durum === 'calis') {
       const b = S.hedefBina;
-      if (!iskeleVar()) yuz((b.k.alt.x - kok.x) || (S.noktaNo ? -1 : 1));
+      if (b && !iskeleVar()) yuz((b.k.alt.x - kok.x) || (S.noktaNo ? -1 : 1));
       // Çekiç: yavaş kalkar, hızlı iner; inişte toz ve "tak"
       const once = S.vurus;
       S.vurus = (S.vurus + s * 2.2) % 1;
@@ -361,8 +409,10 @@ export function isciKur(sahne) {
         const ileri = Math.sign(kok.scaleX);
         toz(kok.x + ileri * 33, kok.y - 6, 2);
         if (kok.visible && Math.random() < 0.9) dokunmaSesi(sahne, 'tak', 0.035);
+        const H = S.hedefSus && S.hedefSus.n; // kaldırılan dekor her vuruşta sarsılır
+        if (H && H.active) { const x0 = H.x; sahne.tweens.add({ targets: H, x: x0 + ileri * 3, duration: 60, yoyo: true, onComplete: () => { H.x = x0; } }); }
       }
-      if (!iskeleVar() && zaman > S.sonraki) { // iskele görseli yoksa: binanın öbür köşesine geç
+      if (b && !iskeleVar() && zaman > S.sonraki) { // iskele görseli yoksa: binanın öbür köşesine geç
         S.noktaNo = 1 - S.noktaNo;
         const n = isNoktalari(b)[S.noktaNo];
         S.durum = 'yuru'; S.yol = [n]; S.varinca = () => { S.durum = 'calis'; S.sonraki = sahne.time.now + 6000 + Math.random() * 5000; };

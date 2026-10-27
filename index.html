@@ -186,9 +186,13 @@
     #duzenBar { position: fixed; left: 50%; bottom: max(14px, env(safe-area-inset-bottom)); transform: translateX(-50%); display: none;
       flex-direction: column; align-items: center; gap: 4px; padding: 12px 18px; z-index: 12; }
     #duzenBar small { color: #6b5a63; font-weight: 700; }
-    #duzenBar button { font: 800 15px 'Nunito', system-ui, sans-serif; border: 0; border-radius: 99px; padding: 9px 18px; cursor: pointer;
+    #temizlikKart { position: fixed; left: 50%; bottom: calc(max(14px, env(safe-area-inset-bottom)) + 130px); transform: translateX(-50%); display: none;
+      flex-direction: column; align-items: center; gap: 4px; padding: 12px 18px; z-index: 13; text-align: center; }
+    #temizlikKart small { color: #6b5a63; font-weight: 700; }
+    #temizlikKart.acik { display: flex; }
+    #duzenBar button, #temizlikKart button { font: 800 15px 'Nunito', system-ui, sans-serif; border: 0; border-radius: 99px; padding: 9px 18px; cursor: pointer;
       background: #ffe9a8; color: #6a4517; box-shadow: 0 4px 0 #e2b85b; }
-    #duzenBar button.ana { background: #bdf09a; color: #2f5e1d; box-shadow: 0 4px 0 #78c254; }
+    #duzenBar button.ana, #temizlikKart button.ana { background: #bdf09a; color: #2f5e1d; box-shadow: 0 4px 0 #78c254; }
     #duzenBar button.secili { background: #d9c7a3; color: #4f3a22; box-shadow: inset 0 3px 0 #b39d74; transform: translateY(3px); }
     body.duzen-modu #duzenBar { display: flex; }
     body.duzen-modu #sol, body.duzen-modu #sag, body.duzen-modu #binaPanel { display: none; }
@@ -235,8 +239,10 @@
   <div id="modal"><div id="modalIc" class="kutu"></div></div>
   <div id="reklam"><div class="kutu">📺 Reklam (deneme)<br><small>Gerçek reklam ileride buraya bağlanacak</small><br><b>3</b></div></div>
   <div id="bildirim" class="kutu"></div>
-  <div id="duzenBar" class="kutu"><b>🔨 Köyü düzenle</b><small id="duzIpucu">Binaya basılı tut ve sürükle</small>
+  <div id="duzenBar" class="kutu"><b>🔨 Köyü düzenle</b><small id="duzIpucu">Binaya basılı tut ve sürükle · Ağaç ya da kayaya dokun: Kunduz kaldırsın</small>
     <div class="dugmeler"><button id="duzFirca">🪨 Yol fırçası</button><button id="duzVazgec">✗ Vazgeç</button><button id="duzKaydet" class="ana">✓ Kaydet</button></div></div>
+  <div id="temizlikKart" class="kutu"><b id="tkBaslik"></b><small id="tkBilgi"></small>
+    <div class="dugmeler"><button id="tkVazgec">✗ Vazgeç</button><button id="tkTamam" class="ana">🦫 Kaldırsın</button></div></div>
   <div id="sesPanel" class="kutu">
     <b>Ses ayarları</b>
     <label><span>🎶 Müzik</span><input type="range" id="sMuzik" min="0" max="100" step="5"><i id="sMuzikY"></i></label>
