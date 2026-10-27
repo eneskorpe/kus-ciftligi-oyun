@@ -11,7 +11,7 @@ import { HARITA, KARO_G, DUNYA_G, DUNYA_Y, izoEkran, karoKoseleri } from './izo.
 import { binaKur, susKur } from './binalar.js';
 import { gunIsigiKur } from './gunIsigi.js';
 import { potYukle, potUygula, potBellek } from './pot.js';
-import { cevreSesleriKur } from './ses.js';
+import { cevreSesleriKur, dokunmaSesi } from './ses.js';
 import { canlilikKur, goletKur, kucukCanlilarKur, surulerKur } from './canlilik.js';
 import { binaCanlilikKur } from './binaCanlilik.js';
 import { dokunmaTepkisiKur } from './dokunTepki.js';
@@ -591,7 +591,7 @@ class Koy extends Phaser.Scene {
   dokun(x, y) {
     // Geliştirme kapsülüne dokunulursa o binanın paneli açılır (hızlandırma düğmeleri orada)
     const kapsul = this.binalar.find((b) => b.insKutu && b.insKutu.contains(x, y));
-    if (kapsul) { this.binaZipla(kapsul); this.game.events.emit('binaSecildi', kapsul); return; }
+    if (kapsul) { this.binaZipla(kapsul); dokunmaSesi(this, 'pop', 0.09); this.game.events.emit('binaSecildi', kapsul); return; }
     const kus = this.kuslar.find((k) => k.dokunduMu(x, y));
     if (kus) {
       kus.sevil();
@@ -603,6 +603,7 @@ class Koy extends Phaser.Scene {
     if (this.dokunTepki(x, y, bina)) { this.game.events.emit('bosDokunus'); return; } // bitki ya da gölet
     if (bina) {
       this.binaZipla(bina);
+      dokunmaSesi(this, 'pop', 0.09); // binaya dokunma sesi
       this.game.events.emit('binaSecildi', bina);
     } else this.game.events.emit('bosDokunus');
   }

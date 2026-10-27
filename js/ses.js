@@ -88,6 +88,15 @@ export function dokunmaSesi(sahne, tur, ses = 0.05) {
     o.frequency.setValueAtTime(f * 2, bas); o.frequency.exponentialRampToValueAtTime(f, bas + 0.05);
     g.gain.setValueAtTime(1, bas); g.gain.exponentialRampToValueAtTime(0.0001, bas + 0.09);
     o.connect(g).connect(cikis); o.start(bas); o.stop(bas + 0.1);
+  } else if (tur === 'pop') { // binaya dokunma: kısa, yuvarlak kabarcık patlaması (perde hızla yükselir, tok bir alt ses eşlik eder)
+    const f = r(330, 380);
+    for (const [tip, f0, f1, v, d] of [['sine', f, f * 2.4, 1, 0.09], ['triangle', f * 0.5, f * 0.9, 0.35, 0.07]]) {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = tip;
+      o.frequency.setValueAtTime(f0, bas); o.frequency.exponentialRampToValueAtTime(f1, bas + d * 0.7);
+      g.gain.setValueAtTime(0.0001, bas); g.gain.linearRampToValueAtTime(v, bas + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, bas + d);
+      o.connect(g).connect(cikis); o.start(bas); o.stop(bas + d + 0.02);
+    }
   } else if (tur === 'plop') {
     const o = ctx.createOscillator(), g = ctx.createGain(), f = r(500, 700);
     o.type = 'sine';
