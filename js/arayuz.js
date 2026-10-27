@@ -27,12 +27,12 @@ export function arayuzKur(o) {
   const sesDugme = () => { $('#dSes img').src = `assets/arayuz/${sesKapaliMi() ? 'ses_kapali' : 'ses_acik'}.png`; };
   // Ses düğmesi ayar panelini açar: müzik ve doğa sesleri için ayrı düzey, tek dokunuşla hepsini kapat/aç
   const sesPanelCiz = () => {
-    for (const [id, tur] of [['sMuzik', 'muzik'], ['sEfekt', 'efekt']]) { $('#' + id).value = Math.round(sesSeviyesi(tur) * 100); $('#' + id + 'Y').textContent = '%' + $('#' + id).value; }
+    for (const [id, tur] of [['sMuzik', 'muzik'], ['sEfekt', 'efekt'], ['sTik', 'tiklama']]) { $('#' + id).value = Math.round(sesSeviyesi(tur) * 100); $('#' + id + 'Y').textContent = '%' + $('#' + id).value; }
     $('#sKapat').textContent = sesKapaliMi() ? '🔊 Sesleri aç' : '🔇 Bütün sesleri kapat';
     sesDugme();
   };
   $('#dSes').onclick = (e) => { e.stopPropagation(); $('#sesPanel').classList.toggle('acik'); sesPanelCiz(); };
-  for (const [id, tur] of [['sMuzik', 'muzik'], ['sEfekt', 'efekt']]) $('#' + id).oninput = (e) => { sesSeviyesiAyarla(tur, e.target.value / 100); sesPanelCiz(); };
+  for (const [id, tur] of [['sMuzik', 'muzik'], ['sEfekt', 'efekt'], ['sTik', 'tiklama']]) $('#' + id).oninput = (e) => { sesSeviyesiAyarla(tur, e.target.value / 100); sesPanelCiz(); };
   $('#sKapat').onclick = () => { sesAyarla(sesKapaliMi()); sesPanelCiz(); };
   document.addEventListener('pointerdown', (e) => { if (!e.target.closest('#sesPanel, #dSes')) $('#sesPanel').classList.remove('acik'); });
   sesPanelCiz();

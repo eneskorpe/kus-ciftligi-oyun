@@ -11,7 +11,7 @@ export function sesAyarla(acik) {
 }
 
 // Ses düzeyleri (oyuncunun ayarı, 0-1): müzik ve doğa/efekt sesleri ayrı. Varsayılanlar kısık: müzik arkada alttan çalsın
-const SEVIYE = { muzik: 0.35, efekt: 0.5 };
+const SEVIYE = { muzik: 0.35, efekt: 0.5, tiklama: 0.5 }; // efekt: doğa sesleri (ortam + serçe), tiklama: dokunma efektleri (pop, hışırtı, çekiç)
 try { Object.assign(SEVIYE, JSON.parse(localStorage.getItem('kusCiftligi_sesSeviye')) || {}); } catch { /* yok */ }
 export const sesSeviyesi = (tur) => SEVIYE[tur];
 export function sesSeviyesiAyarla(tur, deger) {
@@ -73,7 +73,7 @@ export function dokunmaSesi(sahne, tur, ses = 0.05) {
   if (kapali || !ctx || yonetici.locked || document.hidden) return;
   if (ctx.state === 'suspended') ctx.resume();
   const cikis = ctx.createGain(), bas = ctx.currentTime + 0.01, hedef = yonetici.destination || ctx.destination;
-  cikis.gain.value = ses * SEVIYE.efekt * 2.8;
+  cikis.gain.value = ses * SEVIYE.tiklama * 2.8; // efektler kaydırıcısı
   cikis.connect(hedef);
   if (tur === 'hisirti') {
     // Bant geçiren süzgeçten geçmiş, birkaç kez kabarıp sönen beyaz gürültü
