@@ -67,7 +67,14 @@ function hudGuncelle() {
 // --- Küçük yardımcılar ---
 const hex = (n) => '#' + n.toString(16).padStart(6, '0');
 // Kuşun renklerinden küçük bir jeton (başı ve gövdesi)
+// Kuş portresi: oyunun çizimli türlerinde gerçek kuş resmi (renk mutasyonu yaklaşık bir filtreyle), diğerlerinde renk jetonu
+const MUT_FILTRE = { lutino: 'sepia(1) saturate(4) hue-rotate(5deg) brightness(1.15)', albino: 'grayscale(1) brightness(1.35)', mavi: 'hue-rotate(150deg) saturate(.9)' };
+const RESIMLI = ['kanarya', 'ev_sercesi', 'saka', 'muhabbet', 'sultan', 'cennet', 'ketzal'];
 export function jeton(k, boy = 44) {
+  if (RESIMLI.includes(k.tur)) {
+    const f = MUT_FILTRE[fenotip(k.genler)];
+    return `<span class="jeton resim" style="width:${boy}px;height:${boy}px"><img src="assets/kuslar/${k.tur}/tasarim.png" alt=""${f ? ` style="filter:${f}"` : ''}></span>`;
+  }
   const P = paletOlustur(kusGen(k));
   return `<span class="jeton" style="width:${boy}px;height:${boy}px;background:linear-gradient(160deg, ${hex(P.bas)} 0 46%, ${hex(P.govde)} 46% 78%, ${hex(P.kanat)} 78%)"></span>`;
 }
@@ -113,7 +120,8 @@ function reklamIzle(tip) {
 // --- Bina panelleri ---
 function panelCiz() {
   const tip = acikBina, t = BINALAR[tip], B = D.binalar[tip];
-  $('#panelIkon').textContent = t.ikon;
+  const ikon = { kusevi: 'kusevi', kulucka: 'yumurta', tuzak: 'kafes', yemlik: 'bos_yem' }[tip]; // başlıkta Gemini ikonu (yoksa emoji)
+  $('#panelIkon').innerHTML = ikon ? `<img src="assets/arayuz/${ikon}.png" alt="">` : t.ikon;
   $('#panelAd').textContent = t.ad;
   $('#panelSeviye').textContent = 'Sv. ' + B.sv;
   $('#panelSeviye').style.display = t.sabit ? 'none' : '';
