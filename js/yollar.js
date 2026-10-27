@@ -27,11 +27,12 @@ export function sabitEngeller(susler, objeler) {
   return e;
 }
 
-// yerler: [{ tip, i, j, w, d }], engel: Set('i,j') (ağaç, obje, gölet)
-export function otomatikYollar(yerler, engel) {
+// yerler: [{ tip, i, j, w, d }], engel: Set('i,j') (ağaç, obje, gölet, oyuncunun sildiği yollar), ek: oyuncunun elle döşediği yollar
+export function otomatikYollar(yerler, engel, ek = []) {
   const yol = sabitYollar();
   const binaKarosu = new Set();
   for (const b of yerler) for (let i = b.i; i < b.i + b.w; i++) for (let j = b.j; j < b.j + b.d; j++) binaKarosu.add(k(i, j));
+  for (const t of ek) if (!binaKarosu.has(t) && !engel.has(t)) yol.add(t); // elle yollar önce: otomatik yollar onlara katılabilir
   const gecilmez = (i, j) => i < 0 || j < 0 || i >= HARITA || j >= HARITA || binaKarosu.has(k(i, j)) || engel.has(k(i, j));
   // Meydana yakın binalar önce: uzaktakiler onların yollarına katılabilsin
   const sirali = [...yerler].sort((a, b) => Math.hypot(a.i - 8.5, a.j - 12) - Math.hypot(b.i - 8.5, b.j - 12));

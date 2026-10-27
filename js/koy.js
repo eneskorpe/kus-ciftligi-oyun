@@ -58,7 +58,11 @@ const KIR_CICEKLERI = ['papatya', 'dugun', 'unutmabeni', 'pembe_yonca', 'menekse
 
 // Binaların yerleri (oyuncunun taşıdıkları kayıttan) ve bunlara göre otomatik taş yollar (yollar.js)
 const binaYerleri = () => YERLESIM.binalar.map(([tip, i, j]) => { const [a, b] = (D.yerlesim || {})[tip] || [i, j]; return { tip, i: a, j: b, w: BINALAR[tip].boyut[0], d: BINALAR[tip].boyut[1] }; });
-const yolKarolari = () => otomatikYollar(binaYerleri(), sabitEngeller(YERLESIM.susler, KOY_OBJELERI));
+// Oyuncunun fırçayla döşediği (ekle) ve kaldırdığı (sil) yollar D.yollar'da; silinen karoya otomatik yol da girmez
+const yolKarolari = () => {
+  const Y = D.yollar || { ekle: [], sil: [] };
+  return otomatikYollar(binaYerleri(), new Set([...sabitEngeller(YERLESIM.susler, KOY_OBJELERI), ...Y.sil]), Y.ekle);
+};
 
 class Koy extends Phaser.Scene {
   constructor() { super('koy'); }
