@@ -60,6 +60,7 @@ export const bugun = () => { const d = new Date(); return `${d.getFullYear()}-${
 
 const dinleyiciler = new Set();
 export function dinle(f) { dinleyiciler.add(f); }
+export function birak(f) { dinleyiciler.delete(f); }
 export function kaydet() {
   D.son = simdi();
   try { localStorage.setItem(ANAHTAR, JSON.stringify(D)); } catch { /* gizli sekme vb. */ }

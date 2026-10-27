@@ -1,7 +1,7 @@
 // Köy sahnesi: izometrik harita, binalar, gezinen kuşlar, kamera (sürükle / yakınlaştır).
 import { Kus } from './kus.js';
 import { TURLER, tohumluRastgele, kondisyonAdi } from './turler.js';
-import { D, dinle, kaydet, saat } from './durum.js';
+import { D, dinle, birak, kaydet, saat } from './durum.js';
 import { kusGen } from './genetik.js';
 import * as M from './mekanik.js';
 import { arayuzKur, bildirim } from './arayuz.js';
@@ -19,6 +19,7 @@ import { zeminKatmanlariKur } from './zemin.js';
 import { isciKur } from './isci.js';
 import { dereKur } from './su.js';
 import { muzikKur } from './muzik.js';
+import { duzenleKur } from './duzenle.js';
 import { KusEvi } from './kusevi.js';
 import { kuseviArayuzKur } from './kuseviArayuz.js';
 import { dekorlariYukle, dekorKoy, DEKOR_GRUP } from './dekor.js';
@@ -93,11 +94,12 @@ class Koy extends Phaser.Scene {
     potUygula(this); // 2'nin katı tuvallere yerleşmiş görsellerin asıl boyutu
     potBellek(this, /^kus_/); // kuş parçaları da yumuşak kenarlı küçülsün (bellekte)
     const rnd = tohumluRastgele(2026);
+    this.sallananlar = []; this.manzara = null; this.dereGuncelle = null; // sahne yeniden kurulursa eski listeler kalmasın
     efektleriKur(this, 0.5);
     this.yol = yolKarolari();
     this.zeminCiz(rnd);
 
-    this.binalar = YERLESIM.binalar.map(([tip, i, j]) => binaKur(this, tip, i, j, rnd));
+    this.binalar = YERLESIM.binalar.map(([tip, i, j]) => binaKur(this, tip, ...((D.yerlesim || {})[tip] || [i, j]), rnd)); // oyuncunun taşıdığı yerler (duzenle.js)
     // Çiçek noktaları Gemini çiçek kümeleriyle değişti; diğer süsler (ağaç, kaya, fener) yerinde
     const susler = YERLESIM.susler.filter(([tip]) => tip !== 'cicek').map(([tip, i, j]) => susKur(this, tip === 'agac' ? 'agac_koy' : tip, i, j, rnd));
     for (const [tip, i, j] of YERLESIM.susler) if (tip === 'cicek') this.cicekKumesi(i + 0.5, j + 0.5, rnd);
@@ -115,8 +117,10 @@ class Koy extends Phaser.Scene {
     this.kuslar = [];
     M.tik(); // kapalıyken geçen sürenin etkileri
     this.kuslariEsitle();
-    dinle(() => this.kuslariEsitle());
-    this.game.events.on('kusGeldi', (kus, kaynak) => this.kusGeldi(kus, kaynak));
+    const esitle = () => this.kuslariEsitle(), geldi = (kus, kaynak) => this.kusGeldi(kus, kaynak);
+    dinle(esitle);
+    this.game.events.on('kusGeldi', geldi);
+    this.events.once('shutdown', () => { birak(esitle); this.game.events.off('kusGeldi', geldi); }); // yeniden başlatmada çift dinleyici olmasın
     this.time.addEvent({ delay: 1000, loop: true, callback: () => M.tik() });
     this.time.addEvent({ delay: 10000, loop: true, callback: kaydet });
     this.binaDurumlariKur();
@@ -143,6 +147,7 @@ class Koy extends Phaser.Scene {
     cevreSesleriKur(this, () => this.gunIsigi && this.gunIsigi.gece > 0.6); // ara sıra uzaktan serçe cıvıltısı
     this.time.addEvent({ delay: 1000, loop: true, callback: () => this.saatYaz() });
 
+    this.duzen = duzenleKur(this, YERLESIM, KOY_OBJELERI); // köyü düzenleme modu (bina taşıma)
     this.kameraKur();
     this.gorunurlukKur();
     this.game.events.emit('hazir', this);
@@ -235,6 +240,7 @@ class Koy extends Phaser.Scene {
   // Binaların üstünde süre çubuğu ya da "hazır" balonu
   binaDurumlariCiz(zaman) {
     for (const b of this.binalar) {
+      if (b.tasiniyor) { for (const n of [b.balon, b.cerceve, b.cubukC, b.cubukD, ...Object.values(b.ins)]) n.setVisible(false); b.insKutu = null; continue; }
       const x = b.tepe.x, I = D.insaat && D.insaat.tip === b.tip ? D.insaat : null;
       // Geliştirme sürerken kapsül en altta durur, diğer göstergeler onun üstüne kayar
       const y = b.tepe.y - 18 - (I ? 46 : 0);
@@ -504,6 +510,7 @@ class Koy extends Phaser.Scene {
     for (let i = 0; i < HARITA; i++) {
       for (let j = 0; j < HARITA; j++) {
         if (dolu.has(i + ',' + j)) continue;
+        const rnd = tohumluRastgele(7919 + i * 131 + j * 17); // karo başına sabit: bina taşınınca diğer karoların süsü değişmesin
         const kenar = Math.min(i, j, HARITA - 1 - i, HARITA - 1 - j);
         if (kenar === 0 && rnd() < 0.3) this.caliKoy(i + 0.5, j + 0.5, rnd);
         if (rnd() < 0.4) this.tutamKoy(i + 0.15 + rnd() * 0.7, j + 0.15 + rnd() * 0.7, rnd);
@@ -550,10 +557,12 @@ class Koy extends Phaser.Scene {
     cam.setZoom(this.kullaniciZoom * DPR);
     const m = izoEkran(9, 9);
     cam.centerOn(m.x, m.y);
+    const eskiKamera = this.registry.get('kamera'); // düzenleme kaydından sonra kamera yerinde kalsın
+    if (eskiKamera) { this.registry.remove('kamera'); this.kullaniciZoom = eskiKamera.kz; cam.setZoom(eskiKamera.z); cam.centerOn(eskiKamera.x, eskiKamera.y); }
     this.input.addPointer(1);
 
     let basX = 0, basY = 0, suruklendi = false, kiskacMesafe = 0;
-    this.input.on('pointerdown', (p) => { basX = p.x; basY = p.y; suruklendi = false; kiskacMesafe = 0; });
+    this.input.on('pointerdown', (p) => { basX = p.x; basY = p.y; suruklendi = false; kiskacMesafe = 0; if (this.duzen.aktif) this.duzen.bas(p); });
     this.input.on('pointermove', (p) => {
       const p1 = this.input.pointer1, p2 = this.input.pointer2;
       if (p1.isDown && p2.isDown) { // iki parmak: yakınlaştır
@@ -564,6 +573,7 @@ class Koy extends Phaser.Scene {
         return;
       }
       if (!p.isDown) return;
+      if (this.duzen.surukluyor) { suruklendi = true; this.duzen.tasi(p); return; } // bina sürükleniyor: kamera kaymaz
       if (Math.hypot(p.x - basX, p.y - basY) > 12 * DPR) suruklendi = true;
       if (suruklendi) {
         cam.scrollX -= (p.x - p.prevPosition.x) / cam.zoom;
@@ -571,6 +581,8 @@ class Koy extends Phaser.Scene {
       }
     });
     this.input.on('pointerup', (p) => {
+      if (this.duzen.surukluyor) return this.duzen.birak();
+      if (this.duzen.aktif) return; // düzenleme modunda binaya dokunmak panel açmaz
       if (!suruklendi && !this.input.pointer2.isDown) this.dokun(p.worldX, p.worldY);
     });
     this.input.on('wheel', (p, _n, _dx, dy) => this.yakinlastir(p.x, p.y, dy > 0 ? 0.9 : 1.1));

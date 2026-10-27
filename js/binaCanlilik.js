@@ -16,7 +16,7 @@ const DELIKLER = [[296, 396, 32], [288, 676, 32], [297, 920, 32], [560, 705, 20]
 // Bina görselinin bir bölgesini ayrı bir çerçeve olarak binanın tam üstüne koyar
 function parcaKopya(sahne, b, ad, [x, y, w, h, ox, oy]) {
   const n = b.nesne, doku = n.texture;
-  if (!doku.has(ad)) doku.add(ad, 0, x, y, w, h);
+  if (!doku.has(ad)) { doku.add(ad, 0, x, y, w, h); doku.firstFrame = '__BASE'; } // eklenen kesit dokunun varsayılan karesi olmasın (sahne yeniden kurulunca bina bu kesitle çiziliyordu)
   const s = n.scaleX, px = x + ox * w, py = y + oy * h;
   const im = sahne.add.image(n.x + (px - n.originX * n.width) * s, n.y + (py - n.originY * n.height) * s, doku.key, ad)
     .setOrigin(ox, oy).setScale(s).setDepth(n.depth + 1);

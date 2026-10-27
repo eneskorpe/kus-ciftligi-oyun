@@ -97,6 +97,24 @@ export function dokunmaSesi(sahne, tur, ses = 0.05) {
       g.gain.setValueAtTime(0.0001, bas); g.gain.linearRampToValueAtTime(v, bas + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, bas + d);
       o.connect(g).connect(cikis); o.start(bas); o.stop(bas + d + 0.02);
     }
+  } else if (tur === 'tik') { // bina kareden kareye oturunca: çok kısa, tahta bir "tık"
+    const o = ctx.createOscillator(), g = ctx.createGain(), f = r(1250, 1450);
+    o.type = 'triangle';
+    o.frequency.setValueAtTime(f, bas); o.frequency.exponentialRampToValueAtTime(f * 0.6, bas + 0.03);
+    g.gain.setValueAtTime(0.0001, bas); g.gain.linearRampToValueAtTime(1, bas + 0.003); g.gain.exponentialRampToValueAtTime(0.0001, bas + 0.04);
+    o.connect(g).connect(cikis); o.start(bas); o.stop(bas + 0.05);
+  } else if (tur === 'yerlesti') { // bina yerine bırakılınca: iki notalı tatlı "tık-tık"
+    for (const [t0, f] of [[0, 660], [0.07, 990]]) {
+      const o = ctx.createOscillator(), g = ctx.createGain(), s = bas + t0;
+      o.type = 'sine'; o.frequency.setValueAtTime(f, s);
+      g.gain.setValueAtTime(0.0001, s); g.gain.linearRampToValueAtTime(0.9, s + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, s + 0.12);
+      o.connect(g).connect(cikis); o.start(s); o.stop(s + 0.14);
+    }
+  } else if (tur === 'olmaz') { // konamayan yere bırakınca: alçak, kısa "bup"
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'sine'; o.frequency.setValueAtTime(260, bas); o.frequency.exponentialRampToValueAtTime(170, bas + 0.12);
+    g.gain.setValueAtTime(0.0001, bas); g.gain.linearRampToValueAtTime(0.9, bas + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, bas + 0.16);
+    o.connect(g).connect(cikis); o.start(bas); o.stop(bas + 0.18);
   } else if (tur === 'plop') {
     const o = ctx.createOscillator(), g = ctx.createGain(), f = r(500, 700);
     o.type = 'sine';
