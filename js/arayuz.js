@@ -16,7 +16,10 @@ export function arayuzKur(o) {
   oyun = o;
   bildirimAyarla(bildirim);
   dinle(() => { hudGuncelle(); if (acikBina) panelCiz(); });
-  oyun.events.on('binaSecildi', (b) => { acikBina = b.tip; secim = { e: null, d: null }; panelCiz(); $('#binaPanel').classList.add('acik'); });
+  oyun.events.on('binaSecildi', (b) => {
+    if (acikBina === b.tip) return panelKapat(); // açık binaya tekrar dokununca panel kapanır
+    acikBina = b.tip; secim = { e: null, d: null }; panelCiz(); $('#binaPanel').classList.add('acik');
+  });
   oyun.events.on('bosDokunus', panelKapat);
   $('#panelKapat').onclick = panelKapat;
   $('#modal').onclick = (e) => { if (e.target.id === 'modal' && !kartAcik) modalKapat(); };
