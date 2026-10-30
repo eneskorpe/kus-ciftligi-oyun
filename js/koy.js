@@ -8,7 +8,7 @@ import { arayuzKur, bildirim } from './arayuz.js';
 import { efektleriKur } from './efekt.js';
 import { gorselleriYukle } from './kusGorsel.js';
 import { HARITA, KARO_G, DUNYA_G, DUNYA_Y, izoEkran, karoKoseleri } from './izo.js';
-import { binaKur, susKur, BINALAR } from './binalar.js';
+import { binaKur, susKur, BINALAR, YENI_BINALAR } from './binalar.js';
 import { otomatikYollar, sabitEngeller, sabitYollar } from './yollar.js';
 import { gunIsigiKur } from './gunIsigi.js';
 import { potYukle, potUygula, potBellek } from './pot.js';
@@ -60,7 +60,9 @@ const KIR_CICEKLERI = ['papatya', 'dugun', 'unutmabeni', 'pembe_yonca', 'menekse
 const suslerGuncel = () => YERLESIM.susler.filter(([tip, i, j]) => !(D.kaldirilan || []).includes(`${tip},${i},${j}`));
 
 // Binaların yerleri (oyuncunun taşıdıkları kayıttan) ve bunlara göre otomatik taş yollar (yollar.js)
-const binaYerleri = () => YERLESIM.binalar.map(([tip, i, j]) => { const [a, b] = (D.yerlesim || {})[tip] || [i, j]; return { tip, i: a, j: b, w: BINALAR[tip].boyut[0], d: BINALAR[tip].boyut[1] }; });
+// Oyuncunun sonradan kurduğu binalar (İnşa menüsü) da eklenir; Sv 0 olanlar inşaat alanı olarak çizilir
+const binaYerleri = () => [...YERLESIM.binalar, ...YENI_BINALAR.filter((t) => D.binalar[t] && (D.yerlesim || {})[t]).map((t) => [t, ...D.yerlesim[t]])]
+  .map(([tip, i, j]) => { const [a, b] = (D.yerlesim || {})[tip] || [i, j]; return { tip, i: a, j: b, w: BINALAR[tip].boyut[0], d: BINALAR[tip].boyut[1] }; });
 // Oyuncunun fırçayla döşediği (ekle) ve kaldırdığı (sil) yollar D.yollar'da; silinen karoya otomatik yol da girmez
 const yolKarolari = () => {
   const Y = D.yollar || { ekle: [], sil: [] };
@@ -96,12 +98,13 @@ class Koy extends Phaser.Scene {
     potUygula(this); // 2'nin katı tuvallere yerleşmiş görsellerin asıl boyutu
     potBellek(this, /^kus_/); // kuş parçaları da yumuşak kenarlı küçülsün (bellekte)
     const rnd = tohumluRastgele(2026);
+    M.tik(); // kapalıyken geçen sürenin etkileri (biten inşaatlar binaların çiziminden önce işlensin)
     this.sallananlar = []; this.manzara = null; this.dereGuncelle = null; // sahne yeniden kurulursa eski listeler kalmasın
     efektleriKur(this, 0.5);
     this.yol = yolKarolari();
     this.zeminCiz(rnd);
 
-    this.binalar = binaYerleri().map((y) => binaKur(this, y.tip, y.i, y.j, rnd)); // oyuncunun taşıdığı yerler (duzenle.js)
+    this.binalar = binaYerleri().map((y) => binaKur(this, y.tip, y.i, y.j, rnd, D.binalar[y.tip].sv === 0)); // oyuncunun taşıdığı yerler (duzenle.js)
     // Çiçek noktaları Gemini çiçek kümeleriyle değişti; diğer süsler (ağaç, kaya, fener) yerinde
     // susNesneleri: Kunduz Usta'nın kaldırabileceği ağaç ve kayalar (duzenle.js dokun, isci.js)
     this.susNesneleri = [];
@@ -123,12 +126,13 @@ class Koy extends Phaser.Scene {
     const m = izoEkran(9, 12.4);
     this.zemin = { x1: m.x - 190, x2: m.x + 190, y1: m.y - 70, y2: m.y + 70 };
     this.kuslar = [];
-    M.tik(); // kapalıyken geçen sürenin etkileri
     this.kuslariEsitle();
     const esitle = () => this.kuslariEsitle(), geldi = (kus, kaynak) => this.kusGeldi(kus, kaynak);
     dinle(esitle);
     this.game.events.on('kusGeldi', geldi);
-    this.events.once('shutdown', () => { birak(esitle); this.game.events.off('kusGeldi', geldi); }); // yeniden başlatmada çift dinleyici olmasın
+    const yerlestir = (tip) => this.duzen.yerlestir(tip); // İnşa menüsünden seçilen bina (arayuz.js)
+    this.game.events.on('insaYerlestir', yerlestir);
+    this.events.once('shutdown', () => { birak(esitle); this.game.events.off('kusGeldi', geldi); this.game.events.off('insaYerlestir', yerlestir); }); // yeniden başlatmada çift dinleyici olmasın
     this.time.addEvent({ delay: 1000, loop: true, callback: () => M.tik() });
     this.time.addEvent({ delay: 10000, loop: true, callback: kaydet });
     this.binaDurumlariKur();
@@ -242,7 +246,7 @@ class Koy extends Phaser.Scene {
     K.yuz.setPosition(x - W / 2 - 4, y - 3 + Math.sin(zaman / 160) * 1.5).setVisible(true); // usta çekiç sallar gibi hafifçe sallanır
     const s = Math.ceil(kalan / 1000), sa = Math.floor(s / 3600), dk = Math.floor(s % 3600 / 60), sn = s % 60;
     const sure = sa ? `${sa}:${String(dk).padStart(2, '0')}:${String(sn).padStart(2, '0')}` : `${dk}:${String(sn).padStart(2, '0')}`;
-    K.yazi.setText(`Sv ${I.sv} · ${sure}`).setPosition(x + 8, iy).setVisible(true);
+    K.yazi.setText(`${I.yeni ? 'Kuruluyor' : 'Sv ' + I.sv} · ${sure}`).setPosition(x + 8, iy).setVisible(true);
     b.insKutu = new Phaser.Geom.Rectangle(x - W / 2 - 28, y - H / 2 - 14, W + 34, H + 28); // dokunma alanı
   }
 
@@ -595,6 +599,13 @@ class Koy extends Phaser.Scene {
       if (!suruklendi && !this.input.pointer2.isDown) this.dokun(p.worldX, p.worldY);
     });
     this.input.on('wheel', (p, _n, _dx, dy) => this.yakinlastir(p.x, p.y, dy > 0 ? 0.9 : 1.1));
+  }
+
+  // Köyü baştan kurar (bina taşıma, yeni bina); kamera yerinde kalır
+  yenidenKur() {
+    const c = this.cameras.main;
+    this.registry.set('kamera', { x: c.midPoint.x, y: c.midPoint.y, z: c.zoom, kz: this.kullaniciZoom });
+    this.scene.restart();
   }
 
   // Ekrandaki (x, y) noktası yerinde kalacak şekilde yakınlaştırır

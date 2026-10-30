@@ -10,7 +10,8 @@ import { D, degisti } from './durum.js';
 import { HARITA, izoEkran, ekranIzo, karoKoseleri } from './izo.js';
 import { dokunmaSesi } from './ses.js';
 import { bildirim } from './arayuz.js';
-import { temizlikBilgi, temizlikBaslat, kalanSure } from './mekanik.js';
+import { temizlikBilgi, temizlikBaslat, kalanSure, insaEt } from './mekanik.js';
+import { BINALAR } from './binalar.js';
 import { sureYazi } from './durum.js';
 
 const $ = (s) => document.querySelector(s);
@@ -87,14 +88,25 @@ export function duzenleKur(sahne, sabitYol, sabitEngel) {
     b.konum = [i, j];
   };
 
-  const ac = () => {
+  const ac = (sessiz) => {
     S.aktif = true; S.degisti = false; S.yolDegisti = false; firca.clear();
     sahne.game.events.emit('bosDokunus'); // açık bina paneli kapansın
     document.body.classList.add('duzen-modu');
     izgaraCiz();
-    bildirim('🔨 Taşımak istediğin binaya basılı tutup sürükle');
+    if (!sessiz) bildirim('🔨 Taşımak istediğin binaya basılı tutup sürükle');
   };
   const kapat = (kaydet) => {
+    let kuruldu = false;
+    if (hayalet) { // yeni bina yerleştiriliyordu
+      if (kaydet) {
+        const [i, j] = hayalet.konum;
+        if (!uygunMu(hayalet, i, j)) return bildirim('Burası uygun değil: binayı yeşil görünen bir yere koy');
+        if (!insaEt(hayalet.tip, i, j)) return;
+        S.degisti = kuruldu = true;
+        sahne.registry.set('ustaYuruyerek', true); // köy yeniden kurulunca usta evinden yürüyerek gelsin (isci.js)
+      }
+      hayaletKaldir();
+    }
     if (kaydet && S.degisti) {
       D.yerlesim = D.yerlesim || {};
       for (const b of sahne.binalar) if (b.yeni) D.yerlesim[b.tip] = b.yeni;
@@ -112,10 +124,8 @@ export function duzenleKur(sahne, sabitYol, sabitEngel) {
     S.aktif = false;
     if (!S.degisti) { for (const g of [izgara, alan, onizleme]) if (g) g.destroy(); izgara = alan = onizleme = null; return; }
     // Köy yeni yerlere (ya da vazgeçildiyse eski yerlere) göre baştan kurulur; kamera yerinde kalır
-    const c = sahne.cameras.main;
-    sahne.registry.set('kamera', { x: c.midPoint.x, y: c.midPoint.y, z: c.zoom, kz: sahne.kullaniciZoom });
-    sahne.scene.restart();
-    if (kaydet) setTimeout(() => bildirim('✅ Köy düzeni kaydedildi'), 400);
+    sahne.yenidenKur();
+    if (kaydet && !kuruldu) setTimeout(() => bildirim('✅ Köy düzeni kaydedildi'), 400);
   };
 
   S.bas = (p) => {
@@ -124,6 +134,12 @@ export function duzenleKur(sahne, sabitYol, sabitEngel) {
       if (!boyanir(i, j)) return;
       Object.assign(S, { surukluyor: true, fircaYol: !yolVarMi(i + ',' + j) });
       return boya(p);
+    }
+    if (hayalet) { // yeni bina: yalnızca kendi alanından tutulup sürüklenir (başka yerde kamera kayar)
+      const t = ekranIzo(p.worldX, p.worldY), [hi, hj] = hayalet.konum, [w, d] = hayalet.tanim.boyut, i = Math.floor(t.i), j = Math.floor(t.j);
+      if (i < hi || j < hj || i >= hi + w || j >= hj + d) return;
+      Object.assign(S, { surukluyor: true, b: hayalet, ofs: [i - hi, j - hj], ilk: [hi, hj], son: [hi, hj] });
+      return dokunmaSesi(sahne, 'pop', 0.09);
     }
     const b = sahne.binalar.filter((x) => x.nesne.getBounds().contains(p.worldX, p.worldY)).sort((a, c) => c.nesne.depth - a.nesne.depth)[0];
     if (!b) return;
@@ -150,6 +166,7 @@ export function duzenleKur(sahne, sabitYol, sabitEngel) {
     if (S.firca) { S.surukluyor = false; return; }
     const b = S.b, [i, j] = S.son;
     S.surukluyor = false;
+    if (b === hayalet) { S.b = null; return dokunmaSesi(sahne, uygunMu(b, i, j) ? 'yerlesti' : 'olmaz', 0.1); } // kırmızıysa orada kalır, oyuncu yeşil bir yer bulur
     if (uygunMu(b, i, j)) {
       if (i !== b.i || j !== b.j) { b.yeni = [i, j]; S.degisti = true; } else delete b.yeni;
       dokunmaSesi(sahne, 'yerlesti', 0.1);
@@ -173,6 +190,12 @@ export function duzenleKur(sahne, sabitYol, sabitEngel) {
   const kart = $('#temizlikKart');
   S.dokun = (p) => {
     if (S.firca) return;
+    if (hayalet) { // yeni bina dokunulan yere gelir
+      const t = ekranIzo(p.worldX, p.worldY), [w, d] = hayalet.tanim.boyut;
+      const i = Math.floor(t.i) - Math.floor(w / 2), j = Math.floor(t.j) - Math.floor(d / 2);
+      yereKoy(hayalet, i, j); alanCiz(hayalet, i, j);
+      return dokunmaSesi(sahne, 'tik', 0.1);
+    }
     const s = (sahne.susNesneleri || []).filter((x) => x.n.active && x.n.getBounds().contains(p.worldX, p.worldY)).sort((a, c) => c.n.depth - a.n.depth)[0];
     if (!s) return kart.classList.remove('acik');
     const T = D.temizlik;
@@ -185,6 +208,39 @@ export function duzenleKur(sahne, sabitYol, sabitEngel) {
     dokunmaSesi(sahne, 'pop', 0.09);
   };
   $('#tkVazgec').onclick = () => kart.classList.remove('acik');
+
+  // --- Yeni bina yerleştirme (İnşa menüsü, arayuz.js): bina ekranın ortasına en yakın boş yerde belirir;
+  // sürüklenir ya da dokunulan yere gelir; "Burada kur" ile altın ödenir ve Kunduz Usta inşaata başlar ---
+  let hayalet = null;
+  const hayaletKaldir = () => {
+    if (hayalet) hayalet.nesne.destroy();
+    hayalet = null;
+    if (alan) alan.clear();
+    document.body.classList.remove('yerlestir-modu');
+    $('#duzKaydet').textContent = '✓ Kaydet';
+  };
+  S.yerlestir = (tip) => {
+    if (D.insaat || D.temizlik) return bildirim('🦫 Kunduz Usta şu an başka bir işte; işi bitince inşa edebilirsin');
+    if (!S.aktif) ac(true);
+    fircaAyarla(false);
+    if (hayalet) hayaletKaldir();
+    const tanim = BINALAR[tip], [w, d] = tanim.boyut, c = sahne.cameras.main, m = ekranIzo(c.midPoint.x, c.midPoint.y);
+    let en = null;
+    for (let i = 0; i < HARITA; i++) for (let j = 0; j < HARITA; j++) {
+      if (!uygunMu({ tanim }, i, j)) continue;
+      const u = Math.hypot(i + w / 2 - m.i, j + d / 2 - m.j);
+      if (!en || u < en[2]) en = [i, j, u];
+    }
+    if (!en) return bildirim('Köyde bu bina için boş yer yok. Kunduz Usta ağaç ya da kaya kaldırsın, yer açılır');
+    const k = karoKoseleri(en[0], en[1], w, d);
+    const nesne = sahne.add.text((k.sol.x + k.sag.x) / 2, (k.ust.y + k.alt.y) / 2, tanim.ikon, { fontSize: '72px' }).setOrigin(0.5, 0.75).setDepth(150000);
+    hayalet = { tip, tanim, i: en[0], j: en[1], konum: [en[0], en[1]], nesne, ekler: [] };
+    document.body.classList.add('yerlestir-modu');
+    $('#duzIpucu').textContent = `${tanim.ikon} ${tanim.ad}: sürükle ya da bir yere dokun, yeşil olunca "Burada kur"`;
+    $('#duzKaydet').textContent = `🏗️ Burada kur · ${tanim.fiyat} 🪙`;
+    alanCiz(hayalet, en[0], en[1]);
+    c.pan(nesne.x, nesne.y, 400, 'Sine.easeInOut');
+  };
 
   $('#duzFirca').onclick = () => fircaAyarla(!S.firca);
   $('#dDuzenle').onclick = () => (S.aktif ? kapat(true) : ac());

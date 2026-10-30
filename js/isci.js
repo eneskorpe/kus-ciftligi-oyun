@@ -274,6 +274,7 @@ export function isciKur(sahne) {
     if (S.yuksek && b) await iskeledenIn(iskeleOlcu(b));
     S.yuksek = false;
     iskeleKaldir();
+    if (b && b.temel) sahne.time.delayedCall(1600, () => sahne.yenidenKur()); // yeni bina kuruldu: inşaat alanı yerine bina çizilsin
     if (S.durum === 'evde') { if (b) sevin(b, () => {}); return; }
     sevin(b, eveDon);
   };
@@ -339,7 +340,11 @@ export function isciKur(sahne) {
   // Kapalıyken biten kaldırma işlerinin dekorları sessizce kalkar
   for (const s of sahne.susNesneleri || []) if ((D.kaldirilan || []).includes(s.anahtar)) { sahne.sallananlar = (sahne.sallananlar || []).filter((x) => x.n !== s.n); s.n.destroy(); }
   if (D.temizlik) { const s = susBul(D.temizlik.anahtar); if (s) temizlikBaslat(s, true); }
-  if (D.insaat) { const b = sahne.binalar.find((x) => x.tip === D.insaat.tip); if (b) isBaslat(b, true); }
+  if (D.insaat) { // süren iş: usta işinin başında (yeni bina az önce konduysa evinden yürüyerek gelir)
+    const b = sahne.binalar.find((x) => x.tip === D.insaat.tip);
+    if (b) isBaslat(b, !sahne.registry.get('ustaYuruyerek'));
+  }
+  sahne.registry.remove('ustaYuruyerek');
   sahne.isci = { S, kok, isBaslat, temizlikBaslat }; // deneme için
 
   return (zaman, dt) => {

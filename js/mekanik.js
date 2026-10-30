@@ -3,6 +3,7 @@ import { TURLER } from './turler.js';
 import { D, simdi, DAKIKA, degisti, bildir, xpEkle, harca } from './durum.js';
 import { YEMLER, KULUCKA_DK, yabaniKus, yavruUret, kusOlustur, kusDegeri, geceMi } from './genetik.js';
 import { gorevOlay, gunluguYenile } from './gorevler.js';
+import { BINALAR } from './binalar.js';
 
 export const MAKS_SV = 5;
 export const GELISTIRME_FIYATI = [0, 0, 300, 800, 2000, 5000]; // hedef seviyeye göre
@@ -140,9 +141,11 @@ export function geliriTopla() {
 
 // --- Bina geliştirme: Kunduz Usta evinden çıkıp binaya yürür, süre boyunca çalışır (tek usta, aynı anda tek bina) ---
 export const GELISTIRME_DK = [0, 0, 1, 5, 20, 60]; // hedef seviyeye göre süre (dakika)
+export const SV_GEREK = [0, 0, 2, 4, 7, 10]; // binanın hedef seviyesi için gereken oyuncu seviyesi
 export function gelistir(tip) {
   const B = D.binalar[tip];
   if (B.sv >= MAKS_SV) return bildir('Bina en yüksek seviyede');
+  if (D.seviye < SV_GEREK[B.sv + 1]) return bildir(`🔒 Sv. ${B.sv + 1} için oyuncu seviyen ${SV_GEREK[B.sv + 1]} olmalı`);
   if (D.insaat) return bildir('🦫 Kunduz Usta şu an başka bir binada çalışıyor');
   if (D.temizlik) return bildir('🦫 Kunduz Usta şu an köyde bir dekoru kaldırıyor');
   if (!harca(GELISTIRME_FIYATI[B.sv + 1])) return;
@@ -155,7 +158,27 @@ function insaatBitir() {
   B.sv = Math.max(B.sv, I.sv);
   D.insaat = null;
   xpEkle(50);
-  bildir(`⬆️ Seviye ${B.sv} oldu!`);
+  bildir(I.yeni ? `🏗️ ${BINALAR[I.tip].ad} kuruldu!` : `⬆️ Seviye ${B.sv} oldu!`);
+}
+
+// --- Yeni bina inşası: oyuncu seviyesiyle açılır, İnşa menüsünden seçilip köyde boş bir yere konur, Kunduz Usta kurar ---
+export const binaDurumu = (tip) => { // 'kilitli' | 'acik' | 'var'
+  if (D.binalar[tip]) return 'var';
+  return D.seviye >= BINALAR[tip].acilis ? 'acik' : 'kilitli';
+};
+export function insaEt(tip, i, j) {
+  const T = BINALAR[tip];
+  if (binaDurumu(tip) === 'var') { bildir('Bu bina zaten köyünde var'); return false; }
+  if (binaDurumu(tip) === 'kilitli') { bildir(`🔒 ${T.ad} oyuncu seviyesi ${T.acilis}'te açılır`); return false; }
+  if (D.insaat || D.temizlik) { bildir('🦫 Kunduz Usta şu an başka bir işte'); return false; }
+  if (!harca(T.fiyat)) return false;
+  D.binalar[tip] = { sv: 0 }; // inşaat bitince Sv 1
+  D.yerlesim = D.yerlesim || {};
+  D.yerlesim[tip] = [i, j];
+  D.insaat = { tip, sv: 1, yeni: true, bas: simdi(), bitis: simdi() + T.dk * DAKIKA };
+  bildir(`🦫 Kunduz Usta ${T.ad} inşaatına koşuyor!`);
+  degisti();
+  return true;
 }
 
 // --- Dekor kaldırma: Kunduz Usta köydeki ağaç ve kayaları kaldırır; türüne ve boyutuna göre altın kazandırır ---

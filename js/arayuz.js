@@ -3,7 +3,7 @@ import { TURLER, kondisyonAdi, paletOlustur } from './turler.js';
 import { D, simdi, dinle, degisti, bildirimAyarla, xpGerek, sureYazi } from './durum.js';
 import { YEMLER, MUT_ADI, fenotip, kusGen, kusDegeri, tarifBul } from './genetik.js';
 import * as M from './mekanik.js';
-import { BINALAR } from './binalar.js';
+import { BINALAR, YENI_BINALAR } from './binalar.js';
 import * as G from './gorevler.js';
 import { sesKapaliMi, sesAyarla, sesSeviyesi, sesSeviyesiAyarla } from './ses.js';
 
@@ -24,6 +24,7 @@ export function arayuzKur(o) {
   $('#panelKapat').onclick = panelKapat;
   $('#modal').onclick = (e) => { if (e.target.id === 'modal' && !kartAcik) modalKapat(); };
   $('#dKuslar').onclick = kuslarimAc;
+  $('#dInsa').onclick = insaMenusu;
   $('#dAnsiklopedi').onclick = ansiklopediAc;
   $('#dGorevler').onclick = gorevlerAc;
   $('#dBilgi').onclick = krediAc;
@@ -126,17 +127,20 @@ function panelCiz() {
   const ikon = { kusevi: 'kusevi', kulucka: 'yumurta', tuzak: 'kafes', yemlik: 'bos_yem' }[tip]; // başlıkta Gemini ikonu (yoksa emoji)
   $('#panelIkon').innerHTML = ikon ? `<img src="assets/arayuz/${ikon}.png" alt="">` : t.ikon;
   $('#panelAd').textContent = t.ad;
-  $('#panelSeviye').textContent = 'Sv. ' + B.sv;
+  $('#panelSeviye').textContent = B.sv ? 'Sv. ' + B.sv : 'İnşaat';
   $('#panelSeviye').style.display = t.sabit ? 'none' : '';
   $('#panelAciklama').textContent = t.aciklama;
-  let icerik = { tuzak: tuzakPaneli, kulucka: kuluckaPaneli, kusevi: kuseviPaneli, yemlik: yemlikPaneli, kunduz: kunduzPaneli }[tip]();
   const I = D.insaat;
+  let icerik = B.sv === 0 ? '' : ({ tuzak: tuzakPaneli, kulucka: kuluckaPaneli, kusevi: kuseviPaneli, yemlik: yemlikPaneli, kunduz: kunduzPaneli }[tip] || yakindaPaneli)();
   if (t.sabit) { /* geliştirilmeyen bina */ } else if (I && I.tip === tip) { // Kunduz Usta bu binada çalışıyor
-    icerik += `<div class="gelistir" style="display:block">${ilerleme(I, I.bitis - I.bas, `🦫 Kunduz Usta Sv. ${I.sv} için çalışıyor:`, 'insaat')}</div>`;
-  } else if (B.sv < M.MAKS_SV) {
-    const mesgul = I ? `<small>🦫 Usta şu an başka bir binada çalışıyor (${BINALAR[I.tip].ad})</small>` : `<small>${M.BINA_ETKI[tip](B.sv + 1)}</small>`;
-    icerik += `<div class="gelistir">${dugme(`⬆️ Sv. ${B.sv + 1} · ${M.GELISTIRME_FIYATI[B.sv + 1]} 🪙 · ${M.GELISTIRME_DK[B.sv + 1]} dk`, () => M.gelistir(tip), I ? 'disabled' : '')}
-      ${mesgul}</div>`;
+    icerik += `<div class="gelistir" style="display:block">${ilerleme(I, I.bitis - I.bas, I.yeni ? '🦫 Kunduz Usta binayı inşa ediyor:' : `🦫 Kunduz Usta Sv. ${I.sv} için çalışıyor:`, 'insaat')}</div>`;
+  } else if (B.sv < M.MAKS_SV && !t.islevYok) {
+    const hedef = B.sv + 1, kilit = D.seviye < M.SV_GEREK[hedef], is = I || D.temizlik;
+    const not = kilit ? `<small>🔒 Sv. ${hedef} için oyuncu seviyen ${M.SV_GEREK[hedef]} olmalı</small>`
+      : I ? `<small>🦫 Usta şu an başka bir binada çalışıyor (${BINALAR[I.tip].ad})</small>`
+      : D.temizlik ? '<small>🦫 Usta şu an köyde bir dekoru kaldırıyor</small>' : `<small>${M.BINA_ETKI[tip](hedef)}</small>`;
+    icerik += `<div class="gelistir">${dugme(`${kilit ? '🔒' : '⬆️'} Sv. ${hedef} · ${M.GELISTIRME_FIYATI[hedef]} 🪙 · ${M.GELISTIRME_DK[hedef]} dk`, () => M.gelistir(tip), kilit || is ? 'disabled' : '')}
+      ${not}</div>`;
   }
   $('#panelIcerik').innerHTML = ikonla(icerik);
 }
@@ -182,10 +186,31 @@ function kuseviPaneli() {
 }
 
 function kunduzPaneli() {
-  const I = D.insaat;
-  if (!I) return '<p>🦫 Usta evinde dinleniyor. Bir binanın panelinden <b>Geliştir</b>\'e basınca işe koyulur.</p>';
-  return `<p>🦫 Usta şu an <b>${BINALAR[I.tip].ad}</b> binasını Sv. ${I.sv}'e geliştiriyor.</p>` +
+  const I = D.insaat, T = D.temizlik;
+  if (T) return `<p>🦫 Usta şu an köyde bir <b>${T.ad.toLowerCase()}</b> kaldırıyor (+${T.altin} 🪙).</p>` + ilerleme(T, T.bitis - T.bas, 'Kalan süre:', 'temizlik');
+  if (!I) return '<p>🦫 Usta evinde dinleniyor. Bir binanın panelinden <b>Geliştir</b>\'e, 🏗️ <b>İnşa</b> menüsünden yeni bir binaya ya da düzenle modunda bir ağaca basınca işe koyulur.</p>';
+  return (I.yeni ? `<p>🦫 Usta şu an <b>${BINALAR[I.tip].ad}</b> binasını inşa ediyor.</p>` : `<p>🦫 Usta şu an <b>${BINALAR[I.tip].ad}</b> binasını Sv. ${I.sv}'e geliştiriyor.</p>`) +
     ilerleme(I, I.bitis - I.bas, 'Kalan süre:', 'insaat');
+}
+
+// İşlevi henüz eklenmemiş yeni binalar
+function yakindaPaneli() {
+  return '<p class="ipucu">🚧 Bu binanın işlevi çok yakında eklenecek. Şimdilik köyünü süslüyor!</p>';
+}
+
+// --- İnşa menüsü: oyuncu seviyesiyle açılan yeni binalar ---
+function insaMenusu() {
+  const satir = (tip) => {
+    const T = BINALAR[tip], durum = M.binaDurumu(tip), [w, d] = T.boyut;
+    const sag = durum === 'var' ? '<small>✅ Köyünde</small>'
+      : durum === 'kilitli' ? `<small>🔒 Sv. ${T.acilis}</small>`
+      : dugme(`${T.fiyat} 🪙`, () => { modalKapat(); oyun.events.emit('insaYerlestir', tip); }, 'class="ana"');
+    return `<div class="yem ${durum === 'kilitli' ? 'kilit' : ''}"><span class="yi">${T.ikon}</span><span><b>${T.ad}</b><br><small>${T.aciklama}</small><br>
+      <small>⏱ ${T.dk} dk · ${w}×${d} kare</small></span>${sag}</div>`;
+  };
+  const mesgul = D.insaat || D.temizlik ? '<p class="ipucu">🦫 Kunduz Usta şu an çalışıyor; yeni inşaat için işinin bitmesini bekle.</p>' : '';
+  modalAc(`<h2>🏗️ İnşa et</h2><p><small>Seviye atladıkça yeni binalar açılır. Seçtiğin binayı köyde boş bir yere koy, Kunduz Usta inşa etsin.</small></p>${mesgul}
+    <div class="yemler">${YENI_BINALAR.map(satir).join('')}</div><div class="dugmeler">${dugme('Kapat', modalKapat)}</div>`);
 }
 
 function yemlikPaneli() {

@@ -18,7 +18,26 @@ export const BINALAR = {
     aciklama: 'Köydeki kuşlar burada beslenir. Boşalınca yeniden doldurman gerekir.' },
   kunduz: { ad: 'Kunduz Usta', boyut: [3, 3], ikon: '🦫', sabit: true, ayna: true, // geliştirilmez; aynalı: su çarkı gölete bakar
     aciklama: 'Köyün marangozu. Bir binayı geliştirdiğinde evinden çıkıp çalışmaya gider, iş bitince evine döner.' },
+  // Oyuncunun sonradan inşa ettiği binalar (yeni: true). acilis: oyuncu seviyesi, fiyat: altın, dk: inşaat süresi.
+  // islevYok: işlevi henüz yazılmadı (panelde "yakında"); renk/cati: Gemini görseli gelene kadarki geçici çizim
+  tarla: { ad: 'Tohum Tarlası', boyut: [3, 2], ikon: '🌱', yeni: true, acilis: 3, fiyat: 400, dk: 3, renk: 0x9a6b3f, islevYok: true,
+    aciklama: 'Darı, ayçiçeği ve kenevir tohumu ekersin; süre dolunca hasat edip kuşların için yem elde edersin.' },
+  klinik: { ad: 'Kuş Kliniği', boyut: [2, 2], ikon: '🩺', yeni: true, acilis: 5, fiyat: 1200, dk: 8, renk: 0xf4f1ea, cati: 0x7fc6d9, islevYok: true,
+    aciklama: 'Bakımsız kalıp rahatsızlanan kuşlar burada iyileşir. Sağlıklı kuşlara check-up yapılır, tüyleri bakılır.' },
+  degirmen: { ad: 'Değirmen', boyut: [2, 2], ikon: '⚙️', yeni: true, acilis: 6, fiyat: 1800, dk: 10, renk: 0xe8d2a8, cati: 0xc4553f, islevYok: true,
+    aciklama: 'Tarladan gelen hasadı karışık yeme, ballı çubuğa ve kalsiyum taşına çevirir.' },
+  siparis: { ad: 'Sipariş Panosu', boyut: [2, 1], ikon: '📜', yeni: true, acilis: 8, fiyat: 2500, dk: 12, renk: 0xb98055, cati: 0x6aae4f, islevYok: true,
+    aciklama: 'Köylüler belirli kuşlar ister. Siparişi teslim edersen altın ve XP kazanırsın.' },
+  kres: { ad: 'Kuş Kreşi', boyut: [2, 2], ikon: '🐣', yeni: true, acilis: 10, fiyat: 4000, dk: 20, renk: 0xffe3ec, cati: 0xf29bb5, islevYok: true,
+    aciklama: 'Yumurtadan çıkan minik yavrular burada büyür.' },
+  kule: { ad: 'Gözlem Kulesi', boyut: [2, 2], ikon: '🔭', yeni: true, acilis: 12, fiyat: 6000, dk: 30, renk: 0xc9b79a, cati: 0x4f7fbf, yuksek: true, islevYok: true,
+    aciklama: 'Göle, dağa ve ormana keşif gönderirsin. Her bölgede farklı kuş türleri yaşar.' },
+  muze: { ad: 'Kuş Müzesi', boyut: [3, 3], ikon: '🏛️', yeni: true, acilis: 15, fiyat: 10000, dk: 45, renk: 0xf1ead8, cati: 0x9a7bc4, islevYok: true,
+    aciklama: 'Nadir kuşlarını sergilersin. Her sergilenen kuş gelir ve rozet kazandırır.' },
+  lab: { ad: 'Genetik Laboratuvarı', boyut: [2, 2], ikon: '🧬', yeni: true, acilis: 15, fiyat: 12000, dk: 45, renk: 0xe6f2f5, cati: 0x6fbf8f, islevYok: true,
+    aciklama: 'İki kuşun yavrularının hangi renk ve genlerle doğabileceğini gösterir.' },
 };
+export const YENI_BINALAR = Object.keys(BINALAR).filter((t) => BINALAR[t].yeni);
 
 // --- Çizim yardımcıları ---
 function sekil(g, noktalar, renk, cerceve = true, alfa = 1) {
@@ -88,6 +107,36 @@ function cicekler(g, k, adet, rnd) {
     g.fillStyle(Phaser.Utils.Array.GetRandom([0xffffff, 0xffd84a, 0xff9ac0, 0xb48cff])); g.fillCircle(p.x, p.y, 5);
     g.fillStyle(0xffe680); g.fillCircle(p.x, p.y, 2);
   }
+}
+
+// Görseli henüz olmayan yeni bina: renkli duvarlı, çatılı basit bir ev (tarla: sürülmüş toprak ve filizler)
+function geciciCiz(g, k, rnd, tanim) {
+  arsa(g, k, 0x86c05a);
+  if (!tanim.cati) { // tarla
+    const d = daralt(k, 0.82);
+    sekil(g, [d.ust, d.sag, d.alt, d.sol], tanim.renk);
+    g.lineStyle(3, koyulastir(tanim.renk, 0.75), 1);
+    for (let t = 0.15; t < 1; t += 0.17) { const a = lerpN(d.sol, d.ust, t), b = lerpN(d.alt, d.sag, t); g.lineBetween(a.x, a.y, b.x, b.y); }
+    for (let n = 0; n < 14; n++) { const p = lerpN(lerpN(d.sol, d.alt, rnd()), lerpN(d.ust, d.sag, rnd()), rnd()); g.fillStyle(0x6cc154); g.fillEllipse(p.x - 3, p.y - 4, 6, 9); g.fillEllipse(p.x + 3, p.y - 4, 6, 9); }
+    return 10;
+  }
+  const d = daralt(k, 0.7, { x: 0, y: -4 }), h = tanim.yuksek ? 150 : 80;
+  const yuz = kutu(g, d, h, tanim.renk);
+  yuz.sol(0.38, 0.62, 0, 0.6, 0x8a5a3a);
+  yuz.sagDaire(0.5, 0.6, 0.14, 0.2, 0xffd36b);
+  cati(g, d, h, 70, tanim.cati, 1.2, koyulastir(tanim.cati, 0.8));
+  return h + 70;
+}
+// İnşaat alanı (bina kurulana kadar): toprak, köşe kazıkları ve tahtalar
+function temelCiz(g, k) {
+  arsa(g, k, 0x86c05a);
+  const d = daralt(k, 0.86);
+  sekil(g, [d.ust, d.sag, d.alt, d.sol], 0xb08655);
+  g.lineStyle(2, 0x8a6440, 0.8);
+  for (let t = 0.2; t < 1; t += 0.2) { const a = lerpN(d.sol, d.alt, t), b = lerpN(d.ust, d.sag, t); g.lineBetween(a.x, a.y, b.x, b.y); }
+  for (const n of [d.sol, d.alt, d.sag, d.ust]) { g.fillStyle(CIZGI); g.fillRect(n.x - 4, n.y - 34, 8, 36); g.fillStyle(0xd9b27a); g.fillRect(n.x - 2, n.y - 32, 4, 32); }
+  g.lineStyle(2, 0xffffff, 0.8); g.strokePoints([yukari(d.sol, 26), yukari(d.alt, 26), yukari(d.sag, 26)], false);
+  return 34;
 }
 
 // --- Binalar ---
@@ -188,11 +237,15 @@ const CIZIMLER = {
 function elipsN(x, y, rx, ry) { const n = []; for (let i = 0; i < 24; i++) { const t = i / 24 * Math.PI * 2; n.push({ x: x + Math.cos(t) * rx, y: y + Math.sin(t) * ry }); } return n; }
 
 // Binayı haritaya yerleştirir; dokunma kontrolü ve derinlik bilgisini döndürür
-export function binaKur(sahne, tip, i, j, rnd) {
+// temel: bina henüz inşa ediliyor (Sv 0), yerinde inşaat alanı çizilir
+export function binaKur(sahne, tip, i, j, rnd, temel = false) {
   const tanim = BINALAR[tip], [w, d] = tanim.boyut, k = karoKoseleri(i, j, w, d);
   let yukseklik, nesne;
   const meta = sahne.cache.json.get('binaMeta');
-  if (sahne.textures.exists('bina_' + tip) && meta && meta[tip]) {
+  if (temel) {
+    nesne = sahne.add.graphics();
+    yukseklik = temelCiz(nesne, k);
+  } else if (sahne.textures.exists('bina_' + tip) && meta && meta[tip]) {
     // Gemini görseli: çimenli arsanın sol ve sağ köşesi karonun köşelerine oturur
     const M = meta[tip], koseY = (M.solY + M.sagY) / 2;
     nesne = sahne.add.image(k.sol.x, k.sol.y, 'bina_' + tip).setOrigin(M.solX / M.w, koseY / M.h);
@@ -201,12 +254,12 @@ export function binaKur(sahne, tip, i, j, rnd) {
     yukseklik = koseY * nesne.scaleY - (k.sol.y - k.ust.y);
   } else {
     nesne = sahne.add.graphics();
-    yukseklik = CIZIMLER[tip](nesne, k, rnd);
+    yukseklik = CIZIMLER[tip] ? CIZIMLER[tip](nesne, k, rnd) : geciciCiz(nesne, k, rnd, tanim);
   }
   // Derinlik arsanın ortasından: bina gövdesinin arkasındaki kuş ve objeler arkada, önündekiler önde kalır
   // (eskiden ön köşeydi; çimen levhası kaldırılınca arsanın arka yarısındaki her şey binanın altında kalıyordu)
   nesne.setDepth(nesne.type === 'Image' ? (k.ust.y + k.alt.y) / 2 : k.alt.y);
-  return { tip, tanim, i, j, k, nesne, seviye: 1,
+  return { tip, tanim, i, j, k, nesne, seviye: 1, temel,
     kutu: new Phaser.Geom.Rectangle(k.sol.x, k.ust.y - yukseklik, k.sag.x - k.sol.x, k.alt.y - k.ust.y + yukseklik),
     tepe: { x: merkez(k).x, y: k.alt.y - (k.alt.y - k.ust.y) / 2 - yukseklik } };
 }
