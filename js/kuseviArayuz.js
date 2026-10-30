@@ -4,7 +4,8 @@ import { D, dinle, sureYazi, simdi } from './durum.js';
 import { MUT_ADI, fenotip, TARIFLER } from './genetik.js';
 import * as M from './mekanik.js';
 import { IKRAMLAR, FAVORI, stok, ikramAl, ikramVer } from './ikram.js';
-import { jeton, dugme, modalAc, cinsiyet, cubuk, rozet, kapat, metinler, bildirim } from './arayuz.js';
+import { jeton, dugme, modalAc, cinsiyet, cubuk, rozet, kapat, metinler, bildirim, kalpYazi, bakimYazi } from './arayuz.js';
+import { canDostu } from './bag.js';
 
 const $ = (s) => document.querySelector(s);
 let oyun, acik = false, defterSekme = 'soy';
@@ -72,7 +73,8 @@ function ciz() {
   if (!k) return;
   const tur = TURLER[k.tur], buff = k.buff || {};
   const etkiler = [k.hasta && M.RAHATSIZLIKLAR[k.hasta.tur].ikon, k.koruma > simdi() && '🛡️', buff.nadir && '🍯', buff.kalsiyum && '🧂', k.testli && '🧪'].filter(Boolean).join(' ');
-  $('#kKart').innerHTML = `<div class="kkUst"><b>${k.ad}</b> ${cinsiyet(k)} <span>${tur.ad}</span> ${rozet(k.tur)}${etkiler ? `<span class="kkEtki" title="Aktif ikram etkileri">${etkiler}</span>` : ''}</div>
+  $('#kKart').classList.toggle('canDostu', canDostu(k)); // 10 kalp: altın çerçeve
+  $('#kKart').innerHTML = `<div class="kkUst"><b>${k.ad}</b> ${cinsiyet(k)} <span>${tur.ad}</span> ${rozet(k.tur)} ${kalpYazi(k)} ${bakimYazi(k)}${etkiler ? `<span class="kkEtki" title="Aktif ikram etkileri">${etkiler}</span>` : ''}</div>
     <div class="kkAlt"><span>${MUT_ADI[fenotip(k.genler)]} · <b>${kondisyonAdi(k.tuy)}</b> (${k.tuy.toFixed(3)})</span>
     <span class="kkBar">😊 ${cubuk(k.mutluluk, '#ff8fb0')}</span><span class="kkBar">🌾 ${cubuk(k.tokluk, '#e9c46a')}</span></div>`;
   $('#kAvatar').innerHTML = D.kuslar.map((x) => {

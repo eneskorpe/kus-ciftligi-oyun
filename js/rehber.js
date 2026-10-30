@@ -6,6 +6,7 @@ import { BINALAR, YENI_BINALAR } from './binalar.js';
 import { olayDinle } from './gorevler.js';
 import * as M from './mekanik.js';
 import { izoEkran } from './izo.js';
+import { bugunYikandiMi } from './bag.js';
 
 const $ = (s) => document.querySelector(s);
 const AD = 'Bilge Baykuş';
@@ -34,6 +35,10 @@ const ADIMLAR = [
   { yuz: 'mutlu', poz: 'selam', bekle: 'sev', metin: [
     'Kuşlar sevgiyle büyür. Mutlu kuş şarkı söyler, altın kazandırır, yavru yapmaya da gönüllü olur.'],
   ipucu: 'Meydanda gezinen kuşlarından birine dokunup onu sev.' },
+  { yuz: 'konus', poz: 'goster', hedef: { bina: 'banyo' }, tamam: () => (D.banyo || []).length > 0 || D.kuslar.some(bugunYikandiMi), metin: [
+    'Bak, bu da Kuş Banyosu! Kuşların burada yıkanır, tüyleri pırıl pırıl parlar.',
+    'Her kuşunla her gün biraz vakit geçir: ikram ver, yıkat, sev. Böylece aranızdaki bağ güçlenir 💗. Bağı güçlü kuş daha çok kazandırır ve çok daha değerli olur.'],
+  ipucu: "Kuş Banyosu'na dokun ve bir kuşunu 🛁 Yıkat." },
   { yuz: 'konus', poz: 'goster', hedef: { bina: 'yemlik' }, bekle: 'yemlikDoldur', tamam: () => M.yemlikFiyati() === 0, metin: [
     'Karnı tok kuş, mutlu kuştur! Kuşların acıkınca Yemlik\'e gidip kendileri yer. Yem biterse acıkıp üzülürler.'],
   ipucu: 'Yemlik\'e dokun ve 🌾 Doldur düğmesine bas.' },
@@ -106,9 +111,17 @@ if (!D.rehber || parametre.has('rehber')) {
   // Yeni oyunda öğretici baştan başlar; eski kayıtta ise oyuncu zaten ilerlemiştir, sadece sonraki tanıtımlar gelir
   const yeni = parametre.has('rehber') || (D.seviye === 1 && D.xp === 0 && !D.tuzak && D.kuslar.length <= 3);
   D.rehber = { adim: yeni ? 0 : 'bitti', acildi: yeni ? [] : YENI_BINALAR.filter((t) => D.seviye >= BINALAR[t].acilis),
-    kuruldu: yeni ? [] : YENI_BINALAR.filter((t) => D.binalar[t] && D.binalar[t].sv > 0) };
+    kuruldu: yeni ? [] : YENI_BINALAR.filter((t) => D.binalar[t] && D.binalar[t].sv > 0), duyuru: yeni ? ['bag'] : [] };
 }
 const R = D.rehber;
+R.duyuru = R.duyuru || [];
+// Sonradan eklenen sistemlerin eski oyunculara bir kez anlatılması
+const DUYURULAR = {
+  bag: { hedef: { bina: 'banyo' }, satirlar: [
+    'Sana güzel bir haberim var! Artık kuşlarınla gerçek bir bağ kurabilirsin 💗',
+    'Meydandaki kuş banyosu artık bir bina: kuşlarını orada yıkat, tüyleri parlasın. Her kuş günde bir kez yıkanır.',
+    'Her gün ikram ver, yıkat ve sev; kuşunun kartındaki bakım kutuları dolsun. Bağı güçlü kuş daha çok altın kazandırır ve çok daha değerli olur. 10 kalpte Can Dostu olursunuz!'] },
+};
 let konusma = null; // { satirlar, n, yuz, poz, hedef, bitince, ipucu }
 let yazi = { tam: '', n: 0, t: 0 };
 let sahne = null, baykus = null;
@@ -185,6 +198,11 @@ olayDinle((tip) => {
 function sirayaBak() {
   if (konusma || document.body.classList.contains('kusevi-modu') || document.body.classList.contains('duzen-modu')) return;
   if (R.adim !== 'bitti') return adimBaslat();
+  for (const [id, Y] of Object.entries(DUYURULAR)) {
+    if (R.duyuru.includes(id)) continue;
+    R.duyuru.push(id); degisti();
+    return goster({ satirlar: Y.satirlar, n: 0, yuz: 'saskin', poz: 'goster', hedef: Y.hedef });
+  }
   for (const t of YENI_BINALAR) {
     const T = TANITIM[t];
     if (!T) continue;

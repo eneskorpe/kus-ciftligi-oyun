@@ -2,6 +2,7 @@
 // Her türün sevdiği bir ikram var: onu verince etkisi iki katına çıkar.
 import { TURLER } from './turler.js';
 import { D, degisti, bildir, harca, xpEkle } from './durum.js';
+import { bagEkle, bakimYap } from './bag.js';
 
 export const IKRAMLAR = {
   dari: { ad: 'Darı salkımı', ikon: '🌾', fiyat: { altin: 15 }, aciklama: 'Mutluluk +15, tokluk +20' },
@@ -41,6 +42,7 @@ export function ikramVer(k, id) {
   else if (id === 'kalsiyum') { k.buff.kalsiyum = true; metin = 'Sonraki kuluçka %30 kısa'; }
   else if (id === 'test') { k.testli = true; metin = 'Genleri Kuş Defteri\'nde'; }
   if (sevdi) { D.favoriKesif = D.favoriKesif || {}; D.favoriKesif[k.tur] = true; } // oyuncu sevdiği ikramı denerek keşfeder
+  bagEkle(k, 'ikram', sevdi ? 2 : 1); bakimYap(k, 'ikram');
   xpEkle(sevdi ? 3 : 1);
   bildir(`${IKRAMLAR[id].ikon} ${k.ad}: ${metin}${sevdi ? ' · 💗 En sevdiği ikram!' : ''}`);
   degisti();

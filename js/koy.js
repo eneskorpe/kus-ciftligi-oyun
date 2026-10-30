@@ -32,7 +32,7 @@ const DPR = Math.min(window.devicePixelRatio || 1, 2);
 
 // Harita yerleşimi (karo koordinatları)
 const YERLESIM = {
-  binalar: [['kulucka', 7, 3], ['tuzak', 2, 8], ['kusevi', 12, 5], ['yemlik', 8, 11], ['kunduz', 15, 10]],
+  binalar: [['kulucka', 7, 3], ['tuzak', 2, 8], ['kusevi', 12, 5], ['yemlik', 8, 11], ['kunduz', 15, 10], ['banyo', 6, 12]],
   susler: [['agac', 1, 2], ['agac', 4, 0], ['agac', 15, 2], ['agac', 16, 5], ['agac', 0, 12], ['agac', 3, 15], // (15,14) ağacı kaldırıldı: göletin önünü kapatıyordu
     ['agac', 12, 16], ['agac', 11, 1], // (17,10) ağacı kaldırıldı: Kunduz evinin su çarkını kapatıyordu ['agac', 6, 16], ['agac', 16, 16], ['agac', 1, 5],
     ['kaya', 5, 6], ['kaya', 2, 13], ['kaya', 10, 15],
@@ -46,7 +46,6 @@ const KOY_OBJELERI = [
   ['cit_yukari', 9.85, 15.0, 128], ['cit_yukari', 9.85, 16.75, 128],
   ['tabela', 9.15, 17.3, 82],
   ['bank', 11.6, 11.9, 100, true],
-  ['kus_banyosu', 6.3, 12.4, 70],
   ['saman', 4.7, 7.5, 74], ['el_arabasi', 6.0, 8.7, 70, true],
   ['sandiklar', 6.4, 5.4, 66], ['fici', 15.4, 8.8, 44],
   ['fidan', 12.3, 14.4, 44], ['saz', 18.2, 11.6, 50], ['kutuk', 16.9, 15.3, 44], ['fidan', 3.3, 4.3, 40, true],
@@ -181,6 +180,7 @@ class Koy extends Phaser.Scene {
     this.degirmenGuncelle(dt);
     this.rahatsizlikGuncelle(dt);
     this.rehberGuncelle(zaman, dt);
+    this.banyoGuncelle();
     this.gunIsigiGuncelle(zaman);
     this.canlilikGuncelle(zaman);
     this.zeminGuncelle();
@@ -200,9 +200,19 @@ class Koy extends Phaser.Scene {
     }
   }
 
+  // Banyodaki kuşlar havuza uçup yıkanır (mekanik.js banyoYap); banyo bitince kendileri meydana döner
+  banyoGuncelle() {
+    const b = this.binalar.find((x) => x.tip === 'banyo');
+    if (!b || !b.banyoYerleri) return;
+    (D.banyo || []).forEach((B, n) => {
+      const kus = this.kuslar.find((k) => k.id === B.kusId);
+      if (kus && kus.durum !== 'banyo') kus.banyoYap(b.banyoYerleri[n] || b.banyoYerleri[0], () => (D.banyo || []).includes(B));
+    });
+  }
+
   // Kayıttaki görünür kuşlarla köydeki kuşları eşler (en fazla 8 kuş gezer)
   kuslariEsitle() {
-    const gorunen = D.kuslar.filter((k) => k.gorunur && !M.mesgulMu(k)).slice(0, 8);
+    const gorunen = D.kuslar.filter((k) => k.gorunur && (!M.mesgulMu(k) || M.banyodaMi(k))).slice(0, 8); // banyodaki kuş köyde yıkanırken görünür
     for (const kus of [...this.kuslar]) {
       if (!gorunen.some((k) => k.id === kus.id)) { kus.yokEt(); this.kuslar.splice(this.kuslar.indexOf(kus), 1); }
     }
@@ -445,12 +455,15 @@ class Koy extends Phaser.Scene {
       const w = n.displayWidth, h = n.displayHeight, x0 = sol(n), y0 = ust(n), yon = n.flipX ? -1 : 1;
       if (ad === 'tabela') ekle(x0 + w * (n.flipX ? 0.52 : 0.48), y0 + h * 0.03, n.y);
       else if (ad === 'bank') ekle(n.x - yon * w * 0.12, y0 + h * 0.08, n.y);
-      else if (ad === 'kus_banyosu') { ekle(x0 + w * 0.2, y0 + h * 0.13, n.y + 1, 'banyo'); ekle(x0 + w * 0.8, y0 + h * 0.13, n.y + 1, 'banyo'); }
       else if (ad.startsWith('cit')) { ekle(n.x - w * 0.22, y0 + h * (ad === 'cit_asagi' ? 0.08 : 0.38), n.y); ekle(n.x + w * 0.22, y0 + h * (ad === 'cit_asagi' ? 0.38 : 0.08), n.y); }
     }
     for (const b of this.binalar) {
       const n = b.nesne, h = b.kutu.height;
-      if (b.tip === 'yemlik' && n.getBounds) { const s = n.getBounds(); ekle(s.centerX + s.width * 0.2, s.y + s.height * 0.43, b.k.alt.y + 1, 'yemlik'); } // tepsinin sağ kenarı
+      if (b.tip === 'banyo') { // havuzun iki kenarı: oyuncunun yıkattığı kuşlar buraya konar (b.banyoYerleri)
+        const x0 = n.x - n.displayWidth * n.originX, y0 = n.y - n.displayHeight * n.originY, w = n.displayWidth, h = n.displayHeight;
+        ekle(x0 + w * 0.2, y0 + h * 0.13, n.y + 1, 'banyo'); ekle(x0 + w * 0.8, y0 + h * 0.13, n.y + 1, 'banyo');
+        b.banyoYerleri = L.slice(-2);
+      } else if (b.tip === 'yemlik' && n.getBounds) { const s = n.getBounds(); ekle(s.centerX + s.width * 0.2, s.y + s.height * 0.43, b.k.alt.y + 1, 'yemlik'); } // tepsinin sağ kenarı
       else ekle(b.tepe.x, b.tepe.y + h * (b.tip === 'kusevi' ? 0.02 : 0.08), b.k.alt.y + 1);
     }
     this.konmaYerleri = L;

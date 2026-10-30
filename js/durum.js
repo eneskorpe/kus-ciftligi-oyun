@@ -16,7 +16,7 @@ function yeniOyun() {
   return {
     surum: 1, altin: 300, elmas: 10, xp: 0, seviye: 1, sonId: 3,
     kuslar: [kus(1, 'kanarya', 'e', 0.22, 'Limon'), kus(2, 'kanarya', 'd', 0.3, 'Pamuk'), kus(3, 'ev_sercesi', 'e', 0.4, 'Fıstık')],
-    binalar: { tuzak: { sv: 1 }, kulucka: { sv: 1 }, kusevi: { sv: 1, birikim: 0 }, yemlik: { sv: 1, stok: 10 }, kunduz: { sv: 1 } },
+    binalar: { tuzak: { sv: 1 }, kulucka: { sv: 1 }, kusevi: { sv: 1, birikim: 0 }, yemlik: { sv: 1, stok: 10 }, kunduz: { sv: 1 }, banyo: { sv: 1 } },
     tuzak: null,    // { yem, bas, bitis }
     kulucka: null,  // { aId, bId, asama: 'ciftlesme' | 'kulucka', bas, bitis, cocuk }
     insaat: null,   // { tip, sv (hedef seviye), bas, bitis } Kunduz Usta'nın geliştirdiği bina
@@ -47,6 +47,8 @@ if (parametre.has('altin') || parametre.has('elmas')) {
 }
 if (SINIRSIZ) { D.altin = Math.max(D.altin, 999999); D.elmas = Math.max(D.elmas, 99999); }
 D.binalar.kunduz = D.binalar.kunduz || { sv: 1 }; // Kunduz Usta'nın evi (geliştirilmez)
+D.binalar.banyo = D.binalar.banyo || { sv: 1 }; // Kuş Banyosu (meydandaki dekordan bina oldu)
+D.banyo = D.banyo || []; // [{ kusId, su, bas, bitis }] banyodaki kuşlar
 D.tohumlar = D.tohumlar || { dari: 0, aycicek: 0, kenevir: 0 }; // Tohum Tarlası hasadı (🌾 yem kaynağı)
 D.tarla = D.tarla || null; // { ekin, bas, bitis, verim }
 D.degirmen = D.degirmen || null; // { urun, adet, bas, bitis } Değirmen'de öğütülen

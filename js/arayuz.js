@@ -6,6 +6,7 @@ import * as M from './mekanik.js';
 import { BINALAR, YENI_BINALAR } from './binalar.js';
 import * as G from './gorevler.js';
 import { rehberBastan } from './rehber.js';
+import { kalp, kalpIlerleme, bakimDurumu, seri, bugunYikandiMi, canDostu } from './bag.js';
 import { sesKapaliMi, sesAyarla, sesSeviyesi, sesSeviyesiAyarla } from './ses.js';
 
 const $ = (s) => document.querySelector(s);
@@ -53,10 +54,21 @@ const IKON_EMOJI = { '🪙': 'altin', '💎': 'elmas', '⭐': 'yildiz' };
 export const ikonla = (html) => html.replace(/🪙|💎|⭐/g, (e) => `<img class="satirIk" src="assets/arayuz/${IKON_EMOJI[e]}.png" alt="${e}">`);
 const kacir = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
+// Bildirimler sırayla gösterilir: aynı anda gelenler (ör. ikram + "tam bakım") birbirini ezmez
+const bildirimKuyrugu = [];
 export function bildirim(metin) {
-  const b = $('#bildirim');
+  if (bildirimKuyrugu[bildirimKuyrugu.length - 1] === metin) return;
+  bildirimKuyrugu.push(metin);
+  if (bildirimKuyrugu.length > 4) bildirimKuyrugu.splice(1, 1); // çok birikirse en eskiler atlanır
+  if (bildirimKuyrugu.length === 1) bildirimGoster();
+}
+function bildirimGoster() {
+  const b = $('#bildirim'), metin = bildirimKuyrugu[0];
   b.innerHTML = ikonla(kacir(metin)); b.classList.add('acik');
-  clearTimeout(bildirim.t); bildirim.t = setTimeout(() => b.classList.remove('acik'), 2400);
+  setTimeout(() => {
+    bildirimKuyrugu.shift();
+    if (bildirimKuyrugu.length) bildirimGoster(); else b.classList.remove('acik');
+  }, bildirimKuyrugu.length > 1 ? 1600 : 2400);
 }
 
 function hudGuncelle() {
@@ -88,9 +100,13 @@ export function jeton(k, boy = 44) {
 export const cinsiyet = (k) => (k.cinsiyet === 'e' ? '<b class="erkek">♂</b>' : '<b class="disi">♀</b>');
 export const cubuk = (oran, renk) => `<span class="cubuk"><i style="width:${Math.round(oran)}%;background:${renk}"></i></span>`;
 export const rozet = (tur) => `<span class="rozet" data-n="${TURLER[tur].nadirlik}">${TURLER[tur].nadirlik}</span>`;
+// Bağ: kalp sayısı ve sonraki kalbe ilerleme (10 kalpte Can Dostu)
+export const kalpYazi = (k) => `<span class="kalpler" title="Bağ: ${kalp(k)} / 10 kalp">${canDostu(k) ? '🏅' : '💗'} ${kalp(k)}${kalp(k) < 10 ? `<i style="width:${Math.round(kalpIlerleme(k) * 100)}%"></i>` : ''}</span>`;
+export const bakimYazi = (k) => { const B = bakimDurumu(k), s = seri(k);
+  return `<span class="bakim" title="Günlük bakım: ikram, banyo, sevgi">${[['ikram', '🍽️'], ['banyo', '🛁'], ['sev', '💗']].map(([a, i]) => `<b class="${B[a] ? 'tamam' : ''}">${i}</b>`).join('')}${s ? ` 🔥${s}` : ''}</span>`; };
 function kusSatiri(k) {
   const R = k.hasta && M.RAHATSIZLIKLAR[k.hasta.tur], durum = R ? ` <span class="hastaEtiket" title="${R.etki}">${R.ikon} ${R.ad}</span>` : k.koruma > simdi() ? ' <span title="Check-up koruması">🛡️</span>' : '';
-  return `${jeton(k)}<span class="ks"><b>${k.ad}</b> ${cinsiyet(k)} <small>${TURLER[k.tur].ad}</small>${durum}<br>
+  return `${jeton(k)}<span class="ks"><b>${k.ad}</b> ${cinsiyet(k)} <small>${TURLER[k.tur].ad}</small> ${kalpYazi(k)}${durum}<br>
     <small>${MUT_ADI[fenotip(k.genler)]} · ${kondisyonAdi(k.tuy)} (${k.tuy.toFixed(3)})</small><br>
     <span class="bars">😊 ${cubuk(k.mutluluk, '#ff8fb0')} 🌾 ${cubuk(k.tokluk, '#e9c46a')}</span></span>`;
 }
@@ -135,7 +151,7 @@ function panelCiz() {
   $('#panelSeviye').style.display = t.sabit ? 'none' : '';
   $('#panelAciklama').textContent = t.aciklama;
   const I = D.insaat;
-  let icerik = B.sv === 0 ? '' : ({ tuzak: tuzakPaneli, kulucka: kuluckaPaneli, kusevi: kuseviPaneli, yemlik: yemlikPaneli, kunduz: kunduzPaneli, tarla: tarlaPaneli, degirmen: degirmenPaneli, klinik: klinikPaneli, siparis: siparisPaneli, kres: kresPaneli }[tip] || yakindaPaneli)();
+  let icerik = B.sv === 0 ? '' : ({ tuzak: tuzakPaneli, kulucka: kuluckaPaneli, kusevi: kuseviPaneli, yemlik: yemlikPaneli, kunduz: kunduzPaneli, tarla: tarlaPaneli, degirmen: degirmenPaneli, klinik: klinikPaneli, siparis: siparisPaneli, kres: kresPaneli, banyo: banyoPaneli }[tip] || yakindaPaneli)();
   if (t.sabit) { /* geliştirilmeyen bina */ } else if (I && I.tip === tip) { // Kunduz Usta bu binada çalışıyor
     icerik += `<div class="gelistir" style="display:block">${ilerleme(I, I.bitis - I.bas, I.yeni ? '🦫 Kunduz Usta binayı inşa ediyor:' : `🦫 Kunduz Usta Sv. ${I.sv} için çalışıyor:`, 'insaat')}</div>`;
   } else if (B.sv < M.MAKS_SV && !t.islevYok) {
@@ -286,6 +302,32 @@ function kresPaneli() {
     liste.map(kart).join('') + (bos > 0 ? `<p class="ipucu">🛏️ ${bos} boş yatak var</p>` : '');
 }
 
+// Kuş Banyosu: su türü seç, bugün yıkanmamış kuşu yıkat (her kuş günde bir kez)
+let banyoSuyu = 'ilik';
+function banyoPaneli() {
+  const Bn = D.binalar.banyo, liste = D.banyo || [];
+  if (Bn.sv < M.BANYO_SULARI[banyoSuyu].svGerek) banyoSuyu = 'ilik';
+  const yikananlar = liste.map((B, n) => {
+    const k = M.kusBul(B.kusId), S = M.BANYO_SULARI[B.su], kalan = M.kalanSure(B);
+    return `<div class="is"><div>${S.ikon} ${k ? k.ad : '?'} yıkanıyor: <b>${sureYazi(kalan)}</b></div>${cubuk(100 - kalan / (B.bitis - B.bas) * 100, '#8fd0ff')}</div>
+      <div class="dugmeler">${dugme(`⚡ Bitir · ${M.elmasFiyati(kalan)} 💎`, () => M.banyoHizlandir(n))}</div>`;
+  }).join('');
+  const sular = '<div class="dugmeler">' + Object.entries(M.BANYO_SULARI).map(([id, S]) => {
+    const kilit = Bn.sv < S.svGerek, fiyat = S.elmas ? `${S.elmas} 💎` : `${S.fiyat} 🪙`;
+    return dugme(`${S.ikon} ${S.ad} · ${kilit ? `🔒 Sv. ${S.svGerek}` : fiyat}`, () => { banyoSuyu = id; panelCiz(); }, kilit ? 'disabled' : id === banyoSuyu ? 'class="ana"' : '');
+  }).join('') + `</div><p><small>${M.BANYO_SULARI[banyoSuyu].ikon} ${M.BANYO_SULARI[banyoSuyu].aciklama} · ⏱ ${sureYazi(M.banyoSuresi(banyoSuyu))}</small></p>`;
+  const dolu = liste.length >= M.banyoYeri();
+  const kuslar = [...D.kuslar].sort((a, b) => bugunYikandiMi(a) - bugunYikandiMi(b) || b.tuy - a.tuy);
+  const satir = (k) => {
+    const yikandi = bugunYikandiMi(k), mesgul = M.mesgulMu(k);
+    const d = yikandi ? '<small>✔ Bugün yıkandı</small>' : M.banyodaMi(k) ? '<small>🛁 Banyoda</small>'
+      : dugme('🛁 Yıkat', () => M.banyoYap(k.id, banyoSuyu), dolu || mesgul ? 'disabled' : 'class="ana"');
+    return `<div class="satir">${kusSatiri(k)}<span class="dugmeSutun">${d}</span></div>`;
+  };
+  return yikananlar + '<p class="baslik2">Hangi suyla yıkayalım?</p>' + sular +
+    `<p><small>Banyo tüyü parlatır, kuşu mutlu eder ve bağınızı güçlendirir. Her kuş günde bir kez yıkanır. Aynı anda ${M.banyoYeri()} kuş.</small></p>` + kuslar.map(satir).join('');
+}
+
 // İşlevi henüz eklenmemiş yeni binalar
 function yakindaPaneli() {
   return '<p class="ipucu">🚧 Bu binanın işlevi çok yakında eklenecek. Şimdilik köyünü süslüyor!</p>';
@@ -332,8 +374,8 @@ export function kuslarimAc() {
     return `<div class="satir">${kusSatiri(k)}<span class="eylem">
       ${dugme(sevBekle > 0 ? `💗 ${sureYazi(sevBekle)}` : '💗 Sev', () => { if (M.kusSev(k.id)) { oyun.events.emit('kusSevildi', k.id); ciz(); } }, sevBekle > 0 ? 'disabled' : '')}
       ${dugme(k.gorunur ? '👁 Köyde' : '🙈 Gizli', () => { if (!k.gorunur && gorunen >= 8) return bildirim('Köyde en fazla 8 kuş gezebilir'); k.gorunur = !k.gorunur; degisti(); ciz(); })}
-      ${M.mesgulMu(k) ? '<small>💞 Kuluçkada</small>' : dugme(sat.has(k.id) ? `Emin misin? ${kusDegeri(k)} 🪙` : `🪙 Sat · ${kusDegeri(k)}`, () => {
-        if (sat.has(k.id)) { M.kusSat(k.id); ciz(); } else { sat.add(k.id); ciz(); }
+      ${M.mesgulMu(k) ? `<small>${M.banyodaMi(k) ? '🛁 Banyoda' : '💞 Meşgul'}</small>` : dugme(sat.has(k.id) ? `Emin misin? ${kusDegeri(k)} 🪙` : `🪙 Sat · ${kusDegeri(k)}`, () => {
+        if (sat.has(k.id)) { M.kusSat(k.id); ciz(); } else { sat.add(k.id); ciz(); if (kalp(k) >= 3) bildirim(`🦉 ${k.ad} seni ${kalp(k)} kalp seviyor... Satarsan bu bağ da gider. Emin misin?`); }
       }, sat.has(k.id) ? 'class="tehlike"' : '')}</span></div>`;
   }).join(''));
   ciz();

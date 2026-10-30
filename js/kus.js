@@ -700,6 +700,40 @@ export class Kus {
       }
     }
   }
+  // Oyuncunun yıkattığı kuş (Kuş Banyosu): havuzun kenarına uçar, banyo sürdükçe suya dalıp çırpınır, sonunda parlayıp silkinir
+  async banyoYap(K, devam) {
+    const no = await this.basla('banyo'); const ok = () => this.no === no; if (!ok()) return;
+    if (K.dolu && K.dolu !== this) { const o = K.dolu; o.yerBirak(); const A = o.alan; o.git(Phaser.Math.Between(A.x1, A.x2), Phaser.Math.Between(A.y1, A.y2)); } // yeri boşalt
+    this.yerBirak(); K.dolu = this; this.konduguYer = K;
+    const zy = K.taban + 2;
+    if (this.yer !== 'tunek' || Math.hypot(this.p.x - K.x, this.p.y - zy) > 4) {
+      if (!await this.uc(K.x, zy, zy - K.y, no)) return;
+    }
+    this.yer = 'tunek';
+    await this.tw({ ...POZ.tunek }, 220); if (!ok()) return;
+    const damla = (n = 2) => this.sahne.efekt('tuy', this.dunyaKonumu(this.govdeKok), n, 0x8fd0ff);
+    while (devam()) {
+      await this.tw({ basAci: 1.1, basX: 3, basY: 10, egim: 0.28 }, 150, 'Quad.easeIn'); if (!ok()) return;
+      damla();
+      await this.tw({ basAci: -0.35, basX: 0, basY: 0, egim: 0 }, 200, 'Quad.easeOut'); if (!ok()) return;
+      await this.tw({ puf: POZ.tunek.puf * 1.18, cokme: POZ.tunek.cokme + 4 }, 140); if (!ok()) return;
+      for (let i = 0; i < 6; i++) {
+        await this.tw({ egim: 0.2, kanatAci: -0.5 }, 55); await this.tw({ egim: -0.2, kanatAci: -0.1 }, 55); if (!ok()) return;
+        if (i % 2 === 0) damla(3);
+      }
+      await this.tw({ puf: POZ.tunek.puf, cokme: POZ.tunek.cokme, egim: 0, kanatAci: POZ.tunek.kanatAci }, 180); if (!ok()) return;
+      await this.bekle(300 + Math.random() * 400); if (!ok()) return;
+    }
+    await this.silkelen(no); if (!ok()) return;
+    this.sahne.efekt('yildiz', this.dunyaKonumu(this.govdeKok), 7, 0xfff3a0); // pırıl pırıl
+    this.p.mutlu = true;
+    await this.tw({ ibikAci: 0.45, basAci: -0.22 }, 200); await this.bekle(700); if (!ok()) return;
+    this.p.mutlu = false;
+    const A = this.alan;
+    this.yerBirak();
+    if (!await this.uc(Phaser.Math.Between(A.x1, A.x2), Phaser.Math.Between(A.y1, A.y2), 0, no)) return;
+    this.bitir(no);
+  }
   // Göletin ön kenarına uçar, üç kez su içer (suda halka açılır), silkelenir ve meydana döner
   async suIc(no) {
     const ok = () => this.no === no, p = this.p, S = this.sahne.su, A = this.alan, c = this.carpan;

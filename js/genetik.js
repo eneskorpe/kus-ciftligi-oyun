@@ -5,6 +5,7 @@
 import { TURLER, kondisyonAdi } from './turler.js';
 import { D, simdi, saat } from './durum.js';
 import { ISIMLER } from './isimler.js';
+import { kalp } from './bag.js';
 
 export const YEMLER = {
   // tarla: altın yerine tarladan gelen tohumla da kurulabilir (mekanik.js tuzakKur)
@@ -81,7 +82,8 @@ export function yavruUret(a, b, kosullar) {
 }
 
 export function kusDegeri(k) {
-  return Math.round(DEGER[TURLER[k.tur].nadirlik] * MUT_CARPAN[fenotip(k.genler)] * KOND_CARPAN[kondisyonAdi(k.tuy)]);
+  // Bağ: her kalp değeri %8 artırır (kuşla vakit geçirmek, hemen satmaktan kârlı olsun)
+  return Math.round(DEGER[TURLER[k.tur].nadirlik] * MUT_CARPAN[fenotip(k.genler)] * KOND_CARPAN[kondisyonAdi(k.tuy)] * (1 + 0.08 * kalp(k)));
 }
 
 export const geceMi = () => { const s = saat(); return s >= 20 || s < 6; };
