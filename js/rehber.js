@@ -111,7 +111,7 @@ if (!D.rehber || parametre.has('rehber')) {
   // Yeni oyunda öğretici baştan başlar; eski kayıtta ise oyuncu zaten ilerlemiştir, sadece sonraki tanıtımlar gelir
   const yeni = parametre.has('rehber') || (D.seviye === 1 && D.xp === 0 && !D.tuzak && D.kuslar.length <= 3);
   D.rehber = { adim: yeni ? 0 : 'bitti', acildi: yeni ? [] : YENI_BINALAR.filter((t) => D.seviye >= BINALAR[t].acilis),
-    kuruldu: yeni ? [] : YENI_BINALAR.filter((t) => D.binalar[t] && D.binalar[t].sv > 0), duyuru: yeni ? ['bag', 'huy'] : [] };
+    kuruldu: yeni ? [] : YENI_BINALAR.filter((t) => D.binalar[t] && D.binalar[t].sv > 0), duyuru: yeni ? ['bag'] : [] }; // huy ve eğitimi yeni oyuncu da öğretici bitince dinler
 }
 const R = D.rehber;
 R.duyuru = R.duyuru || [];
@@ -125,6 +125,10 @@ const DUYURULAR = {
     'Defterime yeni bir şey yazdım: her kuşun kendine has bir huyu varmış! Kimi şarkıcı, kimi meraklı, kimi de uykucu...',
     'Bir kuşla bağın 2 kalbe ulaşınca huyunu öğrenirsin. Huylar işe de yarar: süslü kuş banyodan daha parlak çıkar, meraklı kuş yerde altın bulur.',
     "Bir de her kuşun kendine özel sevdiği bir ikram var. Kuş Evi'nde farklı ikramlar dene, bakalım hangisine bayılacak!"] },
+  egitim: { hedef: { dom: '#dKusevi' }, satirlar: [
+    'Kuşların artık ders de alabiliyor! Kuş Evi’nde bir kuşunu seç ve 🎓 Eğit düğmesine dokun.',
+    'Ötüş, hüner, getir... Papağanlar konuşmayı bile öğrenir! Dersler kısa birer oyun; her kuşa günde 3 ders.',
+    'Her yetenek yıldızı kuşun değerini artırır. Ötüşü gelişen kuş daha çok altın kazandırır, getirmeyi öğrenen kuş sana hediyeler getirir!'] },
 };
 let konusma = null; // { satirlar, n, yuz, poz, hedef, bitince, ipucu }
 let yazi = { tam: '', n: 0, t: 0 };

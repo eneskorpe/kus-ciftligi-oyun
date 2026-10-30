@@ -25,6 +25,7 @@ import { tarlaKur, degirmenKur } from './tarla.js';
 import { rahatsizlikKur } from './rahatsizlik.js';
 import { rehberKur } from './rehber.js';
 import { kalp } from './bag.js';
+import { yildiz, sozler } from './egitim.js';
 import { KusEvi } from './kusevi.js';
 import { kuseviArayuzKur } from './kuseviArayuz.js';
 import { dekorlariYukle, dekorKoy, DEKOR_GRUP } from './dekor.js';
@@ -182,6 +183,7 @@ class Koy extends Phaser.Scene {
     this.rahatsizlikGuncelle(dt);
     this.rehberGuncelle(zaman, dt);
     this.banyoGuncelle();
+    this.konusmaGuncelle(dt);
     this.gunIsigiGuncelle(zaman);
     this.canlilikGuncelle(zaman);
     this.zeminGuncelle();
@@ -211,6 +213,17 @@ class Koy extends Phaser.Scene {
     });
   }
 
+  // Konuşma dersi almış papağanlar ara sıra öğrendikleri sözlerden birini söyler
+  konusmaGuncelle(dt) {
+    this.konusmaSayac = (this.konusmaSayac ?? 15000) - dt;
+    if (this.konusmaSayac > 0) return;
+    this.konusmaSayac = 18000 + Math.random() * 15000;
+    const adaylar = this.kuslar.filter((x) => x.durum === 'bos' && x.yer !== 'hava').map((x) => ({ x, k: M.kusBul(x.id) })).filter((o) => o.k && sozler(o.k).length);
+    if (!adaylar.length) return;
+    const { x, k } = Phaser.Utils.Array.GetRandom(adaylar);
+    x.konus(Phaser.Utils.Array.GetRandom(sozler(k)));
+  }
+
   // Kayıttaki görünür kuşlarla köydeki kuşları eşler (en fazla 8 kuş gezer)
   kuslariEsitle() {
     const gorunen = D.kuslar.filter((k) => k.gorunur && (!M.mesgulMu(k) || M.banyodaMi(k))).slice(0, 8); // banyodaki kuş köyde yıkanırken görünür
@@ -220,10 +233,12 @@ class Koy extends Phaser.Scene {
     const Z = this.zemin, r = Phaser.Math.Between;
     for (const k of gorunen) {
       const gen = kusGen(k), kus = this.kuslar.find((x) => x.id === k.id);
+      if (kus) kus.sesli = k.huy === 'sarkici' || yildiz(k, 'otus') >= 1;
       if (!kus) {
         const yeni = new Kus(this, r(Z.x1, Z.x2), r(Z.y1, Z.y2), gen, { olcek: 0.29 });
         yeni.id = k.id;
         yeni.huy = k.huy; // huya göre köyde farklı davranır
+        yeni.sesli = k.huy === 'sarkici' || yildiz(k, 'otus') >= 1; // sesli öter
         this.kuslar.push(yeni);
       } else if (kus.gen.tur !== gen.tur || kus.gen.mutasyon !== gen.mutasyon || kondisyonAdi(kus.gen.tuy) !== kondisyonAdi(gen.tuy)) {
         kus.genAyarla(gen);
@@ -658,6 +673,8 @@ class Koy extends Phaser.Scene {
       kus.sevil();
       const k = M.kusBul(kus.id);
       if (k && kalp(k) >= 3) this.efekt('kalp', kus.dunyaKonumu(kus.bas), 6); // bağlı kuş seni görünce daha çok sevinir
+      const h = k ? yildiz(k, 'huner') : 0; // Hüner dersi almış kuş sevildikten sonra numarasını gösterir
+      if (h) this.time.delayedCall(1700, () => kus.numara(h >= 5 ? 'don' : h >= 3 ? 'takla' : 'reverans'));
       if (k) bildirim(M.kusSev(k.id) ? `💗 ${k.ad} sevildi! Mutluluk: ${Math.round(k.mutluluk)}` : `💗 ${k.ad} biraz önce sevildi, sonra tekrar dene`);
       return;
     }

@@ -552,6 +552,62 @@ export class Kus {
     this.bitir(no);
   }
 
+  // --- Eğitim (egitimArayuz.js) ve öğrenilen yetenekler ---
+  // Bir nota söyler: başını kaldırır, gerdanı kabarır, nota uçar (Kuş Evi'nde gaga açılmaz)
+  async notaOt() {
+    const no = await this.basla('ders', 60); const ok = () => this.no === no; if (!ok()) return;
+    const taban = POZ[this.yer] || POZ.zemin;
+    this.sahne.efekt('nota', this.dunyaKonumu(this.bas), 1);
+    await this.tw({ basAci: -0.45, puf: taban.puf * 1.08, gagaAc: 0.8 }, 120); if (!ok()) return;
+    await this.tw({ basAci: 0, puf: taban.puf, gagaAc: 0 }, 200);
+    this.bitir(no);
+  }
+  // Hüner: 'reverans' (eğilip kanat açar), 'takla' (zıplayıp havada döner), 'don' (havalanıp kendi etrafında döner)
+  async numara(tur = 'reverans') {
+    const no = await this.basla('numara', 100); const ok = () => this.no === no; if (!ok()) return;
+    const p = this.p, taban = POZ[this.yer] || POZ.zemin, c = this.carpan, y0 = p.yuk;
+    if (tur === 'reverans') {
+      await this.tw({ basAci: 0.9, egim: 0.35, kanatAci: 0.7 }, 260); if (!ok()) return;
+      await this.bekle(450); if (!ok()) return;
+      await this.tw({ basAci: 0, egim: 0, kanatAci: taban.kanatAci }, 260);
+    } else if (tur === 'takla') {
+      this.cirpHiz = 30; this.tw({ cirp: 1 }, 100);
+      await this.tw({ yuk: y0 + 60 * c, ezY: 1.05 }, 220, 'Quad.easeOut'); if (!ok()) return;
+      await this.tw({ egim: -Math.PI * 2 }, 420); if (!ok()) return;
+      p.egim = 0; this.tw({ cirp: 0 }, 120);
+      await this.tw({ yuk: y0, ezY: 1 }, 240, 'Quad.easeIn'); if (!ok()) return;
+      this.sahne.efekt('yildiz', this.dunyaKonumu(this.govdeKok), 5, 0xfff3a0);
+    } else {
+      this.cirpHiz = 34; this.tw({ cirp: 1 }, 100);
+      await this.tw({ yuk: y0 + 90 * c }, 260, 'Quad.easeOut'); if (!ok()) return;
+      for (let i = 0; i < 3; i++) { await this.tw({ yon: -1 }, 110); await this.tw({ yon: 1 }, 110); if (!ok()) return; }
+      this.tw({ cirp: 0 }, 160);
+      await this.tw({ yuk: y0 }, 300, 'Quad.easeIn'); if (!ok()) return;
+      this.sahne.efekt('yildiz', this.dunyaKonumu(this.govdeKok), 7, 0xfff3a0);
+    }
+    this.cirpHiz = 0;
+    this.bitir(no);
+  }
+  // Konuşma: başının üstünde konuşma balonu çıkar
+  async konus(metin) {
+    const no = await this.basla('konusuyor', 80); const ok = () => this.no === no; if (!ok()) return;
+    const kam = this.sahne.cameras.main, dpr = Math.min(window.devicePixelRatio || 1, 2), b = this.dunyaKonumu(this.bas);
+    const yazi = this.sahne.add.text(b.x, b.y - 26 * this.carpan, metin, { fontFamily: 'Nunito, system-ui, sans-serif', fontStyle: '800',
+      fontSize: Math.round(15 * dpr / kam.zoom) + 'px', color: '#3a2a35', backgroundColor: '#fffaf0', padding: { x: 10 * dpr / kam.zoom, y: 6 * dpr / kam.zoom } })
+      .setOrigin(0.5, 1).setDepth(96000).setAlpha(0);
+    this.sahne.tweens.add({ targets: yazi, alpha: 1, y: yazi.y - 8, duration: 180 });
+    for (let i = 0; i < 3; i++) { await this.tw({ basAci: -0.2, gagaAc: 0.7 }, 90); await this.tw({ basAci: 0, gagaAc: 0 }, 110); if (!ok()) break; }
+    this.sahne.time.delayedCall(1800, () => this.sahne.tweens.add({ targets: yazi, alpha: 0, duration: 300, onComplete: () => yazi.destroy() }));
+    if (ok()) this.bitir(no);
+  }
+  // Derste olmadı: başını iki yana sallar
+  async basSalla() {
+    const no = await this.basla('ders', 60); const ok = () => this.no === no; if (!ok()) return;
+    for (let i = 0; i < 2; i++) { await this.tw({ basAci: 0.35 }, 110); await this.tw({ basAci: -0.35 }, 110); if (!ok()) return; }
+    await this.tw({ basAci: 0 }, 120);
+    this.bitir(no);
+  }
+
   async kulucka() {
     const no = await this.basla('kulucka'); const ok = () => this.no === no; if (!ok()) return;
     const Y = this.sahne.yuva;
@@ -807,7 +863,7 @@ export class Kus {
       if (this.huy === 'merakli' && Math.random() < 0.4) this.sahne.efekt('yildiz', this.dunyaKonumu(this.gaga), 3, 0xfff3a0); // bir şey buldu mu?
     } else if (sec === 'ot') { // başını kaldırıp öter: gaga açılıp kapanır, notalar uçar
       await this.tw({ basAci: -0.4, puf: taban.puf * 1.06 }, 200); if (!ok()) return;
-      if (this.huy === 'sarkici' && Math.random() < 0.5 && this.sahne.cameras.main.worldView.contains(p.x, p.y)) cevreSesiCal(this.sahne, 0.025);
+      if (this.sesli && Math.random() < 0.5 && this.sahne.cameras.main.worldView.contains(p.x, p.y)) cevreSesiCal(this.sahne, 0.025); // şarkıcı ya da ötüş dersi almış kuş
       for (let i = 0; i < 3; i++) {
         await this.tw({ gagaAc: 0.8 }, 90); if (!ok()) return;
         if (i !== 1) this.sahne.efekt('nota', this.dunyaKonumu(this.bas), 1);

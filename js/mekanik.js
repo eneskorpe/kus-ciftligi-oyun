@@ -5,6 +5,7 @@ import { YEMLER, KULUCKA_DK, yabaniKus, yavruUret, kusOlustur, kusDegeri, geceMi
 import { gorevOlay, gunluguYenile } from './gorevler.js';
 import { BINALAR } from './binalar.js';
 import { bagEkle, bakimYap, gelirCarpani, kalp, bugunYikandiMi } from './bag.js';
+import { otusGelir, getirTik } from './egitim.js';
 
 export const MAKS_SV = 5;
 export const GELISTIRME_FIYATI = [0, 0, 300, 800, 2000, 5000]; // hedef seviyeye göre
@@ -587,7 +588,8 @@ export function tik() {
       if (k.mutluluk > 70 && k.tokluk > 50) k.tuy = Math.max(0, k.tuy - 0.004 * saat);
       else if (k.mutluluk < 30 || k.tokluk < 20) k.tuy = Math.min(1, k.tuy + 0.006 * saat);
       if (rahatsizlikTik(k, t, saat)) degisim = true;
-      if (k.mutluluk >= 50) D.binalar.kusevi.birikim += GELIR_SAAT[TURLER[k.tur].nadirlik] * saat * (k.hasta && k.hasta.tur === 'halsiz' ? 0.5 : 1) * gelirCarpani(k);
+      if (getirTik(k)) degisim = true; // Getir yeteneği: günde bir hediye şansı
+      if (k.mutluluk >= 50) D.binalar.kusevi.birikim += GELIR_SAAT[TURLER[k.tur].nadirlik] * saat * (k.hasta && k.hasta.tur === 'halsiz' ? 0.5 : 1) * gelirCarpani(k) * otusGelir(k);
     }
     D.binalar.kusevi.birikim = Math.min(gelirKapasite(), D.binalar.kusevi.birikim);
   }

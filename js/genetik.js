@@ -7,6 +7,7 @@ import { D, simdi, saat } from './durum.js';
 import { ISIMLER } from './isimler.js';
 import { kalp, huySec, favoriSec } from './bag.js';
 import { FAVORI } from './ikram.js';
+import { toplamYildiz } from './egitim.js';
 
 export const YEMLER = {
   // tarla: altın yerine tarladan gelen tohumla da kurulabilir (mekanik.js tuzakKur)
@@ -86,7 +87,7 @@ export function yavruUret(a, b, kosullar) {
 export function kusDegeri(k) {
   // Bağ: her kalp değeri %8 artırır (kuşla vakit geçirmek, hemen satmaktan kârlı olsun)
   const utangac = k.huy === 'utangac' && kalp(k) >= 10 ? 1.25 : 1; // utangaç kuşun Can Dostu ödülü
-  return Math.round(DEGER[TURLER[k.tur].nadirlik] * MUT_CARPAN[fenotip(k.genler)] * KOND_CARPAN[kondisyonAdi(k.tuy)] * (1 + 0.08 * kalp(k)) * utangac);
+  return Math.round(DEGER[TURLER[k.tur].nadirlik] * MUT_CARPAN[fenotip(k.genler)] * KOND_CARPAN[kondisyonAdi(k.tuy)] * (1 + 0.08 * kalp(k)) * utangac * (1 + 0.1 * toplamYildiz(k))); // her yetenek yıldızı +%10
 }
 
 export const geceMi = () => { const s = saat(); return s >= 20 || s < 6; };

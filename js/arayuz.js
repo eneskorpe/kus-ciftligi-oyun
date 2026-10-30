@@ -362,6 +362,7 @@ function yemlikPaneli() {
 
 // --- Pencereler ---
 export function modalAc(html) { gorevPencereAcik = false; $('#modalIc').innerHTML = ikonla(html); $('#modal').classList.add('acik'); }
+export const modalKilitle = (kilit) => { kartAcik = kilit; }; // açıkken pencere dışına dokununca kapanmaz
 function modalKapat() { kartAcik = false; gorevPencereAcik = false; $('#modal').classList.remove('acik'); }
 export const kapat = () => dugme('<img src="assets/arayuz/kapat.png" alt="Kapat">', modalKapat, 'class="kapat"');
 

@@ -6,6 +6,8 @@ import * as M from './mekanik.js';
 import { IKRAMLAR, stok, ikramAl, ikramVer, favoriIkram, favoriBiliniyor } from './ikram.js';
 import { jeton, dugme, modalAc, cinsiyet, cubuk, rozet, kapat, metinler, bildirim, kalpYazi, bakimYazi, huyYazi } from './arayuz.js';
 import { canDostu, HUYLAR, huyAcik, HUY_KALP, kalp, BAG_ESIK } from './bag.js';
+import { egitimAc, egitimKur } from './egitimArayuz.js';
+import { YETENEKLER, yetenekVarMi, yildiz, yildizYazi, toplamYildiz } from './egitim.js';
 
 const $ = (s) => document.querySelector(s);
 let oyun, acik = false, defterSekme = 'soy';
@@ -14,6 +16,7 @@ const secili = () => { const s = sahne(); return s && M.kusBul(s.secili); };
 
 export function kuseviArayuzKur(o) {
   oyun = o;
+  egitimKur(o);
   $('#dKusevi').onclick = () => gir();
   $('#dKoyeDon').onclick = () => cik();
   oyun.events.on('kuseviGir', (id) => gir(id));
@@ -74,7 +77,7 @@ function ciz() {
   const tur = TURLER[k.tur], buff = k.buff || {};
   const etkiler = [k.hasta && M.RAHATSIZLIKLAR[k.hasta.tur].ikon, k.koruma > simdi() && '🛡️', buff.nadir && '🍯', buff.kalsiyum && '🧂', k.testli && '🧪'].filter(Boolean).join(' ');
   $('#kKart').classList.toggle('canDostu', canDostu(k)); // 10 kalp: altın çerçeve
-  $('#kKart').innerHTML = `<div class="kkUst"><b>${k.ad}</b> ${cinsiyet(k)} <span>${tur.ad}</span> ${rozet(k.tur)} ${kalpYazi(k)} ${huyYazi(k, true)} ${bakimYazi(k)}${etkiler ? `<span class="kkEtki" title="Aktif ikram etkileri">${etkiler}</span>` : ''}</div>
+  $('#kKart').innerHTML = `<div class="kkUst"><b>${k.ad}</b> ${cinsiyet(k)} <span>${tur.ad}</span> ${rozet(k.tur)} ${kalpYazi(k)} ${huyYazi(k, true)} ${bakimYazi(k)}${toplamYildiz(k) ? ` <span class="yildizlar" title="Yetenek yıldızları">🎓★${toplamYildiz(k)}</span>` : ''}${etkiler ? `<span class="kkEtki" title="Aktif ikram etkileri">${etkiler}</span>` : ''}</div>
     <div class="kkAlt"><span>${MUT_ADI[fenotip(k.genler)]} · <b>${kondisyonAdi(k.tuy)}</b> (${k.tuy.toFixed(3)})</span>
     <span class="kkBar">😊 ${cubuk(k.mutluluk, '#ff8fb0')}</span><span class="kkBar">🌾 ${cubuk(k.tokluk, '#e9c46a')}</span></div>`;
   $('#kAvatar').innerHTML = D.kuslar.map((x) => {
@@ -110,6 +113,7 @@ export function defterAc(sekme = defterSekme) {
       <p>💗 Bağ: <b>${n} / 10 kalp</b>${n < 10 ? ` <small>(sonraki kalbe ${BAG_ESIK[n + 1] - (k.bag || 0)} puan)</small>` : ' 🏅 Can Dostu'}</p>
       <p>🎭 Huyu: <b>${H && huyAcik(k) ? `${H.ikon} ${H.ad}` : `??? (${HUY_KALP} kalpte ortaya çıkar)`}</b>${H && huyAcik(k) ? `<br><small>${H.etki}</small>` : ''}</p>
       <p>🍽️ En sevdiği ikram: <b>${favoriBiliniyor(k) ? `${fav.ikon} ${fav.ad}` : '??? (farklı ikramlar dene)'}</b></p>
+      <p>🎓 Yetenekler: ${Object.entries(YETENEKLER).filter(([t]) => yetenekVarMi(k, t)).map(([t, Y]) => `${Y.ikon} ${yildizYazi(yildiz(k, t))}`).join(' · ')}</p>
       <p><small>${metinler.turler[k.tur] ? metinler.turler[k.tur].tanim : ''}</small></p>`;
   } else if (sekme === 'gen') {
     icerik = `<p>Görünen renk: <b>${MUT_ADI[fenotip(k.genler)]}</b> · Tüy: <b>${kondisyonAdi(k.tuy)}</b> · Desen #${k.tohum}</p>` +
@@ -143,6 +147,7 @@ document.addEventListener('click', (e) => {
   if (!b || !acik) return;
   const s = sahne(), eylem = b.dataset.kusevi;
   if (eylem === 'defter') return defterAc();
+  if (eylem === 'egit') { const k = secili(); if (k) egitimAc(k); return; }
   if (!s || !s.kus || (s.kus.durum !== 'bos' && s.kus.durum !== 'oksaniyor')) return;
   if (eylem === 'sev') sev();
   else if (eylem === 'tara') {
