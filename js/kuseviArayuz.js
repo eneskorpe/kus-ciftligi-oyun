@@ -71,12 +71,12 @@ function ciz() {
   const k = secili();
   if (!k) return;
   const tur = TURLER[k.tur], buff = k.buff || {};
-  const etkiler = [buff.nadir && '🍯', buff.kalsiyum && '🧂', k.testli && '🧪'].filter(Boolean).join(' ');
+  const etkiler = [k.hasta && M.RAHATSIZLIKLAR[k.hasta.tur].ikon, k.koruma > simdi() && '🛡️', buff.nadir && '🍯', buff.kalsiyum && '🧂', k.testli && '🧪'].filter(Boolean).join(' ');
   $('#kKart').innerHTML = `<div class="kkUst"><b>${k.ad}</b> ${cinsiyet(k)} <span>${tur.ad}</span> ${rozet(k.tur)}${etkiler ? `<span class="kkEtki" title="Aktif ikram etkileri">${etkiler}</span>` : ''}</div>
     <div class="kkAlt"><span>${MUT_ADI[fenotip(k.genler)]} · <b>${kondisyonAdi(k.tuy)}</b> (${k.tuy.toFixed(3)})</span>
     <span class="kkBar">😊 ${cubuk(k.mutluluk, '#ff8fb0')}</span><span class="kkBar">🌾 ${cubuk(k.tokluk, '#e9c46a')}</span></div>`;
   $('#kAvatar').innerHTML = D.kuslar.map((x) => {
-    const durum = M.mesgulMu(x) ? '💞' : x.mutluluk < 40 ? '😢' : x.tokluk < 30 ? '🍽️' : '';
+    const durum = D.klinik && D.klinik.kusId === x.id ? '🏥' : M.mesgulMu(x) ? '💞' : x.hasta ? M.RAHATSIZLIKLAR[x.hasta.tur].ikon : x.mutluluk < 40 ? '😢' : x.tokluk < 30 ? '🍽️' : '';
     return `<button class="kAv ${x.id === k.id ? 'secili' : ''}" data-is-av="${x.id}" title="${x.ad}">${jeton(x, 50)}${durum ? `<i>${durum}</i>` : ''}<small>${x.ad}</small></button>`;
   }).join('') + Array.from({ length: Math.max(0, M.kapasite() - D.kuslar.length) }, () => '<div class="kAv bos">＋</div>').join('');
   document.querySelectorAll('[data-is-av]').forEach((b) => { b.onclick = () => sec(+b.dataset.isAv); });
@@ -141,5 +141,9 @@ document.addEventListener('click', (e) => {
   if (eylem === 'defter') return defterAc();
   if (!s || !s.kus || (s.kus.durum !== 'bos' && s.kus.durum !== 'oksaniyor')) return;
   if (eylem === 'sev') sev();
-  else if (eylem === 'tara') s.kus.temizlen();
+  else if (eylem === 'tara') {
+    s.kus.temizlen();
+    const k = secili(); // tüy dökümü elle taramakla geçmez: Kuş Kliniği'nin tüy bakımı gerekir
+    if (k && k.hasta && k.hasta.tur === 'tuy') bildirim(D.binalar.klinik ? "🪶 Tüy dökümü için Kuş Kliniği'nde tüy bakımı yaptır" : '🪶 Tüy dökümü iyi beslenip mutlu kalınca geçer');
+  }
 });

@@ -15,11 +15,12 @@ const GELIR_SAAT = { 'Yaygın': 12, 'Nadir': 30, 'Epik': 90, 'Efsanevi': 400 };
 export const kapasite = () => 6 + 4 * (D.binalar.kusevi.sv - 1);
 export const yemlikKapasite = () => 20 * D.binalar.yemlik.sv;
 export const kusBul = (id) => D.kuslar.find((k) => k.id === id);
-export const mesgulMu = (k) => !!D.kulucka && (D.kulucka.aId === k.id || D.kulucka.bId === k.id);
+export const mesgulMu = (k) => (!!D.kulucka && (D.kulucka.aId === k.id || D.kulucka.bId === k.id)) || (!!D.klinik && D.klinik.kusId === k.id); // kuluçkada ya da klinikte
 
 export const BINA_ETKI = {
   tuzak: (sv) => `Süre −%${(sv - 1) * 10}, mutasyon şansı +%${(sv - 1) * 4}${sv >= 2 ? ', ay çekirdeği açık' : ''}`,
   degirmen: (sv) => `Öğütme süresi −%${(sv - 1) * 10}${sv >= 2 ? ', ballı çubuk açık' : ''}${sv >= 3 ? ', kalsiyum taşı açık' : ''}`,
+  klinik: (sv) => `Hizmet süresi −%${(sv - 1) * 10}, check-up koruması ${24 + (sv - 1) * 12} sa${sv >= 2 ? ', tüy bakımı açık' : ''}`,
   tarla: (sv) => `Hasat +%${(sv - 1) * 25}, süre −%${(sv - 1) * 10}${sv >= 2 ? ', kenevir açık' : ''}`,
   kulucka: (sv) => `Kuluçka süresi −%${(sv - 1) * 10}, yavru tüyü daha iyi`,
   kusevi: (sv) => `Kapasite ${6 + 4 * (sv - 1)} kuş`,
@@ -56,6 +57,7 @@ export function ciftlestir(aId, bId) {
   if (D.kulucka || !a || !b) return false;
   if (a.cinsiyet === b.cinsiyet) { bildir('Bir erkek ve bir dişi kuş seçmelisin'); return false; }
   for (const k of [a, b]) {
+    if (k.hasta && k.hasta.tur === 'nezle') { bildir(`${k.ad} nezle, önce Kuş Kliniği'nde iyileşmeli 🤧`); return false; }
     if (k.mutluluk < 50) { bildir(`${k.ad} mutsuz, çiftleşmek istemiyor 😔`); return false; }
     if (k.tokluk < 30) { bildir(`${k.ad} aç, önce beslenmeli 🌾`); return false; }
   }
@@ -278,6 +280,58 @@ export function degirmenTopla() {
   degisti();
 }
 
+// --- Hafif rahatsızlıklar: kuşlar ölmez ve gerçekten hastalanmaz; yalnızca uzun süre aç ya da mutsuz kalan kuş ara sıra
+// rahatsızlanır. Kuş Kliniği açılmadan (oyuncu Sv 5) hiç olmaz. İyi bakılırsa 6 saatte kendiliğinden geçer; klinikte hemen.
+export const RAHATSIZLIKLAR = {
+  nezle: { ad: 'Nezle', ikon: '🤧', etki: 'Çiftleşemez' },
+  tuy: { ad: 'Tüy dökümü', ikon: '🪶', etki: 'Tüy değeri hızla bozulur' },
+  halsiz: { ad: 'Halsizlik', ikon: '😴', etki: 'Kazandırdığı altın yarıya iner' },
+};
+const RAHATSIZLIK_SAATLIK = 0.12; // bakımsız kuşun bir saatte rahatsızlanma ihtimali
+function rahatsizlikTik(k, t, saat) {
+  if (k.hasta) {
+    if (k.hasta.tur === 'tuy') k.tuy = Math.min(1, k.tuy + 0.01 * saat);
+    if (k.tokluk > 60 && k.mutluluk > 60) k.hasta.iyi = (k.hasta.iyi || 0) + saat; // iyi bakılıyor: yavaş yavaş iyileşir
+    if (k.hasta.iyi >= 6) { delete k.hasta; bildir(`💚 ${k.ad} iyi bakıldı ve kendiliğinden iyileşti`); return true; }
+    return false;
+  }
+  if (D.seviye < BINALAR.klinik.acilis || (k.koruma && k.koruma > t) || (k.tokluk >= 25 && k.mutluluk >= 25)) return false;
+  if (Math.random() >= 1 - Math.pow(1 - RAHATSIZLIK_SAATLIK, saat)) return false;
+  const turler = Object.keys(RAHATSIZLIKLAR), tur = turler[Math.floor(Math.random() * turler.length)], R = RAHATSIZLIKLAR[tur];
+  k.hasta = { tur, bas: t };
+  bildir(`${R.ikon} ${k.ad} rahatsızlandı: ${R.ad.toLowerCase()}. ${D.binalar.klinik ? "Kuş Kliniği'nde tedavi et" : 'İyi beslenirse geçer'}`);
+  return true;
+}
+
+// --- Kuş Kliniği: tek kuş, süreli hizmet; kuş bu sürede köyde görünmez, bitince etkisiyle döner ---
+export const KLINIK_HIZMETLERI = {
+  tedavi: { ad: 'Tedavi', ikon: '💊', fiyat: 40, dk: 3, svGerek: 1, aciklama: 'Rahatsızlığı geçirir, 12 saat korur', hasta: true },
+  checkup: { ad: 'Check-up', ikon: '🩺', fiyat: 25, dk: 2, svGerek: 1, aciklama: 'Bir süre rahatsızlanmaz, tüyü biraz parlar' },
+  tuy: { ad: 'Tüy bakımı', ikon: '🪶', fiyat: 60, dk: 4, svGerek: 2, aciklama: 'Tüy değeri iyileşir, mutluluk +15' },
+};
+export const klinikSuresi = (h) => KLINIK_HIZMETLERI[h].dk * DAKIKA * SURE_CARPAN(D.binalar.klinik ? D.binalar.klinik.sv : 1);
+export function klinigeGonder(kusId, hizmet) {
+  const k = kusBul(kusId), H = KLINIK_HIZMETLERI[hizmet];
+  if (!k || D.klinik) return;
+  if (D.binalar.klinik.sv < H.svGerek) return bildir(`${H.ad} için Kuş Kliniği Sv. ${H.svGerek} olmalı`);
+  if (mesgulMu(k)) return bildir(`${k.ad} şu an kuluçkada`);
+  if (H.hasta && !k.hasta) return bildir(`${k.ad} sağlıklı, tedaviye gerek yok`);
+  if (!harca(H.fiyat)) return;
+  D.klinik = { kusId, hizmet, bas: simdi(), bitis: simdi() + klinikSuresi(hizmet) };
+  gorevOlay('klinik');
+  bildir(`${H.ikon} ${k.ad} kliniğe girdi`);
+  degisti();
+}
+function klinikBitir() {
+  const I = D.klinik, k = kusBul(I.kusId), sv = D.binalar.klinik ? D.binalar.klinik.sv : 1, t = simdi();
+  D.klinik = null;
+  if (!k) return;
+  if (I.hizmet === 'tedavi') { delete k.hasta; k.koruma = t + 12 * 60 * DAKIKA; k.mutluluk = Math.min(100, k.mutluluk + 10); bildir(`💚 ${k.ad} iyileşti ve köye döndü`); }
+  else if (I.hizmet === 'checkup') { k.koruma = t + (24 + (sv - 1) * 12) * 60 * DAKIKA; k.tuy = Math.max(0, +(k.tuy - 0.004).toFixed(3)); bildir(`🩺 ${k.ad} check-up'tan döndü: sapasağlam`); }
+  else { k.tuy = Math.max(0, +(k.tuy - 0.012).toFixed(3)); k.mutluluk = Math.min(100, k.mutluluk + 15); if (k.hasta && k.hasta.tur === 'tuy') delete k.hasta; bildir(`🪶 ${k.ad} tüy bakımından pırıl pırıl döndü`); }
+  xpEkle(8);
+}
+
 // --- Dekor kaldırma: Kunduz Usta köydeki ağaç ve kayaları kaldırır; türüne ve boyutuna göre altın kazandırır ---
 // Kaldırılan dekorlar D.kaldirilan'a ('agac,1,2' gibi) yazılır; o karo bina, yol ve fırça için boşalır (koy.js suslerGuncel)
 export function temizlikBilgi(doku, boy) {
@@ -326,6 +380,7 @@ export function tik() {
   let degisim = false;
   if (D.insaat && t >= D.insaat.bitis) { insaatBitir(); degisim = true; }
   if (D.temizlik && t >= D.temizlik.bitis) { temizlikBitir(); degisim = true; }
+  if (D.klinik && t >= D.klinik.bitis) { klinikBitir(); degisim = true; }
   const K = D.kulucka;
   if (K && K.asama === 'ciftlesme' && t >= K.bitis) {
     const a = kusBul(K.aId), b = kusBul(K.bId);
@@ -348,7 +403,8 @@ export function tik() {
       // Bakım tüyü etkiler: iyi bakılan kuşun tüyü parlar, bakımsız kuşun tüyü matlaşır
       if (k.mutluluk > 70 && k.tokluk > 50) k.tuy = Math.max(0, k.tuy - 0.004 * saat);
       else if (k.mutluluk < 30 || k.tokluk < 20) k.tuy = Math.min(1, k.tuy + 0.006 * saat);
-      if (k.mutluluk >= 50) D.binalar.kusevi.birikim += GELIR_SAAT[TURLER[k.tur].nadirlik] * saat;
+      if (rahatsizlikTik(k, t, saat)) degisim = true;
+      if (k.mutluluk >= 50) D.binalar.kusevi.birikim += GELIR_SAAT[TURLER[k.tur].nadirlik] * saat * (k.hasta && k.hasta.tur === 'halsiz' ? 0.5 : 1);
     }
     D.binalar.kusevi.birikim = Math.min(gelirKapasite(), D.binalar.kusevi.birikim);
   }

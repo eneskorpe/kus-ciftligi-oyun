@@ -88,7 +88,8 @@ export const cinsiyet = (k) => (k.cinsiyet === 'e' ? '<b class="erkek">♂</b>' 
 export const cubuk = (oran, renk) => `<span class="cubuk"><i style="width:${Math.round(oran)}%;background:${renk}"></i></span>`;
 export const rozet = (tur) => `<span class="rozet" data-n="${TURLER[tur].nadirlik}">${TURLER[tur].nadirlik}</span>`;
 function kusSatiri(k) {
-  return `${jeton(k)}<span class="ks"><b>${k.ad}</b> ${cinsiyet(k)} <small>${TURLER[k.tur].ad}</small><br>
+  const R = k.hasta && M.RAHATSIZLIKLAR[k.hasta.tur], durum = R ? ` <span class="hastaEtiket" title="${R.etki}">${R.ikon} ${R.ad}</span>` : k.koruma > simdi() ? ' <span title="Check-up koruması">🛡️</span>' : '';
+  return `${jeton(k)}<span class="ks"><b>${k.ad}</b> ${cinsiyet(k)} <small>${TURLER[k.tur].ad}</small>${durum}<br>
     <small>${MUT_ADI[fenotip(k.genler)]} · ${kondisyonAdi(k.tuy)} (${k.tuy.toFixed(3)})</small><br>
     <span class="bars">😊 ${cubuk(k.mutluluk, '#ff8fb0')} 🌾 ${cubuk(k.tokluk, '#e9c46a')}</span></span>`;
 }
@@ -133,7 +134,7 @@ function panelCiz() {
   $('#panelSeviye').style.display = t.sabit ? 'none' : '';
   $('#panelAciklama').textContent = t.aciklama;
   const I = D.insaat;
-  let icerik = B.sv === 0 ? '' : ({ tuzak: tuzakPaneli, kulucka: kuluckaPaneli, kusevi: kuseviPaneli, yemlik: yemlikPaneli, kunduz: kunduzPaneli, tarla: tarlaPaneli, degirmen: degirmenPaneli }[tip] || yakindaPaneli)();
+  let icerik = B.sv === 0 ? '' : ({ tuzak: tuzakPaneli, kulucka: kuluckaPaneli, kusevi: kuseviPaneli, yemlik: yemlikPaneli, kunduz: kunduzPaneli, tarla: tarlaPaneli, degirmen: degirmenPaneli, klinik: klinikPaneli }[tip] || yakindaPaneli)();
   if (t.sabit) { /* geliştirilmeyen bina */ } else if (I && I.tip === tip) { // Kunduz Usta bu binada çalışıyor
     icerik += `<div class="gelistir" style="display:block">${ilerleme(I, I.bitis - I.bas, I.yeni ? '🦫 Kunduz Usta binayı inşa ediyor:' : `🦫 Kunduz Usta Sv. ${I.sv} için çalışıyor:`, 'insaat')}</div>`;
   } else if (B.sv < M.MAKS_SV && !t.islevYok) {
@@ -226,6 +227,26 @@ function degirmenPaneli() {
       <small>⏱ ${sureYazi(M.ogutmeSuresi(u))}${kilit ? ` · 🔒 Sv. ${U.svGerek}` : ''}</small></span>
       <span class="dugmeSutun">${dugme('×1', () => M.ogut(u, 1), kilit || !yeter(U, 1) ? 'disabled' : '')}${dugme('×5', () => M.ogut(u, 5), kilit || !yeter(U, 5) ? 'disabled' : '')}</span></div>`;
   }).join('') + '</div>' + ambar + `<p><small>Tohumları Tohum Tarlası'ndan hasat edersin. İkramlar Kuş Evi'ndeki tepsiye gider.</small></p>`;
+}
+
+// Kuş Kliniği: rahatsız kuşlar önce; her kuşa uygun hizmet düğmeleri
+function klinikPaneli() {
+  const I = D.klinik;
+  if (I) {
+    const k = M.kusBul(I.kusId), H = M.KLINIK_HIZMETLERI[I.hizmet];
+    return (k ? `<p class="cift">${jeton(k, 30)} ${k.ad}</p>` : '') + ilerleme(I, I.bitis - I.bas, `${H.ikon} ${H.ad} sürüyor:`, 'klinik');
+  }
+  const kuslar = [...D.kuslar].sort((a, b) => !!b.hasta - !!a.hasta);
+  const hastaSay = kuslar.filter((k) => k.hasta).length;
+  const satir = (k) => {
+    const hizmetler = Object.entries(M.KLINIK_HIZMETLERI).filter(([, H]) => !!H.hasta === !!k.hasta || (!H.hasta && k.hasta && k.hasta.tur === 'tuy' && H === M.KLINIK_HIZMETLERI.tuy));
+    const dugmeler = hizmetler.map(([h, H]) => dugme(`${H.ikon} ${H.ad} · ${H.fiyat} 🪙`, () => M.klinigeGonder(k.id, h),
+      D.binalar.klinik.sv < H.svGerek || M.mesgulMu(k) ? 'disabled' : k.hasta ? 'class="ana"' : '')).join('');
+    return `<div class="satir">${kusSatiri(k)}<span class="dugmeSutun">${dugmeler}</span></div>`;
+  };
+  return `<p>${hastaSay ? `🤒 <b>${hastaSay}</b> kuşun rahatsız.` : '💚 Bütün kuşların sağlıklı.'} <small>Uzun süre aç ya da mutsuz kalan kuşlar rahatsızlanabilir.</small></p>
+    <p><small>${Object.values(M.KLINIK_HIZMETLERI).map((H) => `${H.ikon} <b>${H.ad}</b>: ${H.aciklama} (${sureYazi(M.klinikSuresi(Object.keys(M.KLINIK_HIZMETLERI).find((x) => M.KLINIK_HIZMETLERI[x] === H)))}${H.svGerek > 1 ? `, Sv. ${H.svGerek}` : ''})`).join('<br>')}</small></p>` +
+    kuslar.map(satir).join('');
 }
 
 // İşlevi henüz eklenmemiş yeni binalar

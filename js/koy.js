@@ -22,6 +22,7 @@ import { dereKur } from './su.js';
 import { muzikKur } from './muzik.js';
 import { duzenleKur } from './duzenle.js';
 import { tarlaKur, degirmenKur } from './tarla.js';
+import { rahatsizlikKur } from './rahatsizlik.js';
 import { KusEvi } from './kusevi.js';
 import { kuseviArayuzKur } from './kuseviArayuz.js';
 import { dekorlariYukle, dekorKoy, DEKOR_GRUP } from './dekor.js';
@@ -155,6 +156,7 @@ class Koy extends Phaser.Scene {
     surulerKur(this);
     binaCanlilikKur(this, this.binalar);
     this.tarlaGuncelle = tarlaKur(this); // tarladaki ekinler süre ilerledikçe büyür
+    this.rahatsizlikGuncelle = rahatsizlikKur(this); // rahatsız kuşlar hapşırır, tüy döker, uyuklar
     this.degirmenGuncelle = degirmenKur(this); // değirmenin kanatları (öğütürken hızlı döner)
     this.dokunTepki = dokunmaTepkisiKur(this);
     this.isciGuncelle = isciKur(this); // Kunduz Usta
@@ -174,6 +176,7 @@ class Koy extends Phaser.Scene {
     this.binaDurumlariCiz(zaman);
     this.tarlaGuncelle();
     this.degirmenGuncelle(dt);
+    this.rahatsizlikGuncelle(dt);
     this.gunIsigiGuncelle(zaman);
     this.canlilikGuncelle(zaman);
     this.zeminGuncelle();
