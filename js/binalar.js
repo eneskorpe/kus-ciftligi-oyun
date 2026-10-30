@@ -240,7 +240,7 @@ function elipsN(x, y, rx, ry) { const n = []; for (let i = 0; i < 24; i++) { con
 // temel: bina henüz inşa ediliyor (Sv 0), yerinde inşaat alanı çizilir
 // --- Seviye görselleri: 3 kademe (Sv1-2, Sv3-4, Sv5). Görseli gelen kademeler buraya yazılır (assets/binalar/<tip>_<kademe>.png).
 // Ara seviyelerde (Sv2 ve Sv4) binanın önüne kodla saksılar, Sv4'te bir de flama eklenir.
-export const KADEME_GORSELLERI = ['kulucka_2', 'kulucka_3'];
+export const KADEME_GORSELLERI = ['kulucka_2', 'kulucka_3', 'tuzak_2', 'tuzak_3'];
 export const kademe = (sv) => (sv >= 5 ? 3 : sv >= 3 ? 2 : 1);
 export function binaDokusu(sahne, tip, sv) {
   for (let n = kademe(sv); n > 1; n--) if (sahne.textures.exists(`bina_${tip}_${n}`)) return `${tip}_${n}`;
