@@ -19,6 +19,7 @@ export const mesgulMu = (k) => !!D.kulucka && (D.kulucka.aId === k.id || D.kuluc
 
 export const BINA_ETKI = {
   tuzak: (sv) => `Süre −%${(sv - 1) * 10}, mutasyon şansı +%${(sv - 1) * 4}${sv >= 2 ? ', ay çekirdeği açık' : ''}`,
+  degirmen: (sv) => `Öğütme süresi −%${(sv - 1) * 10}${sv >= 2 ? ', ballı çubuk açık' : ''}${sv >= 3 ? ', kalsiyum taşı açık' : ''}`,
   tarla: (sv) => `Hasat +%${(sv - 1) * 25}, süre −%${(sv - 1) * 10}${sv >= 2 ? ', kenevir açık' : ''}`,
   kulucka: (sv) => `Kuluçka süresi −%${(sv - 1) * 10}, yavru tüyü daha iyi`,
   kusevi: (sv) => `Kapasite ${6 + 4 * (sv - 1)} kuş`,
@@ -132,6 +133,19 @@ export function yemlikTohumla() {
   bildir(`🌾 Yemliğe ${konan} tohum kondu`);
   degisti();
 }
+// Karışık yem (Değirmen): 1 kese = 25 porsiyon
+export const KARISIK_PORSIYON = 25;
+export function yemlikKarisik() {
+  const eksik = yemlikKapasite() - D.binalar.yemlik.stok;
+  if (eksik <= 0) return bildir('Yemlik zaten dolu');
+  if (!D.karisik) return bildir('Karışık yemin yok 🥣 Önce değirmende öğüt');
+  const kese = Math.min(D.karisik, Math.ceil(eksik / KARISIK_PORSIYON));
+  D.karisik -= kese;
+  D.binalar.yemlik.stok = Math.min(yemlikKapasite(), D.binalar.yemlik.stok + kese * KARISIK_PORSIYON);
+  gorevOlay('yemlikDoldur');
+  bildir(`🥣 Yemliğe ${kese} kese karışık yem kondu`);
+  degisti();
+}
 export function yemlikDoldur() {
   const eksik = yemlikKapasite() - D.binalar.yemlik.stok;
   if (eksik <= 0) return bildir('Yemlik zaten dolu');
@@ -228,6 +242,39 @@ export function hasat() {
   xpEkle(5);
   gorevOlay('hasat');
   bildir(`${EKINLER[T.ekin].ikon} +${T.verim} ${EKINLER[T.ekin].ad.toLowerCase()} ambara girdi`);
+  degisti();
+}
+
+// --- Değirmen: ambardaki tohumları karışık yeme ve Kuş Evi ikramlarına öğütür (tek iş, ×1 ya da ×5) ---
+// Ürünler: ikramlar D.ikramlar'a (Kuş Evi tepsisi), karışık yem D.karisik'e (yemlik). Seviye süreyi kısaltır, yeni tarifler açar.
+export const DEGIRMEN_URUNLERI = {
+  karisik: { ad: 'Karışık yem', ikon: '🥣', gerek: { dari: 3, aycicek: 2, kenevir: 1 }, dk: 3, svGerek: 1, aciklama: `Yemliğe ${25} porsiyon` },
+  dari: { ad: 'Darı salkımı', ikon: '🌾', gerek: { dari: 4 }, dk: 1, svGerek: 1, aciklama: 'Kuş Evi ikramı' },
+  ay: { ad: 'Ay çekirdeği', ikon: '🌻', gerek: { aycicek: 4 }, dk: 2, svGerek: 1, aciklama: 'Kuş Evi ikramı' },
+  bal: { ad: 'Ballı yem çubuğu', ikon: '🍯', gerek: { dari: 4, kenevir: 3 }, dk: 6, svGerek: 2, aciklama: 'Gizli tür şansı ×2' },
+  kalsiyum: { ad: 'Kalsiyum taşı', ikon: '🧂', gerek: { kenevir: 6 }, dk: 8, svGerek: 3, aciklama: 'Kuluçka %30 kısa' },
+};
+export const ogutmeSuresi = (u, adet = 1) => DEGIRMEN_URUNLERI[u].dk * adet * DAKIKA * SURE_CARPAN(D.binalar.degirmen ? D.binalar.degirmen.sv : 1);
+export function ogut(urun, adet = 1) {
+  const U = DEGIRMEN_URUNLERI[urun];
+  if (D.degirmen) return;
+  if (D.binalar.degirmen.sv < U.svGerek) return bildir(`${U.ad} için Değirmen Sv. ${U.svGerek} olmalı`);
+  const gerek = Object.fromEntries(Object.entries(U.gerek).map(([e, n]) => [e, n * adet]));
+  if (!tohumHarca(gerek)) return;
+  D.degirmen = { urun, adet, bas: simdi(), bitis: simdi() + ogutmeSuresi(urun, adet) };
+  gorevOlay('ogut');
+  bildir(`⚙️ Değirmen ${U.ad.toLowerCase()} öğütüyor`);
+  degisti();
+}
+export function degirmenTopla() {
+  const I = D.degirmen;
+  if (!I || simdi() < I.bitis) return;
+  const U = DEGIRMEN_URUNLERI[I.urun];
+  if (I.urun === 'karisik') D.karisik += I.adet; else D.ikramlar[I.urun] = (D.ikramlar[I.urun] || 0) + I.adet;
+  D.degirmen = null;
+  xpEkle(3 * I.adet);
+  gorevOlay('degirmenTopla');
+  bildir(`${U.ikon} +${I.adet} ${U.ad.toLowerCase()}`);
   degisti();
 }
 

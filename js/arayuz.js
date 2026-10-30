@@ -133,7 +133,7 @@ function panelCiz() {
   $('#panelSeviye').style.display = t.sabit ? 'none' : '';
   $('#panelAciklama').textContent = t.aciklama;
   const I = D.insaat;
-  let icerik = B.sv === 0 ? '' : ({ tuzak: tuzakPaneli, kulucka: kuluckaPaneli, kusevi: kuseviPaneli, yemlik: yemlikPaneli, kunduz: kunduzPaneli, tarla: tarlaPaneli }[tip] || yakindaPaneli)();
+  let icerik = B.sv === 0 ? '' : ({ tuzak: tuzakPaneli, kulucka: kuluckaPaneli, kusevi: kuseviPaneli, yemlik: yemlikPaneli, kunduz: kunduzPaneli, tarla: tarlaPaneli, degirmen: degirmenPaneli }[tip] || yakindaPaneli)();
   if (t.sabit) { /* geliştirilmeyen bina */ } else if (I && I.tip === tip) { // Kunduz Usta bu binada çalışıyor
     icerik += `<div class="gelistir" style="display:block">${ilerleme(I, I.bitis - I.bas, I.yeni ? '🦫 Kunduz Usta binayı inşa ediyor:' : `🦫 Kunduz Usta Sv. ${I.sv} için çalışıyor:`, 'insaat')}</div>`;
   } else if (B.sv < M.MAKS_SV && !t.islevYok) {
@@ -214,6 +214,20 @@ function tarlaPaneli() {
   }).join('') + '</div>' + ambar + '<p><small>Tohumlar yemliği ve tuzağı doldurur.</small></p>';
 }
 
+// Değirmen: tohumları karışık yeme ve ikramlara öğütür
+function degirmenPaneli() {
+  const I = D.degirmen, ambar = `<p class="ambar">Ambar: ${Object.entries(M.EKINLER).map(([e, E]) => `${E.ikon} <b>${D.tohumlar[e]}</b>`).join(' · ')} · 🥣 <b>${D.karisik}</b></p>`;
+  if (I && simdi() >= I.bitis) { const U = M.DEGIRMEN_URUNLERI[I.urun]; return `<p class="hazir">${U.ikon} ${I.adet} ${U.ad.toLowerCase()} hazır!</p><div class="dugmeler">${dugme('🧺 Topla', () => M.degirmenTopla(), 'class="ana"')}</div>` + ambar; }
+  if (I) { const U = M.DEGIRMEN_URUNLERI[I.urun]; return ilerleme(I, I.bitis - I.bas, `⚙️ ${I.adet} ${U.ad.toLowerCase()} öğütülüyor:`, 'degirmen') + ambar; }
+  const yeter = (U, adet) => Object.entries(U.gerek).every(([e, n]) => D.tohumlar[e] >= n * adet);
+  return '<p class="baslik2">Ne öğütelim?</p><div class="yemler">' + Object.entries(M.DEGIRMEN_URUNLERI).map(([u, U]) => {
+    const kilit = D.binalar.degirmen.sv < U.svGerek, gerek = Object.entries(U.gerek).map(([e, n]) => `${n} ${M.EKINLER[e].ikon}`).join(' ');
+    return `<div class="yem ${kilit ? 'kilit' : ''}"><span class="yi">${U.ikon}</span><span><b>${U.ad}</b><br><small>${U.aciklama} · ${gerek}</small><br>
+      <small>⏱ ${sureYazi(M.ogutmeSuresi(u))}${kilit ? ` · 🔒 Sv. ${U.svGerek}` : ''}</small></span>
+      <span class="dugmeSutun">${dugme('×1', () => M.ogut(u, 1), kilit || !yeter(U, 1) ? 'disabled' : '')}${dugme('×5', () => M.ogut(u, 5), kilit || !yeter(U, 5) ? 'disabled' : '')}</span></div>`;
+  }).join('') + '</div>' + ambar + `<p><small>Tohumları Tohum Tarlası'ndan hasat edersin. İkramlar Kuş Evi'ndeki tepsiye gider.</small></p>`;
+}
+
 // İşlevi henüz eklenmemiş yeni binalar
 function yakindaPaneli() {
   return '<p class="ipucu">🚧 Bu binanın işlevi çok yakında eklenecek. Şimdilik köyünü süslüyor!</p>';
@@ -238,7 +252,7 @@ function yemlikPaneli() {
   const Y = D.binalar.yemlik, f = M.yemlikFiyati();
   return `<p>🌾 Yem: <b>${Y.stok} / ${M.yemlikKapasite()}</b> porsiyon</p>${cubuk(Y.stok / M.yemlikKapasite() * 100, '#e9c46a')}
     <p><small>Acıkan kuşlar buradan kendileri yer. Yem biterse acıkır ve mutsuz olurlar.</small></p>
-    <div class="dugmeler">${dugme(`🌾 Doldur · ${f} 🪙`, () => M.yemlikDoldur(), f ? 'class="ana"' : 'disabled')}${M.tohumToplam() ? dugme(`🌾 Tohumla doldur (ambarda ${M.tohumToplam()})`, () => M.yemlikTohumla(), f ? '' : 'disabled') : ''}</div>`;
+    <div class="dugmeler">${dugme(`🌾 Doldur · ${f} 🪙`, () => M.yemlikDoldur(), f ? 'class="ana"' : 'disabled')}${M.tohumToplam() ? dugme(`🌾 Tohumla doldur (ambarda ${M.tohumToplam()})`, () => M.yemlikTohumla(), f ? '' : 'disabled') : ''}${D.karisik ? dugme(`🥣 Karışık yem koy (${D.karisik} kese)`, () => M.yemlikKarisik(), f ? '' : 'disabled') : ''}</div>`;
 }
 
 // --- Pencereler ---

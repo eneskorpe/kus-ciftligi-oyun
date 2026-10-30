@@ -26,12 +26,33 @@ function bitkiCiz(g, ekin) {
   }
 }
 
-export function tarlaKur(sahne) {
-  if (!sahne.textures.exists('ui_hasat')) { // hasat balonu ikonu
-    const c = sahne.textures.createCanvas('ui_hasat', 128, 128), x = c.getContext();
-    x.font = '96px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
-    x.fillText('🌾', 64, 70); c.refresh();
+// Gemini ikonu gelene kadar balon ikonu emojiden çizilir
+function emojiDoku(sahne, ad, emoji) {
+  if (sahne.textures.exists(ad)) return;
+  const c = sahne.textures.createCanvas(ad, 128, 128), x = c.getContext();
+  x.font = '96px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.fillText(emoji, 64, 70); c.refresh();
+}
+
+// Değirmenin kanatları: görseli gelene kadar geçici çizimin çatısında döner; öğütürken hızlı, boşta ağır ağır
+export function degirmenKur(sahne) {
+  const b = sahne.binalar.find((x) => x.tip === 'degirmen' && !x.temel);
+  if (!b || b.nesne.type === 'Image') return () => {};
+  const g = sahne.add.graphics().setPosition(b.tepe.x, b.tepe.y + 34).setDepth(b.nesne.depth + 2);
+  for (let n = 0; n < 4; n++) {
+    const a = n * Math.PI / 2, c = Math.cos(a), s = Math.sin(a), p = (u, v) => ({ x: c * u - s * v, y: s * u + c * v });
+    g.lineStyle(7, CIZGI); g.lineBetween(0, 0, c * 62, s * 62);
+    g.lineStyle(4, 0x9a6b3f); g.lineBetween(0, 0, c * 62, s * 62);
+    g.fillStyle(CIZGI); g.fillPoints([p(14, 2), p(62, 2), p(62, 18), p(14, 14)], true);
+    g.fillStyle(0xfff3dc); g.fillPoints([p(16, 4), p(60, 4), p(60, 16), p(16, 12)], true);
   }
+  g.fillStyle(CIZGI); g.fillCircle(0, 0, 8); g.fillStyle(0xc4553f); g.fillCircle(0, 0, 5);
+  return (dt) => { g.rotation += (D.degirmen && simdi() < D.degirmen.bitis ? 3 : 0.35) * dt / 1000; };
+}
+
+export function tarlaKur(sahne) {
+  emojiDoku(sahne, 'ui_hasat', '🌾'); // hasat balonu ikonu
+  emojiDoku(sahne, 'ui_un', '🥣'); // değirmende ürün hazır
   const b = sahne.binalar.find((x) => x.tip === 'tarla' && !x.temel);
   if (!b) return () => {};
   // Arsanın iç kısmında 4 sıra × 5 bitki

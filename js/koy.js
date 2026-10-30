@@ -21,7 +21,7 @@ import { isciKur } from './isci.js';
 import { dereKur } from './su.js';
 import { muzikKur } from './muzik.js';
 import { duzenleKur } from './duzenle.js';
-import { tarlaKur } from './tarla.js';
+import { tarlaKur, degirmenKur } from './tarla.js';
 import { KusEvi } from './kusevi.js';
 import { kuseviArayuzKur } from './kuseviArayuz.js';
 import { dekorlariYukle, dekorKoy, DEKOR_GRUP } from './dekor.js';
@@ -155,6 +155,7 @@ class Koy extends Phaser.Scene {
     surulerKur(this);
     binaCanlilikKur(this, this.binalar);
     this.tarlaGuncelle = tarlaKur(this); // tarladaki ekinler süre ilerledikçe büyür
+    this.degirmenGuncelle = degirmenKur(this); // değirmenin kanatları (öğütürken hızlı döner)
     this.dokunTepki = dokunmaTepkisiKur(this);
     this.isciGuncelle = isciKur(this); // Kunduz Usta
     muzikKur(() => this.gunIsigi && this.gunIsigi.gece > 0.6); // oyun müziği ve doğa sesi (gece kuşlar susar)
@@ -172,6 +173,7 @@ class Koy extends Phaser.Scene {
     for (const k of this.kuslar) k.update(zaman, Math.min(dt, 50));
     this.binaDurumlariCiz(zaman);
     this.tarlaGuncelle();
+    this.degirmenGuncelle(dt);
     this.gunIsigiGuncelle(zaman);
     this.canlilikGuncelle(zaman);
     this.zeminGuncelle();
@@ -264,10 +266,10 @@ class Koy extends Phaser.Scene {
       b.insKutu = null;
       if (I) this.kapsulCiz(b, I, x, b.tepe.y - 22, zaman);
       let oran = null, balon = '';
-      const is = b.tip === 'tuzak' ? D.tuzak : b.tip === 'kulucka' ? D.kulucka : b.tip === 'tarla' && !b.temel ? D.tarla : null;
+      const is = b.tip === 'tuzak' ? D.tuzak : b.tip === 'kulucka' ? D.kulucka : b.tip === 'tarla' && !b.temel ? D.tarla : b.tip === 'degirmen' && !b.temel ? D.degirmen : null;
       if (is) {
         const kalan = M.kalanSure(is), toplam = is.bitis - is.bas;
-        if (kalan <= 0 && (b.tip !== 'kulucka' || is.asama === 'kulucka')) balon = { tuzak: 'kafes', kulucka: 'yumurta', tarla: 'hasat' }[b.tip];
+        if (kalan <= 0 && (b.tip !== 'kulucka' || is.asama === 'kulucka')) balon = { tuzak: 'kafes', kulucka: 'yumurta', tarla: 'hasat', degirmen: 'un' }[b.tip];
         else oran = toplam > 0 ? 1 - kalan / toplam : 1;
       } else if (b.tip === 'kusevi' && D.binalar.kusevi.birikim >= M.gelirKapasite() * 0.2) balon = 'altin_yigini';
       else if (b.tip === 'yemlik' && D.binalar.yemlik.stok <= 2) balon = 'bos_yem';

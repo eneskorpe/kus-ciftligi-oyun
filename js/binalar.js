@@ -24,7 +24,7 @@ export const BINALAR = {
     aciklama: 'Darı, ayçiçeği ve kenevir tohumu ekersin; süre dolunca hasat edip kuşların için yem elde edersin.' },
   klinik: { ad: 'Kuş Kliniği', boyut: [2, 2], ikon: '🩺', yeni: true, acilis: 5, fiyat: 1200, dk: 8, renk: 0xf4f1ea, cati: 0x7fc6d9, islevYok: true,
     aciklama: 'Bakımsız kalıp rahatsızlanan kuşlar burada iyileşir. Sağlıklı kuşlara check-up yapılır, tüyleri bakılır.' },
-  degirmen: { ad: 'Değirmen', boyut: [2, 2], ikon: '⚙️', yeni: true, acilis: 6, fiyat: 1800, dk: 10, renk: 0xe8d2a8, cati: 0xc4553f, islevYok: true,
+  degirmen: { ad: 'Değirmen', boyut: [2, 2], ikon: '⚙️', yeni: true, acilis: 6, fiyat: 1800, dk: 10, renk: 0xe8d2a8, cati: 0xc4553f,
     aciklama: 'Tarladan gelen hasadı karışık yeme, ballı çubuğa ve kalsiyum taşına çevirir.' },
   siparis: { ad: 'Sipariş Panosu', boyut: [1, 1], ikon: '📜', yeni: true, acilis: 8, fiyat: 2500, dk: 12, renk: 0xb98055, cati: 0x6aae4f, islevYok: true,
     aciklama: 'Köylüler belirli kuşlar ister. Siparişi teslim edersen altın ve XP kazanırsın.' },
