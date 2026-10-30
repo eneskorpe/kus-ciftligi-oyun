@@ -486,6 +486,7 @@ export function hizlandirElmas(tip) {
   if (!is) return;
   if (!harca(0, elmasFiyati(kalanSure(is)))) return;
   is.bitis = simdi();
+  gorevOlay('hizlandir:' + tip);
   degisti();
 }
 export function hizlandirReklam(tip) { // gerçek reklam bağlanana kadar deneme
