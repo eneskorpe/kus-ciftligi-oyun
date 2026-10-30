@@ -8,7 +8,7 @@ import { arayuzKur, bildirim } from './arayuz.js';
 import { efektleriKur } from './efekt.js';
 import { gorselleriYukle } from './kusGorsel.js';
 import { HARITA, KARO_G, DUNYA_G, DUNYA_Y, izoEkran, karoKoseleri } from './izo.js';
-import { binaKur, susKur, BINALAR, YENI_BINALAR } from './binalar.js';
+import { binaKur, susKur, BINALAR, YENI_BINALAR, KADEME_GORSELLERI } from './binalar.js';
 import { otomatikYollar, sabitEngeller, sabitYollar } from './yollar.js';
 import { gunIsigiKur } from './gunIsigi.js';
 import { potYukle, potUygula, potBellek } from './pot.js';
@@ -82,7 +82,7 @@ class Koy extends Phaser.Scene {
     potYukle(this);
     this.load.image('doku_cimen', 'assets/doku/cimen.png');
     this.load.image('doku_yol', 'assets/doku/yol.png');
-    for (const tip of ['kulucka', 'tuzak', 'kusevi', 'yemlik', 'agac', 'kunduz']) this.load.image('bina_' + tip, `assets/binalar/${tip}.png`);
+    for (const tip of ['kulucka', 'tuzak', 'kusevi', 'yemlik', 'agac', 'kunduz', ...KADEME_GORSELLERI]) this.load.image('bina_' + tip, `assets/binalar/${tip}.png`);
     for (const ad of ['govde', 'bas', 'bas_mutlu', 'on_kol', 'arka_kol', 'bacak', 'kuyruk', 'tahta', 'alet_kutusu']) this.load.image('kunduz_' + ad, `assets/kunduz/${ad}.png`); // Kunduz Usta
     for (const ad of ['iskele_merdivenli', 'iskele_kucuk', 'malzeme', 'toz']) this.load.image('insaat_' + ad, `assets/insaat/${ad}.png`); // inşaat
     this.load.image('manzara_dag', 'assets/manzara/dag.png'); // ormanın ardındaki tepeler ve dağlar
@@ -108,7 +108,7 @@ class Koy extends Phaser.Scene {
     this.yol = yolKarolari();
     this.zeminCiz(rnd);
 
-    this.binalar = binaYerleri().map((y) => binaKur(this, y.tip, y.i, y.j, rnd, D.binalar[y.tip].sv === 0)); // oyuncunun taşıdığı yerler (duzenle.js)
+    this.binalar = binaYerleri().map((y) => binaKur(this, y.tip, y.i, y.j, rnd, D.binalar[y.tip].sv === 0, D.binalar[y.tip].sv)); // oyuncunun taşıdığı yerler (duzenle.js)
     // Çiçek noktaları Gemini çiçek kümeleriyle değişti; diğer süsler (ağaç, kaya, fener) yerinde
     // susNesneleri: Kunduz Usta'nın kaldırabileceği ağaç ve kayalar (duzenle.js dokun, isci.js)
     this.susNesneleri = [];

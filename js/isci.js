@@ -2,6 +2,7 @@
 // iskele kurup çekiçle çalışır (ara sıra binanın öbür köşesine geçer), iş bitince sevinir ve evine döner.
 // Görseller gelene kadar kodla çizilir; parça iskeleti (gövde, baş, kollar, bacaklar, kuyruk) Gemini parçalarına hazırdır.
 import { D, simdi, sureYazi } from './durum.js';
+import { binaSeviyeGuncelle, binaDokusu } from './binalar.js';
 import { HARITA, izoEkran, ekranIzo } from './izo.js';
 import { dokunmaSesi } from './ses.js';
 
@@ -275,9 +276,27 @@ export function isciKur(sahne) {
     S.yuksek = false;
     iskeleKaldir();
     if (b && b.temel) sahne.time.delayedCall(1600, () => sahne.yenidenKur()); // yeni bina kuruldu: inşaat alanı yerine bina çizilsin
+    else if (b && D.binalar[b.tip]) kademeDegisimi(b);
     if (S.durum === 'evde') { if (b) sevin(b, () => {}); return; }
     sevin(b, eveDon);
   };
+  // Seviye görseli: büyük bir toz bulutu kabarır, bulutun en yoğun anında bina yeni kademesine döner
+  const kademeDegisimi = (b) => {
+    const sv = D.binalar[b.tip].sv, k = b.k;
+    const bulut = () => {
+      const gorsel = sahne.textures.exists('insaat_toz');
+      for (let n = 0; n < 26; n++) {
+        const x = k.sol.x + (k.sag.x - k.sol.x) * (0.08 + 0.84 * Math.random()), y = k.alt.y - (k.alt.y - b.tepe.y) * Math.random() * 0.85, boy = 50 + Math.random() * 60;
+        const t = gorsel ? sahne.add.image(x, y, 'insaat_toz').setAngle(Math.random() * 360) : sahne.add.ellipse(x, y, 10, 7, 0xe8d8b8);
+        t.setDepth(b.nesne.depth + 400).setAlpha(0).setScale(boy * 0.5 / t.width);
+        sahne.tweens.add({ targets: t, alpha: 0.95, scale: boy / t.width, duration: 220, ease: 'Quad.easeOut', onComplete: () =>
+          sahne.tweens.add({ targets: t, alpha: 0, y: y - 30, scale: boy * 1.5 / t.width, duration: 700 + Math.random() * 400, delay: 150, onComplete: () => t.destroy() }) });
+      }
+    };
+    if (binaDokusuDegisirMi(b, sv)) { bulut(); sahne.time.delayedCall(300, () => binaSeviyeGuncelle(sahne, b, sv)); }
+    else binaSeviyeGuncelle(sahne, b, sv);
+  };
+  const binaDokusuDegisirMi = (b, sv) => b.nesne.type === 'Image' && binaDokusu(sahne, b.tip, sv) !== b.doku;
   const evdenCik = (sonra) => {
     kok.setPosition(kapi.x, kapi.y).setVisible(true).setAlpha(0);
     S.durum = 'cikiyor';

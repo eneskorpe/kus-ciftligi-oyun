@@ -238,20 +238,25 @@ function elipsN(x, y, rx, ry) { const n = []; for (let i = 0; i < 24; i++) { con
 
 // Binayı haritaya yerleştirir; dokunma kontrolü ve derinlik bilgisini döndürür
 // temel: bina henüz inşa ediliyor (Sv 0), yerinde inşaat alanı çizilir
-export function binaKur(sahne, tip, i, j, rnd, temel = false) {
+// --- Seviye görselleri: 3 kademe (Sv1-2, Sv3-4, Sv5). Görseli gelen kademeler buraya yazılır (assets/binalar/<tip>_<kademe>.png).
+// Ara seviyelerde (Sv2 ve Sv4) binanın önüne kodla saksılar, Sv4'te bir de flama eklenir.
+export const KADEME_GORSELLERI = ['kulucka_2', 'kulucka_3'];
+export const kademe = (sv) => (sv >= 5 ? 3 : sv >= 3 ? 2 : 1);
+export function binaDokusu(sahne, tip, sv) {
+  for (let n = kademe(sv); n > 1; n--) if (sahne.textures.exists(`bina_${tip}_${n}`)) return `${tip}_${n}`;
+  return tip;
+}
+
+export function binaKur(sahne, tip, i, j, rnd, temel = false, sv = 1) {
   const tanim = BINALAR[tip], [w, d] = tanim.boyut, k = karoKoseleri(i, j, w, d);
   let yukseklik, nesne;
-  const meta = sahne.cache.json.get('binaMeta');
+  const meta = sahne.cache.json.get('binaMeta'), ad = binaDokusu(sahne, tip, sv);
   if (temel) {
     nesne = sahne.add.graphics();
     yukseklik = temelCiz(nesne, k);
-  } else if (sahne.textures.exists('bina_' + tip) && meta && meta[tip]) {
-    // Gemini görseli: çimenli arsanın sol ve sağ köşesi karonun köşelerine oturur
-    const M = meta[tip], koseY = (M.solY + M.sagY) / 2;
-    nesne = sahne.add.image(k.sol.x, k.sol.y, 'bina_' + tip).setOrigin(M.solX / M.w, koseY / M.h);
-    nesne.setScale((k.sag.x - k.sol.x) / (M.sagX - M.solX));
-    if (tanim.ayna) nesne.setFlipX(true); // görsel sağ-sol simetrik arsada durduğu için köşeler yine oturur
-    yukseklik = koseY * nesne.scaleY - (k.sol.y - k.ust.y);
+  } else if (sahne.textures.exists('bina_' + ad) && meta && meta[ad]) {
+    nesne = sahne.add.image(k.sol.x, k.sol.y, 'bina_' + ad);
+    yukseklik = gorselOturt(nesne, meta[ad], k, tanim);
   } else {
     nesne = sahne.add.graphics();
     yukseklik = CIZIMLER[tip] ? CIZIMLER[tip](nesne, k, rnd) : geciciCiz(nesne, k, rnd, tanim);
@@ -259,9 +264,65 @@ export function binaKur(sahne, tip, i, j, rnd, temel = false) {
   // Derinlik arsanın ortasından: bina gövdesinin arkasındaki kuş ve objeler arkada, önündekiler önde kalır
   // (eskiden ön köşeydi; çimen levhası kaldırılınca arsanın arka yarısındaki her şey binanın altında kalıyordu)
   nesne.setDepth(nesne.type === 'Image' ? (k.ust.y + k.alt.y) / 2 : k.alt.y);
-  return { tip, tanim, i, j, k, nesne, seviye: 1, temel,
-    kutu: new Phaser.Geom.Rectangle(k.sol.x, k.ust.y - yukseklik, k.sag.x - k.sol.x, k.alt.y - k.ust.y + yukseklik),
-    tepe: { x: merkez(k).x, y: k.alt.y - (k.alt.y - k.ust.y) / 2 - yukseklik } };
+  const b = { tip, tanim, i, j, k, nesne, seviye: 1, temel, doku: ad };
+  olcuAyarla(b, yukseklik);
+  if (!temel && !tanim.sabit) seviyeSusleri(sahne, b, sv);
+  return b;
+}
+// Gemini görseli: çimenli arsanın sol ve sağ köşesi karonun köşelerine oturur
+function gorselOturt(nesne, M, k, tanim) {
+  const koseY = (M.solY + M.sagY) / 2;
+  nesne.setOrigin(M.solX / M.w, koseY / M.h).setScale((k.sag.x - k.sol.x) / (M.sagX - M.solX));
+  if (tanim.ayna) nesne.setFlipX(true); // görsel sağ-sol simetrik arsada durduğu için köşeler yine oturur
+  return koseY * nesne.scaleY - (k.sol.y - k.ust.y);
+}
+function olcuAyarla(b, yukseklik) {
+  const k = b.k;
+  b.kutu = new Phaser.Geom.Rectangle(k.sol.x, k.ust.y - yukseklik, k.sag.x - k.sol.x, k.alt.y - k.ust.y + yukseklik);
+  b.tepe = { x: merkez(k).x, y: k.alt.y - (k.alt.y - k.ust.y) / 2 - yukseklik };
+}
+
+// Sv2 ve Sv4: ön köşelere çiçekli saksılar; Sv4'te yanda küçük bir flama. Kademe görseli zaten süslü olduğundan Sv1/3/5'te yok.
+function seviyeSusleri(sahne, b, sv) {
+  for (const n of b.susler || []) n.destroy();
+  b.susler = [];
+  if (sv !== 2 && sv !== 4) return;
+  const k = b.k, saksi = (p, renk) => {
+    const g = sahne.add.graphics().setPosition(p.x, p.y).setDepth(p.y + 1);
+    g.fillStyle(0x000000, 0.12); g.fillEllipse(0, 2, 30, 9);
+    g.fillStyle(CIZGI); g.fillPoints([{ x: -13, y: -18 }, { x: 13, y: -18 }, { x: 10, y: 2 }, { x: -10, y: 2 }], true);
+    g.fillStyle(0xc8653f); g.fillPoints([{ x: -10.5, y: -16 }, { x: 10.5, y: -16 }, { x: 8, y: 0 }, { x: -8, y: 0 }], true);
+    g.fillStyle(0xe08a5c); g.fillRect(-12, -19, 24, 5);
+    g.fillStyle(0x4f9a3c); for (const a of [-8, -2, 4, 9]) g.fillEllipse(a, -22, 7, 11);
+    for (const [x, y] of [[-7, -27], [1, -30], [8, -26], [-1, -23]]) {
+      g.fillStyle(CIZGI); g.fillCircle(x, y, 4.6); g.fillStyle(renk); g.fillCircle(x, y, 3.4); g.fillStyle(0xfff3a0); g.fillCircle(x, y, 1.3);
+    }
+    b.susler.push(g);
+  };
+  saksi(lerpN(k.alt, k.sol, 0.22), 0xff8fb0);
+  saksi(lerpN(k.alt, k.sag, 0.22), 0xffd34a);
+  if (sv === 4) { // flama: arsanın sağ köşesinde ince direk ve dalgalanan üçgen bayrak
+    const p = lerpN(k.sag, k.alt, 0.15), g = sahne.add.graphics().setPosition(p.x - 6, p.y - 4).setDepth(p.y);
+    g.fillStyle(CIZGI); g.fillRect(-2.5, -78, 5, 80); g.fillStyle(0xa0703f); g.fillRect(-1.2, -77, 2.4, 78);
+    g.fillStyle(CIZGI); g.fillCircle(0, -80, 4.5); g.fillStyle(0xffd34a); g.fillCircle(0, -80, 3);
+    const bayrak = sahne.add.graphics().setPosition(p.x - 6, p.y - 80).setDepth(p.y);
+    bayrak.fillStyle(CIZGI); bayrak.fillTriangle(0, 0, 34, 9, 0, 20); bayrak.fillStyle(0xe8574a); bayrak.fillTriangle(1.5, 2.5, 30, 9.5, 1.5, 17.5);
+    bayrak.fillStyle(0xffffff, 0.35); bayrak.fillTriangle(1.5, 2.5, 18, 6.5, 1.5, 9);
+    sahne.tweens.add({ targets: bayrak, scaleX: 0.82, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    b.susler.push(g, bayrak);
+  }
+}
+
+// Geliştirme bitince: kademe değiştiyse görsel toz bulutunun içinde yenisine döner, ara seviyede süsler eklenir.
+// Dönen değer: görsel değişti mi
+export function binaSeviyeGuncelle(sahne, b, sv) {
+  seviyeSusleri(sahne, b, sv);
+  const ad = binaDokusu(sahne, b.tip, sv), meta = sahne.cache.json.get('binaMeta');
+  if (ad === b.doku || b.nesne.type !== 'Image' || !meta || !meta[ad]) return false;
+  b.doku = ad;
+  b.nesne.setTexture('bina_' + ad);
+  olcuAyarla(b, gorselOturt(b.nesne, meta[ad], b.k, b.tanim));
+  return true;
 }
 
 // Süs: ağaç ve kaya

@@ -146,7 +146,7 @@ export function duzenleKur(sahne, sabitYol, sabitEngel) {
     const t = ekranIzo(p.worldX, p.worldY), [i, j] = b.konum || [b.i, b.j];
     Object.assign(S, { surukluyor: true, b, ofs: [Math.floor(t.i) - i, Math.floor(t.j) - j], ilk: [i, j], son: [i, j] });
     b.tasiniyor = true;
-    for (const n of (b.ekler || [])) n.setVisible(false);
+    for (const n of [...(b.ekler || []), ...(b.susler || [])]) n.setVisible(false); // saksı ve flama da taşınırken gizlenir
     sahne.tweens.add({ targets: b.nesne, scaleY: b.nesne.scaleY * 1.04, duration: 90, yoyo: true });
     dokunmaSesi(sahne, 'pop', 0.09);
     alanCiz(b, i, j);
@@ -177,7 +177,7 @@ export function duzenleKur(sahne, sabitYol, sabitEngel) {
     }
     alan.clear();
     b.tasiniyor = false;
-    for (const n of (b.ekler || [])) n.setVisible(true);
+    for (const n of [...(b.ekler || []), ...(b.susler || [])]) n.setVisible(true);
     S.b = null;
   };
 
