@@ -134,7 +134,7 @@ function panelCiz() {
   $('#panelSeviye').style.display = t.sabit ? 'none' : '';
   $('#panelAciklama').textContent = t.aciklama;
   const I = D.insaat;
-  let icerik = B.sv === 0 ? '' : ({ tuzak: tuzakPaneli, kulucka: kuluckaPaneli, kusevi: kuseviPaneli, yemlik: yemlikPaneli, kunduz: kunduzPaneli, tarla: tarlaPaneli, degirmen: degirmenPaneli, klinik: klinikPaneli }[tip] || yakindaPaneli)();
+  let icerik = B.sv === 0 ? '' : ({ tuzak: tuzakPaneli, kulucka: kuluckaPaneli, kusevi: kuseviPaneli, yemlik: yemlikPaneli, kunduz: kunduzPaneli, tarla: tarlaPaneli, degirmen: degirmenPaneli, klinik: klinikPaneli, siparis: siparisPaneli }[tip] || yakindaPaneli)();
   if (t.sabit) { /* geliştirilmeyen bina */ } else if (I && I.tip === tip) { // Kunduz Usta bu binada çalışıyor
     icerik += `<div class="gelistir" style="display:block">${ilerleme(I, I.bitis - I.bas, I.yeni ? '🦫 Kunduz Usta binayı inşa ediyor:' : `🦫 Kunduz Usta Sv. ${I.sv} için çalışıyor:`, 'insaat')}</div>`;
   } else if (B.sv < M.MAKS_SV && !t.islevYok) {
@@ -247,6 +247,26 @@ function klinikPaneli() {
   return `<p>${hastaSay ? `🤒 <b>${hastaSay}</b> kuşun rahatsız.` : '💚 Bütün kuşların sağlıklı.'} <small>Uzun süre aç ya da mutsuz kalan kuşlar rahatsızlanabilir.</small></p>
     <p><small>${Object.values(M.KLINIK_HIZMETLERI).map((H) => `${H.ikon} <b>${H.ad}</b>: ${H.aciklama} (${sureYazi(M.klinikSuresi(Object.keys(M.KLINIK_HIZMETLERI).find((x) => M.KLINIK_HIZMETLERI[x] === H)))}${H.svGerek > 1 ? `, Sv. ${H.svGerek}` : ''})`).join('<br>')}</small></p>` +
     kuslar.map(satir).join('');
+}
+
+// Sipariş Panosu: köylülerin istediği kuşlar; uygun kuşun varsa teslim et
+function siparisPaneli() {
+  const P = D.siparis || { liste: [] };
+  const kart = (s) => {
+    if (!s.tur) return `<div class="siparis bos"><span class="yi">📭</span><small>Yeni sipariş geliyor: <b>${sureYazi(s.bekle - simdi())}</b></small></div>`;
+    const K = M.siparisKoylu(s), uygun = D.kuslar.filter((k) => M.siparisUygun(s, k));
+    return `<div class="siparis ${uygun.length ? 'hazir' : ''}"><span class="yi">${K.ikon}</span><span class="sm"><b>${K.ad}</b> <small>“${M.siparisSozu(s)}”</small><br>
+      <span class="istek">${M.siparisYazi(s)}</span><br>
+      <small>Ödül: ${s.altin} 🪙 · ${s.xp} XP${s.elmas ? ` · ${s.elmas} 💎` : ''}</small></span>
+      <span class="dugmeSutun">${dugme(uygun.length ? `🎁 Teslim et (${uygun.length})` : 'Uygun kuş yok', () => siparisKusSec(s), uygun.length ? 'class="ana"' : 'disabled')}${dugme('✖ Reddet', () => M.siparisReddet(s.id))}</span></div>`;
+  };
+  return `<p><small>Köylüler belirli kuşlar istiyor. Uygun kuşu teslim edince kuş yeni evine gider, sen ödülü alırsın.${P.teslim ? ` Teslim edilen: <b>${P.teslim}</b>` : ''}</small></p>` + P.liste.map(kart).join('');
+}
+function siparisKusSec(s) {
+  const K = M.siparisKoylu(s), uygun = D.kuslar.filter((k) => M.siparisUygun(s, k));
+  modalAc(`<h3>${K.ikon} ${K.ad} için bir kuş seç</h3><p><small>${M.siparisYazi(s)} · Ödül: ${s.altin} 🪙${s.elmas ? ` · ${s.elmas} 💎` : ''}</small></p>` +
+    uygun.map((k) => `<div class="satir">${kusSatiri(k)}<span class="dugmeSutun">${dugme('🎁 Ver', () => { M.siparisTeslim(s.id, k.id); modalKapat(); }, 'class="ana"')}<small>Satış: ${kusDegeri(k)} 🪙</small></span></div>`).join('') +
+    `<div class="dugmeler">${dugme('Vazgeç', modalKapat)}</div>`);
 }
 
 // İşlevi henüz eklenmemiş yeni binalar

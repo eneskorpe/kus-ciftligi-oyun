@@ -276,6 +276,7 @@ class Koy extends Phaser.Scene {
         else oran = toplam > 0 ? 1 - kalan / toplam : 1;
       } else if (b.tip === 'kusevi' && D.binalar.kusevi.birikim >= M.gelirKapasite() * 0.2) balon = 'altin_yigini';
       else if (b.tip === 'yemlik' && D.binalar.yemlik.stok <= 2) balon = 'bos_yem';
+      else if (b.tip === 'siparis' && !b.temel && M.siparisHazirMi()) balon = 'siparis';
       if (oran !== null) {
         // Çerçevenin iç krem alanı: yatayda %7-%93, dikeyde %29-%74 (cubuk_cerceve.png)
         const W = 112, H = 26, ix = x - W / 2 + W * 0.07, iw = W * 0.86, ih = H * 0.45, iy = y - H / 2 + H * 0.29 + ih / 2;

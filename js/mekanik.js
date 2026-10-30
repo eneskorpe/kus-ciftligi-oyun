@@ -1,7 +1,7 @@
 // Oyun kuralları: tuzak, kuluçka, bakım, gelir, bina geliştirme, hızlandırma.
 import { TURLER } from './turler.js';
 import { D, simdi, DAKIKA, degisti, bildir, xpEkle, harca } from './durum.js';
-import { YEMLER, KULUCKA_DK, yabaniKus, yavruUret, kusOlustur, kusDegeri, geceMi } from './genetik.js';
+import { YEMLER, KULUCKA_DK, yabaniKus, yavruUret, kusOlustur, kusDegeri, geceMi, fenotip, MUT_ADI } from './genetik.js';
 import { gorevOlay, gunluguYenile } from './gorevler.js';
 import { BINALAR } from './binalar.js';
 
@@ -21,6 +21,7 @@ export const BINA_ETKI = {
   tuzak: (sv) => `Süre −%${(sv - 1) * 10}, mutasyon şansı +%${(sv - 1) * 4}${sv >= 2 ? ', ay çekirdeği açık' : ''}`,
   degirmen: (sv) => `Öğütme süresi −%${(sv - 1) * 10}${sv >= 2 ? ', ballı çubuk açık' : ''}${sv >= 3 ? ', kalsiyum taşı açık' : ''}`,
   klinik: (sv) => `Hizmet süresi −%${(sv - 1) * 10}, check-up koruması ${24 + (sv - 1) * 12} sa${sv >= 2 ? ', tüy bakımı açık' : ''}`,
+  siparis: (sv) => `Panoda ${siparisYeri(sv)} sipariş, ödül +%${(sv - 1) * 10}, yeni sipariş daha çabuk gelir${sv >= 3 ? ', kusursuz tüy siparişleri' : ''}`,
   tarla: (sv) => `Hasat +%${(sv - 1) * 25}, süre −%${(sv - 1) * 10}${sv >= 2 ? ', kenevir açık' : ''}`,
   kulucka: (sv) => `Kuluçka süresi −%${(sv - 1) * 10}, yavru tüyü daha iyi`,
   kusevi: (sv) => `Kapasite ${6 + 4 * (sv - 1)} kuş`,
@@ -332,6 +333,76 @@ function klinikBitir() {
   xpEkle(8);
 }
 
+// --- Sipariş Panosu: köylüler belirli bir kuş ister (tür, renk, tüy kalitesi, cinsiyet). Kuşu teslim edince altın, XP, bazen elmas.
+// D.siparis.liste: her yer ya bir sipariş ya da { bekle } (yeni sipariş gelme anı). Siparişlerin süresi dolmaz; beğenmediğin reddedilir.
+export const KOYLULER = [
+  { ad: 'Ayı Dede', ikon: '🐻' }, { ad: 'Tilki Teyze', ikon: '🦊' }, { ad: 'Tavşan Kız', ikon: '🐰' }, { ad: 'Kirpi Amca', ikon: '🦔' },
+  { ad: 'Sincap Bacı', ikon: '🐿️' }, { ad: 'Kurbağa Muhtar', ikon: '🐸' }, { ad: 'Fare Nine', ikon: '🐭' }, { ad: 'Geyik Hoca', ikon: '🦌' },
+];
+const SIPARIS_SOZ = ['Bahçeme neşe katacak bir kuş arıyorum', 'Torunuma doğum günü hediyesi lazım', 'Penceremde şarkı söyleyecek biri olsun',
+  'Kuş yarışmasına katılacağım', 'Yalnız kaldım, bir arkadaş istiyorum', 'Çay bahçeme süs olsun', 'Okulun kuş köşesi için', 'Eski kuşum gibi birini arıyorum'];
+export const KOND_SINIR = { 'İyi': 0.38, 'Parlak': 0.15, 'Kusursuz': 0.07 }; // bu tüy değerinin altında olmalı
+const MUT_GEN = { normal: {}, alaca: { alaca: [1, 0] }, mavi: { mavi: [1, 1] }, lutino: { ino: [1, 1] }, albino: { ino: [1, 1], mavi: [1, 1] } };
+const pnoSv = () => (D.binalar.siparis ? D.binalar.siparis.sv : 0);
+export const siparisYeri = (sv = pnoSv()) => 3 + Math.floor((sv - 1) / 2); // Sv1-2: 3, Sv3-4: 4, Sv5: 5
+const siparisBekleme = () => 15 * DAKIKA * SURE_CARPAN(Math.max(1, pnoSv()));
+const rastgele = (d) => d[Math.floor(Math.random() * d.length)];
+function siparisUret() {
+  const sv = pnoSv(), turler = D.kesifler.filter((t) => TURLER[t]);
+  const tur = rastgele(turler.filter((t) => TURLER[t].nadirlik !== 'Efsanevi' || Math.random() < 0.3)) || 'kanarya';
+  const s = { id: (D.siparis.sonId = (D.siparis.sonId || 0) + 1), koylu: Math.floor(Math.random() * KOYLULER.length), soz: Math.floor(Math.random() * SIPARIS_SOZ.length), tur };
+  let zorluk = 0;
+  // Renk: oyuncunun şimdiye kadar elde ettiği renklerden (kuşlarında görülen)
+  const renkler = [...new Set(D.kuslar.map((k) => fenotip(k.genler)))].filter((m) => m !== 'normal');
+  if (renkler.length && Math.random() < 0.35) { s.mutasyon = rastgele(renkler); zorluk++; }
+  const r = Math.random();
+  if (sv >= 3 && r < 0.12) { s.kondisyon = 'Kusursuz'; zorluk += 2; } else if (r < 0.35) { s.kondisyon = 'Parlak'; zorluk++; } else if (r < 0.6) s.kondisyon = 'İyi';
+  if (Math.random() < 0.3) { s.cinsiyet = Math.random() < 0.5 ? 'e' : 'd'; zorluk++; }
+  // Ödül: istenen kuşun satış değerinin yaklaşık iki katı; zorluk ve pano seviyesiyle artar
+  const deger = kusDegeri({ tur, genler: { ino: [0, 0], mavi: [0, 0], alaca: [0, 0], ...MUT_GEN[s.mutasyon || 'normal'] }, tuy: s.kondisyon ? KOND_SINIR[s.kondisyon] - 0.01 : 0.42 });
+  s.altin = Math.round(deger * (1.8 + 0.25 * zorluk) * (1 + 0.1 * (sv - 1)) / 5) * 5 + 20;
+  s.xp = 15 + 10 * ['Yaygın', 'Nadir', 'Epik', 'Efsanevi'].indexOf(TURLER[tur].nadirlik) + 5 * zorluk;
+  if (zorluk >= 2 && Math.random() < 0.4) s.elmas = zorluk >= 3 ? 2 : 1;
+  return s;
+}
+export const siparisKoylu = (s) => KOYLULER[s.koylu];
+export const siparisSozu = (s) => SIPARIS_SOZ[s.soz];
+export const siparisYazi = (s) => [TURLER[s.tur].ad, s.mutasyon && MUT_ADI[s.mutasyon], s.kondisyon && `en az ${s.kondisyon.toLocaleLowerCase('tr')} tüy`,
+  s.cinsiyet && (s.cinsiyet === 'e' ? '♂ erkek' : '♀ dişi')].filter(Boolean).join(' · ');
+export const siparisUygun = (s, k) => k.tur === s.tur && !mesgulMu(k) && (!s.mutasyon || fenotip(k.genler) === s.mutasyon)
+  && (!s.kondisyon || k.tuy < KOND_SINIR[s.kondisyon]) && (!s.cinsiyet || k.cinsiyet === s.cinsiyet);
+export const siparisHazirMi = () => !!D.siparis && D.siparis.liste.some((s) => s.tur && D.kuslar.some((k) => siparisUygun(s, k)));
+function siparisTik(t) {
+  if (!pnoSv()) return false;
+  const P = D.siparis = D.siparis || { liste: [] };
+  let degisim = false;
+  while (P.liste.length < siparisYeri()) { P.liste.push(P.liste.length ? { bekle: t + siparisBekleme() * P.liste.length / 2 } : siparisUret()); degisim = true; }
+  P.liste.forEach((s, n) => { if (!s.tur && t >= s.bekle) { P.liste[n] = siparisUret(); degisim = true; } });
+  return degisim;
+}
+export function siparisTeslim(sipId, kusId) {
+  const P = D.siparis, n = P ? P.liste.findIndex((s) => s.id === sipId) : -1, k = kusBul(kusId);
+  if (n < 0 || !k) return;
+  const s = P.liste[n];
+  if (!siparisUygun(s, k)) return bildir('Bu kuş siparişe uymuyor');
+  delete k.yeniTur;
+  D.kuslar = D.kuslar.filter((x) => x !== k);
+  D.altin += s.altin; D.elmas += s.elmas || 0;
+  P.teslim = (P.teslim || 0) + 1;
+  P.liste[n] = { bekle: simdi() + siparisBekleme() };
+  xpEkle(s.xp);
+  gorevOlay('siparis');
+  bildir(`📜 ${siparisKoylu(s).ad} ${k.ad} için çok mutlu! +${s.altin} 🪙${s.elmas ? ` +${s.elmas} 💎` : ''}`);
+  degisti();
+}
+export function siparisReddet(sipId) {
+  const P = D.siparis, n = P ? P.liste.findIndex((s) => s.id === sipId) : -1;
+  if (n < 0) return;
+  P.liste[n] = { bekle: simdi() + 5 * DAKIKA };
+  bildir('📜 Sipariş panodan kaldırıldı, yenisi birazdan gelir');
+  degisti();
+}
+
 // --- Dekor kaldırma: Kunduz Usta köydeki ağaç ve kayaları kaldırır; türüne ve boyutuna göre altın kazandırır ---
 // Kaldırılan dekorlar D.kaldirilan'a ('agac,1,2' gibi) yazılır; o karo bina, yol ve fırça için boşalır (koy.js suslerGuncel)
 export function temizlikBilgi(doku, boy) {
@@ -381,6 +452,7 @@ export function tik() {
   if (D.insaat && t >= D.insaat.bitis) { insaatBitir(); degisim = true; }
   if (D.temizlik && t >= D.temizlik.bitis) { temizlikBitir(); degisim = true; }
   if (D.klinik && t >= D.klinik.bitis) { klinikBitir(); degisim = true; }
+  if (siparisTik(t)) degisim = true;
   const K = D.kulucka;
   if (K && K.asama === 'ciftlesme' && t >= K.bitis) {
     const a = kusBul(K.aId), b = kusBul(K.bId);

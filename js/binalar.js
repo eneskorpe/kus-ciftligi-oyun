@@ -26,7 +26,7 @@ export const BINALAR = {
     aciklama: 'Bakımsız kalıp rahatsızlanan kuşlar burada iyileşir. Sağlıklı kuşlara check-up yapılır, tüyleri bakılır.' },
   degirmen: { ad: 'Değirmen', boyut: [2, 2], ikon: '⚙️', yeni: true, acilis: 6, fiyat: 1800, dk: 10, renk: 0xe8d2a8, cati: 0xc4553f,
     aciklama: 'Tarladan gelen hasadı karışık yeme, ballı çubuğa ve kalsiyum taşına çevirir.' },
-  siparis: { ad: 'Sipariş Panosu', boyut: [1, 1], ikon: '📜', yeni: true, acilis: 8, fiyat: 2500, dk: 12, renk: 0xb98055, cati: 0x6aae4f, islevYok: true,
+  siparis: { ad: 'Sipariş Panosu', boyut: [1, 1], ikon: '📜', yeni: true, acilis: 8, fiyat: 2500, dk: 12, renk: 0xb98055, cati: 0x6aae4f,
     aciklama: 'Köylüler belirli kuşlar ister. Siparişi teslim edersen altın ve XP kazanırsın.' },
   kres: { ad: 'Kuş Kreşi', boyut: [2, 2], ikon: '🐣', yeni: true, acilis: 10, fiyat: 4000, dk: 20, renk: 0xffe3ec, cati: 0xf29bb5, islevYok: true,
     aciklama: 'Yumurtadan çıkan minik yavrular burada büyür.' },
