@@ -23,6 +23,7 @@ import { muzikKur } from './muzik.js';
 import { duzenleKur } from './duzenle.js';
 import { tarlaKur, degirmenKur } from './tarla.js';
 import { rahatsizlikKur } from './rahatsizlik.js';
+import { rehberKur } from './rehber.js';
 import { KusEvi } from './kusevi.js';
 import { kuseviArayuzKur } from './kuseviArayuz.js';
 import { dekorlariYukle, dekorKoy, DEKOR_GRUP } from './dekor.js';
@@ -93,6 +94,7 @@ class Koy extends Phaser.Scene {
     this.load.json('manzara_on_su', 'assets/manzara/on_su.json'); // derenin orta çizgisi ve suyun iç noktaları
     for (const ad of KIR_CICEKLERI) this.load.image('kircicek_' + ad, `assets/kircicek/${ad}.png`);
     // Bina uyarı ikonları, balon çerçeveleri ve süre çubuğu
+    for (const ad of ['selam', 'goster', 'okur', 'sevinc']) this.load.image('rehber_' + ad, `assets/rehber/poz_${ad}.png`); // Bilge Baykuş
     for (const ad of ['kafes', 'yumurta', 'altin_yigini', 'bos_yem', 'balon', 'balon_hazir', 'cubuk_cerceve', 'cubuk_dolgu']) this.load.image('ui_' + ad, `assets/arayuz/${ad}.png`);
   }
 
@@ -160,6 +162,7 @@ class Koy extends Phaser.Scene {
     this.degirmenGuncelle = degirmenKur(this); // değirmenin kanatları (öğütürken hızlı döner)
     this.dokunTepki = dokunmaTepkisiKur(this);
     this.isciGuncelle = isciKur(this); // Kunduz Usta
+    this.rehberGuncelle = rehberKur(this); // Bilge Baykuş: öğretici ve tanıtımlar
     muzikKur(() => this.gunIsigi && this.gunIsigi.gece > 0.6); // oyun müziği ve doğa sesi (gece kuşlar susar)
     cevreSesleriKur(this, () => this.gunIsigi && this.gunIsigi.gece > 0.6); // ara sıra uzaktan serçe cıvıltısı
     this.time.addEvent({ delay: 1000, loop: true, callback: () => this.saatYaz() });
@@ -177,6 +180,7 @@ class Koy extends Phaser.Scene {
     this.tarlaGuncelle();
     this.degirmenGuncelle(dt);
     this.rahatsizlikGuncelle(dt);
+    this.rehberGuncelle(zaman, dt);
     this.gunIsigiGuncelle(zaman);
     this.canlilikGuncelle(zaman);
     this.zeminGuncelle();
@@ -277,6 +281,7 @@ class Koy extends Phaser.Scene {
       } else if (b.tip === 'kusevi' && D.binalar.kusevi.birikim >= M.gelirKapasite() * 0.2) balon = 'altin_yigini';
       else if (b.tip === 'yemlik' && D.binalar.yemlik.stok <= 2) balon = 'bos_yem';
       else if (b.tip === 'siparis' && !b.temel && M.siparisHazirMi()) balon = 'siparis';
+      else if (b.tip === 'kres' && !b.temel && (M.kresHazirMi() || M.kresAcMi())) balon = M.kresHazirMi() ? 'yavru' : 'biberon';
       if (oran !== null) {
         // Çerçevenin iç krem alanı: yatayda %7-%93, dikeyde %29-%74 (cubuk_cerceve.png)
         const W = 112, H = 26, ix = x - W / 2 + W * 0.07, iw = W * 0.86, ih = H * 0.45, iy = y - H / 2 + H * 0.29 + ih / 2;

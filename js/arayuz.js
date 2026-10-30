@@ -5,6 +5,7 @@ import { YEMLER, MUT_ADI, fenotip, kusGen, kusDegeri, tarifBul } from './genetik
 import * as M from './mekanik.js';
 import { BINALAR, YENI_BINALAR } from './binalar.js';
 import * as G from './gorevler.js';
+import { rehberBastan } from './rehber.js';
 import { sesKapaliMi, sesAyarla, sesSeviyesi, sesSeviyesiAyarla } from './ses.js';
 
 const $ = (s) => document.querySelector(s);
@@ -134,7 +135,7 @@ function panelCiz() {
   $('#panelSeviye').style.display = t.sabit ? 'none' : '';
   $('#panelAciklama').textContent = t.aciklama;
   const I = D.insaat;
-  let icerik = B.sv === 0 ? '' : ({ tuzak: tuzakPaneli, kulucka: kuluckaPaneli, kusevi: kuseviPaneli, yemlik: yemlikPaneli, kunduz: kunduzPaneli, tarla: tarlaPaneli, degirmen: degirmenPaneli, klinik: klinikPaneli, siparis: siparisPaneli }[tip] || yakindaPaneli)();
+  let icerik = B.sv === 0 ? '' : ({ tuzak: tuzakPaneli, kulucka: kuluckaPaneli, kusevi: kuseviPaneli, yemlik: yemlikPaneli, kunduz: kunduzPaneli, tarla: tarlaPaneli, degirmen: degirmenPaneli, klinik: klinikPaneli, siparis: siparisPaneli, kres: kresPaneli }[tip] || yakindaPaneli)();
   if (t.sabit) { /* geliştirilmeyen bina */ } else if (I && I.tip === tip) { // Kunduz Usta bu binada çalışıyor
     icerik += `<div class="gelistir" style="display:block">${ilerleme(I, I.bitis - I.bas, I.yeni ? '🦫 Kunduz Usta binayı inşa ediyor:' : `🦫 Kunduz Usta Sv. ${I.sv} için çalışıyor:`, 'insaat')}</div>`;
   } else if (B.sv < M.MAKS_SV && !t.islevYok) {
@@ -269,6 +270,22 @@ function siparisKusSec(s) {
     `<div class="dugmeler">${dugme('Vazgeç', modalKapat)}</div>`);
 }
 
+// Kuş Kreşi: tüysüz yavrular büyür; her üçte birde bir besle, büyüyünce köye al
+function kresPaneli() {
+  const liste = D.kres || [], bos = M.kresYeri() - liste.length;
+  const kart = (y, n) => {
+    const oran = M.kresBuyume(y), k = y.kus, ogun = '🍼'.repeat(y.besleme) + '<span style="opacity:.3">' + '🍼'.repeat(M.KRES_BESLEME - y.besleme) + '</span>';
+    const ust = `<div class="satir">${jeton(k)}<span class="ks"><b>${k.ad}</b> ${cinsiyet(k)} <small>${TURLER[k.tur].ad}</small><br>
+      <small>${oran < 1 ? '🐣 Tüysüz yavru' : '🐤 Kocaman oldu!'} · Tüy: ${kondisyonAdi(k.tuy)} (${k.tuy.toFixed(3)})</small><br><small>Öğünler: ${ogun}</small></span>`;
+    if (oran >= 1) return ust + `<span class="dugmeSutun">${dugme('🏡 Köye al', () => { const g = M.kresMezun(n); if (g) oyun.events.emit('kusGeldi', g, 'kres'); }, 'class="ana"')}</span></div>`;
+    const kalan = M.kalanSure(y), acik = M.kresBeslenebilir(y);
+    return ust + `<span class="dugmeSutun">${dugme('🍼 Besle', () => M.kresBesle(n), acik ? 'class="ana"' : 'disabled')}${dugme(`⚡ ${M.elmasFiyati(kalan)} 💎`, () => M.kresHizlandir(n))}</span></div>
+      <div class="is"><div>Büyüyor: <b>${sureYazi(kalan)}</b>${acik ? '' : y.besleme < M.KRES_BESLEME ? ' · <small>sonraki öğün birazdan</small>' : ''}</div>${cubuk(oran * 100, '#f29bb5')}</div>`;
+  };
+  return `<p><small>Yumurtadan çıkan yavruyu kartındaki "🐣 Kreşe gönder" düğmesiyle buraya getirirsin. Büyürken ${M.KRES_BESLEME} kez beslenen yavrunun tüyü daha güzel olur.</small></p>` +
+    liste.map(kart).join('') + (bos > 0 ? `<p class="ipucu">🛏️ ${bos} boş yatak var</p>` : '');
+}
+
 // İşlevi henüz eklenmemiş yeni binalar
 function yakindaPaneli() {
   return '<p class="ipucu">🚧 Bu binanın işlevi çok yakında eklenecek. Şimdilik köyünü süslüyor!</p>';
@@ -346,7 +363,9 @@ function kartAc(kus, kaynak) {
     <p>${MUT_ADI[fenotip(kus.genler)]} · <b>${kondisyonAdi(kus.tuy)}</b> (${kus.tuy.toFixed(3)}) · Desen #${kus.tohum}</p>
     <p><small>${metinler.turler[kus.tur] ? metinler.turler[kus.tur].kisilik : ''}</small></p>
     <div class="dugmeler">${dugme('🏡 Köye al', () => { if (M.kusEkle(kus)) { modalKapat(); oyun.events.emit('kusGeldi', kus, kaynak); } }, doluysa ? 'disabled' : 'class="ana"')}
+    ${kaynak === 'kulucka' && D.binalar.kres && D.binalar.kres.sv ? dugme('🐣 Kreşe gönder', () => { if (M.kreseGonder(kus)) modalKapat(); }, M.kresBosYer() ? '' : 'disabled') : ''}
     ${dugme(`🪙 Sat · ${kusDegeri(kus)}`, () => { D.kuslar.push(kus); M.kusSat(kus.id); modalKapat(); })}</div>
+    ${kaynak === 'kulucka' && D.binalar.kres && D.binalar.kres.sv ? `<p><small>${M.kresBosYer() ? "Kreşte büyüyen yavru beslenirse tüyü daha güzel olur ve Kuş Evi'nde yer kaplamaz." : 'Kreşte boş yer yok.'}</small></p>` : ''}
     ${doluysa ? '<p><small>Kuş Evi dolu. Geliştir ya da bir kuş sat.</small></p>' : ''}</div>`);
 }
 
@@ -379,5 +398,6 @@ function krediAc() {
     <p><b>🎶 Müzik</b></p><p>• Mara Records (Suno ile üretildi)</p>
     <p><b>🎵 Kuş sesleri</b></p><p>• Yakın cıvıltılar oyunun kendi kodunda üretilir, uzak doğa sesi ElevenLabs ile üretildi.</p>
     <p><b>🛠️ Yazılım</b></p><p>• ${bag('https://phaser.io', 'Phaser 3')} — MIT Lisansı, © Phaser Studio Inc.</p>
-    <p><b>🎨 Görseller ve metinler</b></p><p>• Oyun için Google Gemini ile üretilmiştir.</p></div>`);
+    <p><b>🎨 Görseller ve metinler</b></p><p>• Oyun için Google Gemini ile üretilmiştir.</p></div>
+    <div class="dugmeler">${dugme("🦉 Bilge Baykuş'un turunu baştan izle", () => { modalKapat(); rehberBastan(); })}</div>`);
 }

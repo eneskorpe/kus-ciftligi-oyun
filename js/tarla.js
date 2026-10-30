@@ -54,6 +54,8 @@ export function tarlaKur(sahne) {
   emojiDoku(sahne, 'ui_hasat', '🌾'); // hasat balonu ikonu
   emojiDoku(sahne, 'ui_un', '🥣'); // değirmende ürün hazır
   emojiDoku(sahne, 'ui_siparis', '📜'); // teslim edilebilecek sipariş var
+  emojiDoku(sahne, 'ui_yavru', '🐤'); // kreşte büyüyen yavru hazır
+  emojiDoku(sahne, 'ui_biberon', '🍼'); // kreşte yavru acıktı
   const b = sahne.binalar.find((x) => x.tip === 'tarla' && !x.temel);
   if (!b) return () => {};
   // Arsanın iç kısmında 4 sıra × 5 bitki

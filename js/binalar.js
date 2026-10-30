@@ -28,7 +28,7 @@ export const BINALAR = {
     aciklama: 'Tarladan gelen hasadı karışık yeme, ballı çubuğa ve kalsiyum taşına çevirir.' },
   siparis: { ad: 'Sipariş Panosu', boyut: [1, 1], ikon: '📜', yeni: true, acilis: 8, fiyat: 2500, dk: 12, renk: 0xb98055, cati: 0x6aae4f,
     aciklama: 'Köylüler belirli kuşlar ister. Siparişi teslim edersen altın ve XP kazanırsın.' },
-  kres: { ad: 'Kuş Kreşi', boyut: [2, 2], ikon: '🐣', yeni: true, acilis: 10, fiyat: 4000, dk: 20, renk: 0xffe3ec, cati: 0xf29bb5, islevYok: true,
+  kres: { ad: 'Kuş Kreşi', boyut: [2, 2], ikon: '🐣', yeni: true, acilis: 10, fiyat: 4000, dk: 20, renk: 0xffe3ec, cati: 0xf29bb5,
     aciklama: 'Yumurtadan çıkan minik yavrular burada büyür.' },
   kule: { ad: 'Gözlem Kulesi', boyut: [2, 2], ikon: '🔭', yeni: true, acilis: 12, fiyat: 6000, dk: 30, renk: 0xc9b79a, cati: 0x4f7fbf, yuksek: true, islevYok: true,
     aciklama: 'Göle, dağa ve ormana keşif gönderirsin. Her bölgede farklı kuş türleri yaşar.' },

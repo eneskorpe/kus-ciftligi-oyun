@@ -21,6 +21,7 @@ export const BINA_ETKI = {
   tuzak: (sv) => `Süre −%${(sv - 1) * 10}, mutasyon şansı +%${(sv - 1) * 4}${sv >= 2 ? ', ay çekirdeği açık' : ''}`,
   degirmen: (sv) => `Öğütme süresi −%${(sv - 1) * 10}${sv >= 2 ? ', ballı çubuk açık' : ''}${sv >= 3 ? ', kalsiyum taşı açık' : ''}`,
   klinik: (sv) => `Hizmet süresi −%${(sv - 1) * 10}, check-up koruması ${24 + (sv - 1) * 12} sa${sv >= 2 ? ', tüy bakımı açık' : ''}`,
+  kres: (sv) => `${kresYeri(sv)} yavru yeri, büyüme süresi −%${(sv - 1) * 10}, her besleme tüyü ${(0.012 + 0.003 * (sv - 1)).toFixed(3)} iyileştirir`,
   siparis: (sv) => `Panoda ${siparisYeri(sv)} sipariş, ödül +%${(sv - 1) * 10}, yeni sipariş daha çabuk gelir${sv >= 3 ? ', kusursuz tüy siparişleri' : ''}`,
   tarla: (sv) => `Hasat +%${(sv - 1) * 25}, süre −%${(sv - 1) * 10}${sv >= 2 ? ', kenevir açık' : ''}`,
   kulucka: (sv) => `Kuluçka süresi −%${(sv - 1) * 10}, yavru tüyü daha iyi`,
@@ -94,6 +95,7 @@ export function kusEkle(kus) {
   delete kus.yeniTur;
   kus.gorunur = D.kuslar.filter((k) => k.gorunur).length < 8;
   D.kuslar.push(kus);
+  gorevOlay('kusEkle');
   degisti();
   return true;
 }
@@ -332,6 +334,56 @@ function klinikBitir() {
   else { k.tuy = Math.max(0, +(k.tuy - 0.012).toFixed(3)); k.mutluluk = Math.min(100, k.mutluluk + 15); if (k.hasta && k.hasta.tur === 'tuy') delete k.hasta; bildir(`🪶 ${k.ad} tüy bakımından pırıl pırıl döndü`); }
   xpEkle(8);
 }
+
+// --- Kuş Kreşi: yumurtadan çıkan yavru (isteğe bağlı) kreşe gider; tüysüz yavru zamanla büyür. Büyürken 3 kez beslenirse
+// tüyü daha iyi olur. Kreşteki yavru Kuş Evi'nde yer kaplamaz; büyüyünce "Köye al" ile gelir. D.kres: [{ kus, bas, bitis, besleme }]
+const KRES_DK = { 'Yaygın': 10, 'Nadir': 20, 'Epik': 60, 'Efsanevi': 180 };
+const kresSv = () => (D.binalar.kres ? D.binalar.kres.sv : 0);
+export const kresYeri = (sv = kresSv()) => (sv ? 1 + Math.floor(sv / 2) : 0); // Sv1: 1, Sv2-3: 2, Sv4-5: 3
+export const KRES_BESLEME = 3;
+export const kresSuresi = (tur) => KRES_DK[TURLER[tur].nadirlik] * DAKIKA * SURE_CARPAN(Math.max(1, kresSv()));
+export const kresBuyume = (y) => Math.min(1, (simdi() - y.bas) / (y.bitis - y.bas));
+export const kresBeslenebilir = (y) => y.besleme < KRES_BESLEME && kresBuyume(y) < 1 && kresBuyume(y) >= y.besleme / KRES_BESLEME; // her üçte birde bir öğün
+export const kresBosYer = () => !!kresSv() && (D.kres || []).length < kresYeri();
+export function kreseGonder(kus) {
+  if (!kresBosYer()) { bildir('🐣 Kreşte boş yer yok'); return false; }
+  delete kus.yeniTur;
+  (D.kres = D.kres || []).push({ kus, bas: simdi(), bitis: simdi() + kresSuresi(kus.tur), besleme: 0 });
+  bildir(`🐣 ${kus.ad} kreşe yerleşti, büyümeye başladı`);
+  degisti();
+  return true;
+}
+export function kresBesle(n) {
+  const y = D.kres[n];
+  if (!y || !kresBeslenebilir(y)) return;
+  y.besleme++;
+  y.kus.tuy = Math.max(0, +(y.kus.tuy - (0.012 + 0.003 * (kresSv() - 1))).toFixed(3));
+  xpEkle(3);
+  gorevOlay('kresBesle');
+  bildir(`🍼 ${y.kus.ad} karnını doyurdu (${y.besleme}/${KRES_BESLEME})`);
+  degisti();
+}
+export function kresMezun(n) {
+  const y = D.kres[n];
+  if (!y || kresBuyume(y) < 1) return null;
+  if (D.kuslar.length >= kapasite()) { bildir("Kuş Evi dolu! Geliştir ya da bir kuş sat"); return null; }
+  D.kres.splice(n, 1);
+  const k = y.kus;
+  k.mutluluk = 100; k.tokluk = 100; k.kresli = true;
+  if (y.besleme >= KRES_BESLEME) xpEkle(10); // hiç öğün kaçırmayana ek XP
+  xpEkle(15);
+  kusEkle(k);
+  bildir(`🎓 ${k.ad} kocaman oldu ve köye geldi!`);
+  return k;
+}
+export function kresHizlandir(n) {
+  const y = D.kres[n];
+  if (!y || !harca(0, elmasFiyati(kalanSure(y)))) return;
+  y.bitis = simdi();
+  degisti();
+}
+export const kresHazirMi = () => (D.kres || []).some((y) => kresBuyume(y) >= 1);
+export const kresAcMi = () => (D.kres || []).some(kresBeslenebilir);
 
 // --- Sipariş Panosu: köylüler belirli bir kuş ister (tür, renk, tüy kalitesi, cinsiyet). Kuşu teslim edince altın, XP, bazen elmas.
 // D.siparis.liste: her yer ya bir sipariş ya da { bekle } (yeni sipariş gelme anı). Siparişlerin süresi dolmaz; beğenmediğin reddedilir.

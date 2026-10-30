@@ -50,9 +50,14 @@ export function gunluguYenile() {
   degisti();
 }
 
+// Olayları görevler dışında dinleyenler (Bilge Baykuş'un öğreticisi, rehber.js)
+const olayDinleyiciler = [];
+export const olayDinle = (f) => olayDinleyiciler.push(f);
+
 // Ana görevin olay sayacı, görev açıldığında sıfırdan başlar
 export function gorevOlay(tip, miktar = 1) {
   const G = D.gorevler;
+  for (const f of olayDinleyiciler) f(tip, miktar);
   let tamam = false;
   for (const g of G.gunluk) {
     const t = GUNLUK_HAVUZ[g.id];
