@@ -19,6 +19,7 @@ export const mesgulMu = (k) => !!D.kulucka && (D.kulucka.aId === k.id || D.kuluc
 
 export const BINA_ETKI = {
   tuzak: (sv) => `Süre −%${(sv - 1) * 10}, mutasyon şansı +%${(sv - 1) * 4}${sv >= 2 ? ', ay çekirdeği açık' : ''}`,
+  tarla: (sv) => `Hasat +%${(sv - 1) * 25}, süre −%${(sv - 1) * 10}${sv >= 2 ? ', kenevir açık' : ''}`,
   kulucka: (sv) => `Kuluçka süresi −%${(sv - 1) * 10}, yavru tüyü daha iyi`,
   kusevi: (sv) => `Kapasite ${6 + 4 * (sv - 1)} kuş`,
   yemlik: (sv) => `${20 * sv} porsiyon yem alır`,
@@ -26,11 +27,11 @@ export const BINA_ETKI = {
 
 // --- Tuzak ---
 export const tuzakSuresi = (yem) => YEMLER[yem].sure * DAKIKA * SURE_CARPAN(D.binalar.tuzak.sv);
-export function tuzakKur(yem) {
+export function tuzakKur(yem, tohumla = false) {
   const Y = YEMLER[yem];
   if (D.tuzak) return;
   if (D.binalar.tuzak.sv < Y.svGerek) return bildir(`Bu yem için Tuzak Kulübesi Sv. ${Y.svGerek} olmalı`);
-  if (!harca(Y.fiyat)) return;
+  if (tohumla) { if (!tohumHarca(Y.tarla)) return; } else if (!harca(Y.fiyat)) return;
   D.tuzak = { yem, bas: simdi(), bitis: simdi() + tuzakSuresi(yem) };
   gorevOlay('tuzakKur'); gorevOlay('tuzakKur:' + yem);
   bildir(`${Y.ikon} Tuzak kuruldu`);
@@ -118,6 +119,19 @@ export function kusSev(id) {
 }
 
 // --- Yemlik ve Kuş Evi ---
+// Yemliği tarladan gelen tohumla doldurur: 1 tohum = 1 porsiyon (önce darı, sonra ayçiçeği, sonra kenevir). Yetmezse yarısına kadar
+export function yemlikTohumla() {
+  const eksik = yemlikKapasite() - D.binalar.yemlik.stok;
+  if (eksik <= 0) return bildir('Yemlik zaten dolu');
+  let kalan = eksik;
+  for (const e of ['dari', 'aycicek', 'kenevir']) { const al = Math.min(kalan, D.tohumlar[e]); D.tohumlar[e] -= al; kalan -= al; }
+  const konan = eksik - kalan;
+  if (!konan) return bildir('Ambarda tohum yok 🌾 Tarlada ekip hasat et');
+  D.binalar.yemlik.stok += konan;
+  gorevOlay('yemlikDoldur');
+  bildir(`🌾 Yemliğe ${konan} tohum kondu`);
+  degisti();
+}
 export function yemlikDoldur() {
   const eksik = yemlikKapasite() - D.binalar.yemlik.stok;
   if (eksik <= 0) return bildir('Yemlik zaten dolu');
@@ -179,6 +193,42 @@ export function insaEt(tip, i, j) {
   bildir(`🦫 Kunduz Usta ${T.ad} inşaatına koşuyor!`);
   degisti();
   return true;
+}
+
+// --- Tohum Tarlası: ekin seç (az bir tohum parası), süre dolunca hasat et; hasat ambara (D.tohumlar) girer ---
+// Tohumlar yemliği ve tuzağı doldurur, ileride Değirmen'de ikramlara dönüşür. Tarla seviyesi verimi artırır, süreyi kısaltır.
+export const EKINLER = {
+  dari: { ad: 'Darı', ikon: '🌾', fiyat: 10, dk: 2, verim: 12, svGerek: 1 },
+  aycicek: { ad: 'Ayçiçeği', ikon: '🌻', fiyat: 25, dk: 6, verim: 10, svGerek: 1 },
+  kenevir: { ad: 'Kenevir', ikon: '🌿', fiyat: 50, dk: 15, verim: 10, svGerek: 2 },
+};
+export const ekinSuresi = (e) => EKINLER[e].dk * DAKIKA * SURE_CARPAN(D.binalar.tarla ? D.binalar.tarla.sv : 1);
+export const ekinVerimi = (e) => Math.round(EKINLER[e].verim * (1 + 0.25 * ((D.binalar.tarla ? D.binalar.tarla.sv : 1) - 1)));
+export const tohumToplam = () => Object.values(D.tohumlar).reduce((a, b) => a + b, 0);
+export function tohumHarca(gerek) {
+  for (const [e, n] of Object.entries(gerek)) if (D.tohumlar[e] < n) { bildir(`Ambarda yeterli ${EKINLER[e].ad.toLowerCase()} yok`); return false; }
+  for (const [e, n] of Object.entries(gerek)) D.tohumlar[e] -= n;
+  return true;
+}
+export function ek(ekin) {
+  const E = EKINLER[ekin];
+  if (D.tarla) return;
+  if (D.binalar.tarla.sv < E.svGerek) return bildir(`${E.ad} için Tohum Tarlası Sv. ${E.svGerek} olmalı`);
+  if (!harca(E.fiyat)) return;
+  D.tarla = { ekin, bas: simdi(), bitis: simdi() + ekinSuresi(ekin), verim: ekinVerimi(ekin) };
+  gorevOlay('ek');
+  bildir(`${E.ikon} ${E.ad} ekildi`);
+  degisti();
+}
+export function hasat() {
+  const T = D.tarla;
+  if (!T || simdi() < T.bitis) return;
+  D.tohumlar[T.ekin] += T.verim;
+  D.tarla = null;
+  xpEkle(5);
+  gorevOlay('hasat');
+  bildir(`${EKINLER[T.ekin].ikon} +${T.verim} ${EKINLER[T.ekin].ad.toLowerCase()} ambara girdi`);
+  degisti();
 }
 
 // --- Dekor kaldırma: Kunduz Usta köydeki ağaç ve kayaları kaldırır; türüne ve boyutuna göre altın kazandırır ---

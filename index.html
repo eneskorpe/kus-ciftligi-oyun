@@ -17,6 +17,7 @@
     #ust > * { pointer-events: auto; }
     .sayac { flex: none; display: flex; align-items: center; gap: 6px; padding: 4px 12px 4px 6px; font-weight: 800; font-size: 16px; height: 42px; }
     .sayac .ik { font-size: 22px; }
+    .dugmeSutun { display: flex; flex-direction: column; gap: 4px; } .ambar { font-size: 14px; }
     .sayac img.ik { width: 30px; height: 30px; margin: -2px 0; filter: drop-shadow(0 1.5px 0 rgba(58,42,53,.2)); }
     #sv { flex: 1; max-width: 240px; gap: 8px; }
     #sv b { background: #3a2a35; color: #ffe7a8; border-radius: 10px; padding: 1px 8px; font-size: 14px; }
@@ -205,6 +206,7 @@
     <div id="sv" class="kutu sayac"><img class="ik" src="assets/arayuz/yildiz.png" alt=""><b>Sv <span id="seviye">1</span></b><div id="xp"><div id="xpDolu"></div></div></div>
     <div class="kutu sayac"><img class="ik" src="assets/arayuz/altin.png" alt="Altın"><span id="altin">0</span></div>
     <div class="kutu sayac"><img class="ik" src="assets/arayuz/elmas.png" alt="Elmas"><span id="elmas">0</span></div>
+    <div class="kutu sayac" id="tohumSayac" title="Ambardaki tohum" style="display:none"><span class="ik">🌾</span><span id="tohum">0</span></div>
     <button class="kutu sayac kucukDugme" id="dSes" title="Ses ayarları"><img class="ik" src="assets/arayuz/ses_acik.png" alt="Ses"></button>
     <button class="kutu sayac kucukDugme" id="dBilgi" title="Emeği geçenler"><img class="ik" src="assets/arayuz/bilgi.png" alt="Bilgi"></button>
     <div class="kutu sayac" id="saatKutu"><img class="ik" id="saatIkon" src="assets/arayuz/gunes.png" alt=""><span id="saat">12:00</span></div>

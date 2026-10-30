@@ -7,9 +7,10 @@ import { D, simdi, saat } from './durum.js';
 import { ISIMLER } from './isimler.js';
 
 export const YEMLER = {
-  tohum: { ad: 'Kuş tohumu', ikon: '🌱', fiyat: 20, sure: 10, svGerek: 1, turler: { ev_sercesi: 50, saka: 30, kanarya: 20 } },
-  dari: { ad: 'Salkım darı', ikon: '🌾', fiyat: 60, sure: 20, svGerek: 1, turler: { ev_sercesi: 15, saka: 15, kanarya: 30, muhabbet: 40 } },
-  ay: { ad: 'Ay çekirdeği', ikon: '🌻', fiyat: 150, sure: 40, svGerek: 2, turler: { kanarya: 15, saka: 15, muhabbet: 30, sultan: 40 } },
+  // tarla: altın yerine tarladan gelen tohumla da kurulabilir (mekanik.js tuzakKur)
+  tohum: { ad: 'Kuş tohumu', ikon: '🌱', fiyat: 20, tarla: { dari: 3 }, sure: 10, svGerek: 1, turler: { ev_sercesi: 50, saka: 30, kanarya: 20 } },
+  dari: { ad: 'Salkım darı', ikon: '🌾', fiyat: 60, tarla: { dari: 8 }, sure: 20, svGerek: 1, turler: { ev_sercesi: 15, saka: 15, kanarya: 30, muhabbet: 40 } },
+  ay: { ad: 'Ay çekirdeği', ikon: '🌻', fiyat: 150, tarla: { aycicek: 6 }, sure: 40, svGerek: 2, turler: { kanarya: 15, saka: 15, muhabbet: 30, sultan: 40 } },
 };
 
 // Gizli tarifler: sıra önemsiz. kosul sağlanmazsa yavru ebeveynlerden birinin türünde olur.

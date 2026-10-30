@@ -62,6 +62,8 @@ function hudGuncelle() {
   $('#seviye').textContent = D.seviye;
   $('#xpDolu').style.width = Math.min(100, D.xp / xpGerek(D.seviye) * 100) + '%';
   $('#altin').textContent = D.altin.toLocaleString('tr-TR');
+  $('#tohum').textContent = M.tohumToplam().toLocaleString('tr-TR');
+  $('#tohumSayac').style.display = D.binalar.tarla || M.tohumToplam() ? '' : 'none'; // tarla kurulunca görünür
   $('#elmas').textContent = D.elmas.toLocaleString('tr-TR');
   const n = G.hazirSayisi(), r = $('#gorevRozet');
   r.textContent = n; r.style.display = n ? 'flex' : 'none';
@@ -131,7 +133,7 @@ function panelCiz() {
   $('#panelSeviye').style.display = t.sabit ? 'none' : '';
   $('#panelAciklama').textContent = t.aciklama;
   const I = D.insaat;
-  let icerik = B.sv === 0 ? '' : ({ tuzak: tuzakPaneli, kulucka: kuluckaPaneli, kusevi: kuseviPaneli, yemlik: yemlikPaneli, kunduz: kunduzPaneli }[tip] || yakindaPaneli)();
+  let icerik = B.sv === 0 ? '' : ({ tuzak: tuzakPaneli, kulucka: kuluckaPaneli, kusevi: kuseviPaneli, yemlik: yemlikPaneli, kunduz: kunduzPaneli, tarla: tarlaPaneli }[tip] || yakindaPaneli)();
   if (t.sabit) { /* geliştirilmeyen bina */ } else if (I && I.tip === tip) { // Kunduz Usta bu binada çalışıyor
     icerik += `<div class="gelistir" style="display:block">${ilerleme(I, I.bitis - I.bas, I.yeni ? '🦫 Kunduz Usta binayı inşa ediyor:' : `🦫 Kunduz Usta Sv. ${I.sv} için çalışıyor:`, 'insaat')}</div>`;
   } else if (B.sv < M.MAKS_SV && !t.islevYok) {
@@ -154,7 +156,7 @@ function tuzakPaneli() {
     const kuslar = Object.keys(Y.turler).map((t) => TURLER[t].ad).join(', ');
     return `<div class="yem ${kilit ? 'kilit' : ''}"><span class="yi">${Y.ikon}</span><span><b>${Y.ad}</b><br><small>${kuslar}</small><br>
       <small>⏱ ${sureYazi(M.tuzakSuresi(ad))}${kilit ? ` · 🔒 Sv. ${Y.svGerek}` : ''}</small></span>
-      ${dugme(`${Y.fiyat} 🪙`, () => M.tuzakKur(ad), kilit ? 'disabled' : '')}</div>`;
+      <span class="dugmeSutun">${dugme(`${Y.fiyat} 🪙`, () => M.tuzakKur(ad), kilit ? 'disabled' : '')}${tohumDugmesi(Y.tarla, () => M.tuzakKur(ad, true), kilit)}</span></div>`;
   }).join('') + '</div>';
 }
 
@@ -193,6 +195,25 @@ function kunduzPaneli() {
     ilerleme(I, I.bitis - I.bas, 'Kalan süre:', 'insaat');
 }
 
+// Tarladan gelen tohumla ödeme düğmesi (ambarda yetecek kadar varsa)
+function tohumDugmesi(gerek, fn, kilit) {
+  if (!gerek || !D.binalar.tarla) return '';
+  const yeter = Object.entries(gerek).every(([e, n]) => D.tohumlar[e] >= n);
+  return dugme(Object.entries(gerek).map(([e, n]) => `${n} ${M.EKINLER[e].ikon}`).join(' '), fn, kilit || !yeter ? 'disabled' : '');
+}
+
+// Tohum Tarlası: ekin seç, büyüsün, hasat et
+function tarlaPaneli() {
+  const T = D.tarla, ambar = `<p class="ambar">Ambar: ${Object.entries(M.EKINLER).map(([e, E]) => `${E.ikon} <b>${D.tohumlar[e]}</b>`).join(' · ')}</p>`;
+  if (T && simdi() >= T.bitis) return `<p class="hazir">${M.EKINLER[T.ekin].ikon} ${M.EKINLER[T.ekin].ad} hasada hazır! (+${T.verim})</p><div class="dugmeler">${dugme('🧺 Hasat et', () => M.hasat(), 'class="ana"')}</div>` + ambar;
+  if (T) return ilerleme(T, T.bitis - T.bas, `${M.EKINLER[T.ekin].ikon} ${M.EKINLER[T.ekin].ad} büyüyor:`, 'tarla') + ambar;
+  return '<p class="baslik2">Ne ekelim?</p><div class="yemler">' + Object.entries(M.EKINLER).map(([e, E]) => {
+    const kilit = D.binalar.tarla.sv < E.svGerek;
+    return `<div class="yem ${kilit ? 'kilit' : ''}"><span class="yi">${E.ikon}</span><span><b>${E.ad}</b><br><small>Hasat: ${M.ekinVerimi(e)} tohum</small><br>
+      <small>⏱ ${sureYazi(M.ekinSuresi(e))}${kilit ? ` · 🔒 Sv. ${E.svGerek}` : ''}</small></span>${dugme(`${E.fiyat} 🪙`, () => M.ek(e), kilit ? 'disabled' : '')}</div>`;
+  }).join('') + '</div>' + ambar + '<p><small>Tohumlar yemliği ve tuzağı doldurur.</small></p>';
+}
+
 // İşlevi henüz eklenmemiş yeni binalar
 function yakindaPaneli() {
   return '<p class="ipucu">🚧 Bu binanın işlevi çok yakında eklenecek. Şimdilik köyünü süslüyor!</p>';
@@ -217,7 +238,7 @@ function yemlikPaneli() {
   const Y = D.binalar.yemlik, f = M.yemlikFiyati();
   return `<p>🌾 Yem: <b>${Y.stok} / ${M.yemlikKapasite()}</b> porsiyon</p>${cubuk(Y.stok / M.yemlikKapasite() * 100, '#e9c46a')}
     <p><small>Acıkan kuşlar buradan kendileri yer. Yem biterse acıkır ve mutsuz olurlar.</small></p>
-    <div class="dugmeler">${dugme(`🌾 Doldur · ${f} 🪙`, () => M.yemlikDoldur(), f ? 'class="ana"' : 'disabled')}</div>`;
+    <div class="dugmeler">${dugme(`🌾 Doldur · ${f} 🪙`, () => M.yemlikDoldur(), f ? 'class="ana"' : 'disabled')}${M.tohumToplam() ? dugme(`🌾 Tohumla doldur (ambarda ${M.tohumToplam()})`, () => M.yemlikTohumla(), f ? '' : 'disabled') : ''}</div>`;
 }
 
 // --- Pencereler ---

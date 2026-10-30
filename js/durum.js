@@ -47,6 +47,8 @@ if (parametre.has('altin') || parametre.has('elmas')) {
 }
 if (SINIRSIZ) { D.altin = Math.max(D.altin, 999999); D.elmas = Math.max(D.elmas, 99999); }
 D.binalar.kunduz = D.binalar.kunduz || { sv: 1 }; // Kunduz Usta'nın evi (geliştirilmez)
+D.tohumlar = D.tohumlar || { dari: 0, aycicek: 0, kenevir: 0 }; // Tohum Tarlası hasadı (🌾 yem kaynağı)
+D.tarla = D.tarla || null; // { ekin, bas, bitis, verim }
 D.ikramlar = D.ikramlar ||{ dari: 5, ay: 3, meyve: 1, bal: 0, kalsiyum: 0, test: 0 };
 
 // Günün saati (0-24, kesirli). Test için ?saat=22 gibi sabitlenebilir.
