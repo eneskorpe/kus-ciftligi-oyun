@@ -3,6 +3,7 @@
 // geriye (-x) uzanan bir kanat/kuyruk için pozitif açı ucu yukarı kaldırır.
 import { TURLER, paletOlustur, koyulastir, tohumluRastgele } from './turler.js';
 import { GORSEL_TURLER, ONAYLI, boyaliDoku } from './kusGorsel.js';
+import { cevreSesiCal } from './ses.js';
 
 const CIZGI = 0x3a2a35;
 const KALIN = 2.6;
@@ -759,6 +760,10 @@ export class Kus {
     const secenekler = this.yer === 'zemin'
       ? ['basEg', 'basEg', 'etrafaBak', 'kuyruk', 'temizlen', 'silkelen', 'zipla', 'zipla', 'gagala', 'gerin']
       : this.yer === 'tunek' ? ['basEg', 'etrafaBak', 'kuyruk', 'temizlen', 'uyukla'] : ['basEg', 'yumurtaBak', 'uyukla'];
+    // Huya göre sık yapılan hareketler (bag.js HUYLAR): şarkıcı öter, uykucu uyuklar, meraklı yeri gagalar, neşeli zıplar, süslü tüylerini tarar
+    const HUY_HAREKET = { sarkici: ['ot', 'ot', 'ot'], uykucu: ['uyukla', 'uyukla'], merakli: ['gagala', 'gagala'], neseli: ['zipla', 'zipla', 'zipla'], suslu: ['temizlen', 'silkelen'] };
+    if (this.yer !== 'yuva' && HUY_HAREKET[this.huy]) secenekler.push(...HUY_HAREKET[this.huy].filter((h) => this.yer === 'zemin' || h !== 'zipla' && h !== 'gagala'));
+    if (this.yer !== 'yuva' && !secenekler.includes('ot') && Math.random() < 0.3) secenekler.push('ot'); // her kuş ara sıra öter (sesli öten yalnız şarkıcı)
     const geceUykusu = this.sahne.gunIsigi && this.sahne.gunIsigi.gece > 0.6 && Math.random() < 0.65; // geceleri çoğunlukla uyuklarlar
     // Köyde gölet varsa ara sıra su içmeye gider (aynı anda tek kuş)
     const suIc = !geceUykusu && this.yer === 'zemin' && this.sahne.su && !this.sahne.suIcen && Math.random() < 0.12;
@@ -799,6 +804,16 @@ export class Kus {
         await this.tw({ basAci: 1.25, basY: 14, egim: 0.32, ezY: 0.94 }, 130, 'Quad.easeIn'); if (!ok()) return;
         await this.tw({ basAci: 0, basY: 0, egim: 0, ezY: 1 }, 170, 'Quad.easeOut'); if (!ok()) return;
       }
+      if (this.huy === 'merakli' && Math.random() < 0.4) this.sahne.efekt('yildiz', this.dunyaKonumu(this.gaga), 3, 0xfff3a0); // bir şey buldu mu?
+    } else if (sec === 'ot') { // başını kaldırıp öter: gaga açılıp kapanır, notalar uçar
+      await this.tw({ basAci: -0.4, puf: taban.puf * 1.06 }, 200); if (!ok()) return;
+      if (this.huy === 'sarkici' && Math.random() < 0.5 && this.sahne.cameras.main.worldView.contains(p.x, p.y)) cevreSesiCal(this.sahne, 0.025);
+      for (let i = 0; i < 3; i++) {
+        await this.tw({ gagaAc: 0.8 }, 90); if (!ok()) return;
+        if (i !== 1) this.sahne.efekt('nota', this.dunyaKonumu(this.bas), 1);
+        await this.tw({ gagaAc: 0.1 }, 110); if (!ok()) return;
+      }
+      await this.tw({ basAci: 0, gagaAc: 0, puf: taban.puf }, 220);
     } else if (sec === 'gerin') { // kanadını gerer
       await this.tw({ kanatAci: 0.9, egim: 0.12, basAci: -0.15 }, 380); if (!ok()) return;
       await this.bekle(450); if (!ok()) return;

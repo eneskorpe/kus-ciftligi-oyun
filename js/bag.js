@@ -1,7 +1,7 @@
 // Kuşla bağ (0-10 kalp) ve günlük bakım rutini (docs/kus-bagi-tasarim.md).
 // k.bag: biriken bağ puanı (düşmez). k.bakim: { gun, ikram, banyo, sev, kazanc: { kaynak: o gün kazanılan } }
 // k.seri: art arda "bakımlı gün" sayısı, k.sonBakimli: son bakımlı günün tarihi
-import { D, bugun, bildir } from './durum.js';
+import { D, bugun, bildir, saat } from './durum.js';
 
 // Her kalp için gereken toplam bağ puanı (kalp ilerledikçe biraz daha zor)
 export const BAG_ESIK = [0, 20, 50, 90, 140, 200, 270, 350, 440, 540, 650];
@@ -21,7 +21,8 @@ export const KALP_ODULLERI = {
   7: 'Yavrularının tüyü daha güzel olur',
   10: 'Can Dostu oldunuz! 🏅',
 };
-export const gelirCarpani = (k) => (kalp(k) >= 5 ? 1.25 : 1);
+// Kalp 5: gelir +%25 (utangaç kuş Can Dostu olunca +%50). Şarkıcı kuş ötüşüyle ziyaretçi çeker: +%10
+export const gelirCarpani = (k) => (kalp(k) >= 5 ? (k.huy === 'utangac' && kalp(k) >= MAKS_KALP ? 1.5 : 1.25) : 1) * (k.huy === 'sarkici' ? 1.1 : 1);
 export const canDostu = (k) => kalp(k) >= MAKS_KALP;
 
 function bakimGunu(k) {
@@ -36,12 +37,15 @@ export const bugunYikandiMi = (k) => !!bakimGunu(k).banyo;
 export function bagEkle(k, kaynak, carpan = 1) {
   const K = KAYNAK[kaynak], B = bakimGunu(k);
   const once = kalp(k), kalan = K.gunluk - (B.kazanc[kaynak] || 0);
+  if (k.huy === 'utangac') carpan *= 0.75; // utangaç kuşun bağı yavaş dolar
+  if (k.huy === 'uykucu' && (saat() >= 20 || saat() < 6)) carpan *= 1.5; // uykucu kuş gece daha çok bağlanır
   const puan = Math.min(kalan, Math.round(K.puan * carpan));
   if (puan <= 0) return 0;
   B.kazanc[kaynak] = (B.kazanc[kaynak] || 0) + puan;
   k.bag = (k.bag || 0) + puan;
   const sonra = kalp(k);
   if (sonra > once) bildir(`💗 ${k.ad} ile bağınız ${sonra} kalp oldu!${KALP_ODULLERI[sonra] ? ' ' + KALP_ODULLERI[sonra] : ''}`);
+  if (once < HUY_KALP && sonra >= HUY_KALP && HUYLAR[k.huy]) bildir(`🎭 ${k.ad} aslında ${HUYLAR[k.huy].ikon} ${HUYLAR[k.huy].ad.toLocaleLowerCase('tr')} bir kuşmuş! ${HUYLAR[k.huy].etki}`);
   return puan;
 }
 
@@ -62,3 +66,26 @@ export function bakimYap(k, kutu) {
 }
 // Seri bugün ya da dün devam ediyorsa gösterilir, daha eskiyse kopmuştur
 export const seri = (k) => (k.sonBakimli === bugun() || k.sonBakimli === dunGun() ? k.seri || 0 : 0);
+
+// --- Huylar: her kuşun bir huyu var; 2 kalpte ortaya çıkar, yavruya anne ya da babadan geçebilir ---
+export const HUY_KALP = 2;
+export const HUYLAR = {
+  sarkici: { ad: 'Şarkıcı', ikon: '🎵', etki: "Kuş Evi'ne +%10 altın kazandırır, sık öter" },
+  suslu: { ad: 'Süslü', ikon: '🪞', etki: 'Banyodan %50 daha parlak çıkar' },
+  merakli: { ad: 'Meraklı', ikon: '🔍', etki: 'Köyde gezerken ara sıra tohum ya da altın bulur' },
+  uykucu: { ad: 'Uykucu', ikon: '😴', etki: 'Geceleri bağınız daha hızlı güçlenir' },
+  obur: { ad: 'Obur', ikon: '🍽️', etki: 'İkramlar iki kat etki eder ama çabuk acıkır' },
+  utangac: { ad: 'Utangaç', ikon: '🙈', etki: 'Bağı yavaş dolar; Can Dostu olunca değeri ve geliri çok artar' },
+  neseli: { ad: 'Neşeli', ikon: '🎉', etki: 'Köydeki diğer kuşlar daha geç üzülür' },
+};
+export const huyAcik = (k) => kalp(k) >= HUY_KALP;
+const rastgele = (d) => d[Math.floor(Math.random() * d.length)];
+// Yavru %60 ihtimalle anne ya da babasının huyunu alır
+export const huySec = (ebeveynHuy) => (ebeveynHuy && ebeveynHuy.some(Boolean) && Math.random() < 0.6 ? rastgele(ebeveynHuy.filter(Boolean)) : rastgele(Object.keys(HUYLAR)));
+
+// Her kuşun kendine özel, gizli bir sevdiği ikram var (çoğunlukla türünün sevdiği). Denerken keşfedilir.
+export const FAVORI_SECENEK = ['dari', 'ay', 'meyve', 'bal'];
+export const favoriSec = (turFavori) => (Math.random() < 0.4 ? turFavori : rastgele(FAVORI_SECENEK));
+
+// Eski kayıtlardaki kuşlara huy verilir (sevdiği ikram türününki olarak kalır)
+for (const k of [...D.kuslar, ...(D.kres || []).map((y) => y.kus)]) if (!k.huy) k.huy = huySec();

@@ -6,7 +6,7 @@ import * as M from './mekanik.js';
 import { BINALAR, YENI_BINALAR } from './binalar.js';
 import * as G from './gorevler.js';
 import { rehberBastan } from './rehber.js';
-import { kalp, kalpIlerleme, bakimDurumu, seri, bugunYikandiMi, canDostu } from './bag.js';
+import { kalp, kalpIlerleme, bakimDurumu, seri, bugunYikandiMi, canDostu, HUYLAR, huyAcik, HUY_KALP } from './bag.js';
 import { sesKapaliMi, sesAyarla, sesSeviyesi, sesSeviyesiAyarla } from './ses.js';
 
 const $ = (s) => document.querySelector(s);
@@ -104,9 +104,14 @@ export const rozet = (tur) => `<span class="rozet" data-n="${TURLER[tur].nadirli
 export const kalpYazi = (k) => `<span class="kalpler" title="Bağ: ${kalp(k)} / 10 kalp">${canDostu(k) ? '🏅' : '💗'} ${kalp(k)}${kalp(k) < 10 ? `<i style="width:${Math.round(kalpIlerleme(k) * 100)}%"></i>` : ''}</span>`;
 export const bakimYazi = (k) => { const B = bakimDurumu(k), s = seri(k);
   return `<span class="bakim" title="Günlük bakım: ikram, banyo, sevgi">${[['ikram', '🍽️'], ['banyo', '🛁'], ['sev', '💗']].map(([a, i]) => `<b class="${B[a] ? 'tamam' : ''}">${i}</b>`).join('')}${s ? ` 🔥${s}` : ''}</span>`; };
+// Huy: 2 kalpte ortaya çıkar, o zamana kadar ❔
+export const huyYazi = (k, uzun = false) => { const H = HUYLAR[k.huy];
+  if (!H) return '';
+  if (!huyAcik(k)) return `<span class="huy gizli" title="Huyu ${HUY_KALP} kalpte ortaya çıkar">🎭 ${uzun ? `??? (${HUY_KALP} kalpte)` : '?'}</span>`;
+  return `<span class="huy" title="${H.ad}: ${H.etki}">${H.ikon}${uzun ? ' ' + H.ad : ''}</span>`; };
 function kusSatiri(k) {
   const R = k.hasta && M.RAHATSIZLIKLAR[k.hasta.tur], durum = R ? ` <span class="hastaEtiket" title="${R.etki}">${R.ikon} ${R.ad}</span>` : k.koruma > simdi() ? ' <span title="Check-up koruması">🛡️</span>' : '';
-  return `${jeton(k)}<span class="ks"><b>${k.ad}</b> ${cinsiyet(k)} <small>${TURLER[k.tur].ad}</small> ${kalpYazi(k)}${durum}<br>
+  return `${jeton(k)}<span class="ks"><b>${k.ad}</b> ${cinsiyet(k)} <small>${TURLER[k.tur].ad}</small> ${kalpYazi(k)} ${huyAcik(k) ? huyYazi(k) : ''}${durum}<br>
     <small>${MUT_ADI[fenotip(k.genler)]} · ${kondisyonAdi(k.tuy)} (${k.tuy.toFixed(3)})</small><br>
     <span class="bars">😊 ${cubuk(k.mutluluk, '#ff8fb0')} 🌾 ${cubuk(k.tokluk, '#e9c46a')}</span></span>`;
 }

@@ -3,9 +3,9 @@ import { TURLER, kondisyonAdi } from './turler.js';
 import { D, dinle, sureYazi, simdi } from './durum.js';
 import { MUT_ADI, fenotip, TARIFLER } from './genetik.js';
 import * as M from './mekanik.js';
-import { IKRAMLAR, FAVORI, stok, ikramAl, ikramVer } from './ikram.js';
-import { jeton, dugme, modalAc, cinsiyet, cubuk, rozet, kapat, metinler, bildirim, kalpYazi, bakimYazi } from './arayuz.js';
-import { canDostu } from './bag.js';
+import { IKRAMLAR, stok, ikramAl, ikramVer, favoriIkram, favoriBiliniyor } from './ikram.js';
+import { jeton, dugme, modalAc, cinsiyet, cubuk, rozet, kapat, metinler, bildirim, kalpYazi, bakimYazi, huyYazi } from './arayuz.js';
+import { canDostu, HUYLAR, huyAcik, HUY_KALP, kalp, BAG_ESIK } from './bag.js';
 
 const $ = (s) => document.querySelector(s);
 let oyun, acik = false, defterSekme = 'soy';
@@ -74,7 +74,7 @@ function ciz() {
   const tur = TURLER[k.tur], buff = k.buff || {};
   const etkiler = [k.hasta && M.RAHATSIZLIKLAR[k.hasta.tur].ikon, k.koruma > simdi() && '🛡️', buff.nadir && '🍯', buff.kalsiyum && '🧂', k.testli && '🧪'].filter(Boolean).join(' ');
   $('#kKart').classList.toggle('canDostu', canDostu(k)); // 10 kalp: altın çerçeve
-  $('#kKart').innerHTML = `<div class="kkUst"><b>${k.ad}</b> ${cinsiyet(k)} <span>${tur.ad}</span> ${rozet(k.tur)} ${kalpYazi(k)} ${bakimYazi(k)}${etkiler ? `<span class="kkEtki" title="Aktif ikram etkileri">${etkiler}</span>` : ''}</div>
+  $('#kKart').innerHTML = `<div class="kkUst"><b>${k.ad}</b> ${cinsiyet(k)} <span>${tur.ad}</span> ${rozet(k.tur)} ${kalpYazi(k)} ${huyYazi(k, true)} ${bakimYazi(k)}${etkiler ? `<span class="kkEtki" title="Aktif ikram etkileri">${etkiler}</span>` : ''}</div>
     <div class="kkAlt"><span>${MUT_ADI[fenotip(k.genler)]} · <b>${kondisyonAdi(k.tuy)}</b> (${k.tuy.toFixed(3)})</span>
     <span class="kkBar">😊 ${cubuk(k.mutluluk, '#ff8fb0')}</span><span class="kkBar">🌾 ${cubuk(k.tokluk, '#e9c46a')}</span></div>`;
   $('#kAvatar').innerHTML = D.kuslar.map((x) => {
@@ -104,10 +104,12 @@ export function defterAc(sekme = defterSekme) {
   let icerik = '';
   if (sekme === 'soy') {
     const yas = sureYazi(simdi() - (k.dogum || simdi()));
-    const favoriBilinir = D.favoriKesif && D.favoriKesif[k.tur];
+    const fav = IKRAMLAR[favoriIkram(k)], H = HUYLAR[k.huy], n = kalp(k);
     icerik = `<p>${k.ebeveyn ? `👪 Anne-baba: <b>${k.ebeveyn.join(' & ')}</b>` : '🌿 Doğada yakalandı'}</p>
       <p>⏳ Köyde: <b>${yas}</b></p>
-      <p>🍽️ En sevdiği ikram: <b>${favoriBilinir ? `${IKRAMLAR[FAVORI[k.tur]].ikon} ${IKRAMLAR[FAVORI[k.tur]].ad}` : '??? (farklı ikramlar dene)'}</b></p>
+      <p>💗 Bağ: <b>${n} / 10 kalp</b>${n < 10 ? ` <small>(sonraki kalbe ${BAG_ESIK[n + 1] - (k.bag || 0)} puan)</small>` : ' 🏅 Can Dostu'}</p>
+      <p>🎭 Huyu: <b>${H && huyAcik(k) ? `${H.ikon} ${H.ad}` : `??? (${HUY_KALP} kalpte ortaya çıkar)`}</b>${H && huyAcik(k) ? `<br><small>${H.etki}</small>` : ''}</p>
+      <p>🍽️ En sevdiği ikram: <b>${favoriBiliniyor(k) ? `${fav.ikon} ${fav.ad}` : '??? (farklı ikramlar dene)'}</b></p>
       <p><small>${metinler.turler[k.tur] ? metinler.turler[k.tur].tanim : ''}</small></p>`;
   } else if (sekme === 'gen') {
     icerik = `<p>Görünen renk: <b>${MUT_ADI[fenotip(k.genler)]}</b> · Tüy: <b>${kondisyonAdi(k.tuy)}</b> · Desen #${k.tohum}</p>` +

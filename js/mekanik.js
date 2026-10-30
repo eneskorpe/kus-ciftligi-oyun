@@ -366,7 +366,7 @@ function banyoBitir(B) {
   const k = kusBul(B.kusId), S = BANYO_SULARI[B.su];
   D.banyo = D.banyo.filter((x) => x !== B);
   if (!k) return;
-  k.tuy = Math.max(0, +(k.tuy - S.tuy).toFixed(3));
+  k.tuy = Math.max(0, +(k.tuy - S.tuy * (k.huy === 'suslu' ? 1.5 : 1)).toFixed(3)); // süslü kuş banyodan daha parlak çıkar
   k.mutluluk = Math.min(100, k.mutluluk + S.mutluluk);
   bagEkle(k, 'banyo'); bakimYap(k, 'banyo');
   xpEkle(4);
@@ -569,9 +569,19 @@ export function tik() {
   }
   if (saat > 0) {
     const Y = D.binalar.yemlik;
+    // Neşeli bir kuş köyde gezerken diğerleri daha geç üzülür
+    const neseli = D.kuslar.some((k) => k.huy === 'neseli' && k.gorunur && !mesgulMu(k));
+    let buldu = false;
     for (const k of D.kuslar) {
-      k.tokluk = Math.max(0, k.tokluk - 4 * saat);
-      k.mutluluk = Math.max(0, k.mutluluk - 3 * saat);
+      k.tokluk = Math.max(0, k.tokluk - 4 * saat * (k.huy === 'obur' ? 1.5 : 1));
+      k.mutluluk = Math.max(0, k.mutluluk - 3 * saat * (neseli && k.huy !== 'neseli' ? 0.8 : 1));
+      // Meraklı kuş köyde gezerken ara sıra bir şey bulur (bir seferde en çok bir buluş bildirilir)
+      if (!buldu && k.huy === 'merakli' && k.gorunur && !mesgulMu(k) && Math.random() < 1 - Math.pow(0.85, saat)) {
+        buldu = true;
+        if (D.binalar.tarla && Math.random() < 0.6) { const n = 3 + Math.floor(Math.random() * 4); D.tohumlar.dari += n; bildir(`🔍 ${k.ad} yerde ${n} 🌾 darı buldu!`); }
+        else { const n = 5 + Math.floor(Math.random() * 11); D.altin += n; bildir(`🔍 ${k.ad} çimenlerin arasında ${n} 🪙 buldu!`); }
+        degisim = true;
+      }
       if (k.tokluk < 70 && Y.stok > 0) { Y.stok--; k.tokluk = Math.min(100, k.tokluk + 30); k.mutluluk = Math.min(100, k.mutluluk + 3); degisim = true; }
       // Bakım tüyü etkiler: iyi bakılan kuşun tüyü parlar, bakımsız kuşun tüyü matlaşır
       if (k.mutluluk > 70 && k.tokluk > 50) k.tuy = Math.max(0, k.tuy - 0.004 * saat);

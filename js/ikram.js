@@ -16,6 +16,11 @@ export const IKRAMLAR = {
 // Türlerin sevdiği ikramlar (Gemini'nin yazdığı "sevdiği yem" bilgisine göre)
 export const FAVORI = { ev_sercesi: 'dari', saka: 'ay', kanarya: 'bal', muhabbet: 'dari', sultan: 'ay', cennet: 'meyve', ketzal: 'meyve' };
 
+// Kuşun kendi sevdiği ikram (eski kuşlarda türünün sevdiği)
+export const favoriIkram = (k) => k.favori || FAVORI[k.tur];
+// Oyuncu bu kuşun sevdiğini biliyor mu (eski kayıtlarda türün sevdiği bilindiyse o da sayılır)
+export const favoriBiliniyor = (k) => !!k.favoriBilinir || (!k.favori && !!(D.favoriKesif && D.favoriKesif[k.tur]));
+
 export const BASLANGIC_IKRAM = { dari: 5, ay: 3, meyve: 1, bal: 0, kalsiyum: 0, test: 0 };
 
 export const stok = (id) => (D.ikramlar && D.ikramlar[id]) || 0;
@@ -31,7 +36,7 @@ export function ikramAl(id) {
 // Kuşa ikram verir; sonuç metni ve favori olup olmadığını döndürür
 export function ikramVer(k, id) {
   if (stok(id) <= 0) return null;
-  const sevdi = FAVORI[k.tur] === id, c = sevdi ? 2 : 1;
+  const sevdi = favoriIkram(k) === id, c = (sevdi ? 2 : 1) * (k.huy === 'obur' ? 2 : 1); // obur kuşta ikram iki kat etkili
   D.ikramlar[id]--;
   k.buff = k.buff || {};
   let metin = '';
@@ -41,7 +46,7 @@ export function ikramVer(k, id) {
   else if (id === 'bal') { k.buff.nadir = true; metin = 'Gizli tür şansı ×2 (sonraki çiftleşme)'; }
   else if (id === 'kalsiyum') { k.buff.kalsiyum = true; metin = 'Sonraki kuluçka %30 kısa'; }
   else if (id === 'test') { k.testli = true; metin = 'Genleri Kuş Defteri\'nde'; }
-  if (sevdi) { D.favoriKesif = D.favoriKesif || {}; D.favoriKesif[k.tur] = true; } // oyuncu sevdiği ikramı denerek keşfeder
+  if (sevdi) k.favoriBilinir = true; // oyuncu bu kuşun sevdiği ikramı denerek keşfeder
   bagEkle(k, 'ikram', sevdi ? 2 : 1); bakimYap(k, 'ikram');
   xpEkle(sevdi ? 3 : 1);
   bildir(`${IKRAMLAR[id].ikon} ${k.ad}: ${metin}${sevdi ? ' · 💗 En sevdiği ikram!' : ''}`);

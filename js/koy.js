@@ -24,6 +24,7 @@ import { duzenleKur } from './duzenle.js';
 import { tarlaKur, degirmenKur } from './tarla.js';
 import { rahatsizlikKur } from './rahatsizlik.js';
 import { rehberKur } from './rehber.js';
+import { kalp } from './bag.js';
 import { KusEvi } from './kusevi.js';
 import { kuseviArayuzKur } from './kuseviArayuz.js';
 import { dekorlariYukle, dekorKoy, DEKOR_GRUP } from './dekor.js';
@@ -222,6 +223,7 @@ class Koy extends Phaser.Scene {
       if (!kus) {
         const yeni = new Kus(this, r(Z.x1, Z.x2), r(Z.y1, Z.y2), gen, { olcek: 0.29 });
         yeni.id = k.id;
+        yeni.huy = k.huy; // huya göre köyde farklı davranır
         this.kuslar.push(yeni);
       } else if (kus.gen.tur !== gen.tur || kus.gen.mutasyon !== gen.mutasyon || kondisyonAdi(kus.gen.tuy) !== kondisyonAdi(gen.tuy)) {
         kus.genAyarla(gen);
@@ -655,6 +657,7 @@ class Koy extends Phaser.Scene {
     if (kus) {
       kus.sevil();
       const k = M.kusBul(kus.id);
+      if (k && kalp(k) >= 3) this.efekt('kalp', kus.dunyaKonumu(kus.bas), 6); // bağlı kuş seni görünce daha çok sevinir
       if (k) bildirim(M.kusSev(k.id) ? `💗 ${k.ad} sevildi! Mutluluk: ${Math.round(k.mutluluk)}` : `💗 ${k.ad} biraz önce sevildi, sonra tekrar dene`);
       return;
     }

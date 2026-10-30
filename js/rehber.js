@@ -111,7 +111,7 @@ if (!D.rehber || parametre.has('rehber')) {
   // Yeni oyunda öğretici baştan başlar; eski kayıtta ise oyuncu zaten ilerlemiştir, sadece sonraki tanıtımlar gelir
   const yeni = parametre.has('rehber') || (D.seviye === 1 && D.xp === 0 && !D.tuzak && D.kuslar.length <= 3);
   D.rehber = { adim: yeni ? 0 : 'bitti', acildi: yeni ? [] : YENI_BINALAR.filter((t) => D.seviye >= BINALAR[t].acilis),
-    kuruldu: yeni ? [] : YENI_BINALAR.filter((t) => D.binalar[t] && D.binalar[t].sv > 0), duyuru: yeni ? ['bag'] : [] };
+    kuruldu: yeni ? [] : YENI_BINALAR.filter((t) => D.binalar[t] && D.binalar[t].sv > 0), duyuru: yeni ? ['bag', 'huy'] : [] };
 }
 const R = D.rehber;
 R.duyuru = R.duyuru || [];
@@ -121,6 +121,10 @@ const DUYURULAR = {
     'Sana güzel bir haberim var! Artık kuşlarınla gerçek bir bağ kurabilirsin 💗',
     'Meydandaki kuş banyosu artık bir bina: kuşlarını orada yıkat, tüyleri parlasın. Her kuş günde bir kez yıkanır.',
     'Her gün ikram ver, yıkat ve sev; kuşunun kartındaki bakım kutuları dolsun. Bağı güçlü kuş daha çok altın kazandırır ve çok daha değerli olur. 10 kalpte Can Dostu olursunuz!'] },
+  huy: { hedef: { dom: '#dKusevi' }, satirlar: [
+    'Defterime yeni bir şey yazdım: her kuşun kendine has bir huyu varmış! Kimi şarkıcı, kimi meraklı, kimi de uykucu...',
+    'Bir kuşla bağın 2 kalbe ulaşınca huyunu öğrenirsin. Huylar işe de yarar: süslü kuş banyodan daha parlak çıkar, meraklı kuş yerde altın bulur.',
+    "Bir de her kuşun kendine özel sevdiği bir ikram var. Kuş Evi'nde farklı ikramlar dene, bakalım hangisine bayılacak!"] },
 };
 let konusma = null; // { satirlar, n, yuz, poz, hedef, bitince, ipucu }
 let yazi = { tam: '', n: 0, t: 0 };
@@ -221,7 +225,7 @@ export function rehberBastan() { R.adim = 0; degisti(); kapat(); sirayaBak(); }
 // Ok: hedef bir düğmeyse onun üstünde, binaysa köydeki yerinde zıplar. Panel ya da pencere açıkken gizlenir.
 function okGuncelle(zaman) {
   const ok = $('#rehberOk'), h = konusma && konusma.hedef;
-  const kapali = !h || $('#modal').classList.contains('acik') || $('#binaPanel').classList.contains('acik');
+  const B = document.body.classList, kapali = !h || $('#modal').classList.contains('acik') || $('#binaPanel').classList.contains('acik') || B.contains('kusevi-modu') || B.contains('duzen-modu');
   let x, y;
   if (!kapali && h.dom) {
     const r = $(h.dom).getBoundingClientRect();

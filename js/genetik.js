@@ -5,7 +5,8 @@
 import { TURLER, kondisyonAdi } from './turler.js';
 import { D, simdi, saat } from './durum.js';
 import { ISIMLER } from './isimler.js';
-import { kalp } from './bag.js';
+import { kalp, huySec, favoriSec } from './bag.js';
+import { FAVORI } from './ikram.js';
 
 export const YEMLER = {
   // tarla: altın yerine tarladan gelen tohumla da kurulabilir (mekanik.js tuzakKur)
@@ -42,13 +43,14 @@ export function fenotip(g) {
 // Kuş görselinin istediği gen bilgisi
 export const kusGen = (k) => ({ tur: k.tur, mutasyon: fenotip(k.genler), tuy: k.tuy, tohum: k.tohum });
 
-export function kusOlustur({ tur, genler, tuy, cinsiyet, ebeveyn }) {
+export function kusOlustur({ tur, genler, tuy, cinsiyet, ebeveyn, ebeveynHuy }) {
   const kullanilan = new Set(D.kuslar.map((k) => k.ad));
   const bos = ISIMLER.filter((ad) => !kullanilan.has(ad));
   return {
     id: ++D.sonId, ad: bos.length ? sec(bos) : `Kuş ${D.sonId}`, tur, cinsiyet: cinsiyet || sec(['e', 'd']),
     tuy: +sinirla(tuy).toFixed(3), tohum: 1 + Math.floor(Math.random() * 999), genler,
     mutluluk: 75, tokluk: 75, sonSevme: 0, gorunur: true, dogum: simdi(), ebeveyn: ebeveyn || null,
+    huy: huySec(ebeveynHuy), favori: favoriSec(FAVORI[tur]),
   };
 }
 
@@ -78,12 +80,13 @@ export function yavruUret(a, b, kosullar) {
   const genler = {};
   for (const g of ['ino', 'mavi', 'alaca']) genler[g] = [sec(a.genler[g]), sec(b.genler[g])];
   const sapma = (Math.random() + Math.random() + Math.random() - 1.5) * 0.12;
-  return { tur, genler, tuy: sinirla((a.tuy + b.tuy) / 2 + sapma - 0.015 * (kosullar.kuluckaSv - 1)), ebeveyn: [a.ad, b.ad] };
+  return { tur, genler, tuy: sinirla((a.tuy + b.tuy) / 2 + sapma - 0.015 * (kosullar.kuluckaSv - 1)), ebeveyn: [a.ad, b.ad], ebeveynHuy: [a.huy, b.huy] };
 }
 
 export function kusDegeri(k) {
   // Bağ: her kalp değeri %8 artırır (kuşla vakit geçirmek, hemen satmaktan kârlı olsun)
-  return Math.round(DEGER[TURLER[k.tur].nadirlik] * MUT_CARPAN[fenotip(k.genler)] * KOND_CARPAN[kondisyonAdi(k.tuy)] * (1 + 0.08 * kalp(k)));
+  const utangac = k.huy === 'utangac' && kalp(k) >= 10 ? 1.25 : 1; // utangaç kuşun Can Dostu ödülü
+  return Math.round(DEGER[TURLER[k.tur].nadirlik] * MUT_CARPAN[fenotip(k.genler)] * KOND_CARPAN[kondisyonAdi(k.tuy)] * (1 + 0.08 * kalp(k)) * utangac);
 }
 
 export const geceMi = () => { const s = saat(); return s >= 20 || s < 6; };
