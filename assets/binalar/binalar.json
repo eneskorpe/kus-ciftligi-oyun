@@ -205,5 +205,14 @@
   "sagX": 767,
   "sagY": 520.5,
   "altY": 754
+ },
+ "degirmen_govde": {
+  "w": 768,
+  "h": 741,
+  "solX": 0,
+  "solY": 504.0,
+  "sagX": 767,
+  "sagY": 507.0,
+  "altY": 740
  }
 }
