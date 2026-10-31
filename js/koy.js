@@ -176,6 +176,16 @@ class Koy extends Phaser.Scene {
 
     this.engel = sabitEngeller(suslerGuncel(), KOY_OBJELERI); // kaldırılan dekor buradan silinir (isci.js)
     this.duzen = duzenleKur(this, sabitYollar(), this.engel); // köyü düzenleme modu (bina taşıma)
+    // Arsası büyüyen bina (ör. Sipariş Panosu 1×1 → 2×2) eski kayıtta başka bir şeyin üstüne taşabilir: en yakın uygun yere taşınır
+    for (const b of this.binalar) {
+      if (!YENI_BINALAR.includes(b.tip) || this.duzen.uygunMu(b, b.i, b.j)) continue;
+      let en = null;
+      for (let i = 0; i < HARITA; i++) for (let j = 0; j < HARITA; j++) {
+        const d = Math.hypot(i - b.i, j - b.j);
+        if ((!en || d < en.d) && this.duzen.uygunMu(b, i, j)) en = { i, j, d };
+      }
+      if (en) { D.yerlesim[b.tip] = [en.i, en.j]; kaydet(); this.yenidenKur(); return; }
+    }
     this.kameraKur();
     this.gorunurlukKur();
     this.game.events.emit('hazir', this);
