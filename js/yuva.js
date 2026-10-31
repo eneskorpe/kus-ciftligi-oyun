@@ -25,7 +25,7 @@ export const SUSLER = {
   ozel_ketzal: { ad: 'Yeşim tapınak kapısı', ikon: '🗿', sart: '5 kalp bağ', sadece: 'ketzal', ilerleme: (k) => [kalp(k), 5] },
 };
 // Görseli hazır olan süsler (assets/yuva/). Görseli gelmeyenler açılır ama Kuş Evi'nde henüz görünmez
-export const YUVA_GORSELLERI = ['isimlik', 'yastik', 'salincak', 'havuz', 'saksi', 'besik', 'can', 'merdiven', 'sandik', 'fener', 'ayna', 'altinTunek'];
+export const YUVA_GORSELLERI = ['isimlik', 'yastik', 'salincak', 'havuz', 'saksi', 'besik', 'can', 'merdiven', 'sandik', 'fener', 'ayna', 'altinTunek', 'ozel_cennet'];
 
 export const susVarMi = (k, id) => !SUSLER[id].sadece || SUSLER[id].sadece === k.tur;
 export const kusSusleri = (k) => Object.keys(SUSLER).filter((id) => susVarMi(k, id));

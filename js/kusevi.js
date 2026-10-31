@@ -33,6 +33,8 @@ const YUVA_YERI = {
   fener: { taraf: -1, oran: 0.92, boy: 0.2, duvar: 0.3 },
   can: { taraf: 1, oran: 0.92, boy: 0.2, duvar: 0.24 },
   isimlik: { tunekte: true, boy: 0.1 },
+  ozel_cennet: { kemer: true },
+  ozel_ketzal: { kemer: true },
 };
 // Arka plan görselinde halının merkezi (oran olarak): tünek buraya oturur
 const HALI = { x: 0.5, y: 0.875 };
@@ -146,6 +148,15 @@ export class KusEvi extends Phaser.Scene {
       const gen = Y.tunekte ? O.alanH * 0.16 : Y.taraf ? B[Y.taraf] * (Y.asili ? 0.42 : 0.3) : O.alanH * 0.3;
       r.setScale(Math.min(O.alanH * Y.boy / r.height, gen / r.width));
       const x = t.x + Y.taraf * Y.oran * B[Y.taraf] || t.x;
+      if (Y.kemer) {
+        // Türe özel kemer tüneği çerçeveler: tabandan kuşun başının üstüne kadar (dar ekranda odanın eni kadar)
+        const boy = taban - (t.y - O.alanH * 0.4), en = O.en * 0.95;
+        // Dik telefon ekranında en dar kalır: kemer boyuna en çok %35 uzatılır (bambu direkler uzamayı belli etmez)
+        const sx = Math.min(boy / r.height, en / r.width), sy = Math.min(boy / r.height, sx * 1.35);
+        r.setScale(sx, sy).setOrigin(0.5, 1).setPosition(t.x, taban + 2 * DPR).setDepth(t.y - 4);
+        this.susler.push(r);
+        continue;
+      }
       if (Y.tunekte) r.setOrigin(0.5, 0).setPosition(t.x, t.y + (taban - t.y) * 0.3).setDepth(t.y);
       else if (Y.asili) r.setOrigin(0.5, 0).setPosition(x, ust + 2 * DPR).setDepth(-5);
       else if (Y.duvar) {
