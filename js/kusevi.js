@@ -18,13 +18,20 @@ export const KENAR = { sol: 86, ust: 132, alt: 124 };
 // Hazırlanan Gemini görselleri (assets/kusevi/): 'ic', 'ic_gece', 'tunek'. Eklendikçe buraya yazılır.
 const KUSEVI_GORSELLERI = ['ic.jpg', 'ic_gece.jpg', 'tunek.png'];
 // Süslerin odadaki yeri. taraf: tüneğin solu (-1) ya da sağı (1); oran: tünekle o taraftaki boşluğun kenarı arasındaki yer;
-// boy: kuş alanı yüksekliğinin oranı. Asılı süs bilgi kartının altından sarkar, isimlik tüneğin direğine asılır
+// boy: kuş alanı yüksekliğinin oranı. asili: bilgi kartının altından sarkar; duvar: duvara çakılı (y: karttan tabana oran,
+// görseldeki dirsek solda, sağ duvarda aynalanır); isimlik tüneğin direğine asılır
 const YUVA_YERI = {
-  saksi: { taraf: -1, oran: 0.74, boy: 0.22 },
-  besik: { taraf: -1, oran: 0.36, boy: 0.13 },
+  saksi: { taraf: -1, oran: 0.84, boy: 0.22 },
+  altinTunek: { taraf: -1, oran: 0.56, boy: 0.17 },
+  besik: { taraf: -1, oran: 0.3, boy: 0.13 },
   yastik: { taraf: 0, oran: 0, boy: 0.11, y: 0.02, on: true },
-  havuz: { taraf: 1, oran: 0.5, boy: 0.16 },
-  salincak: { taraf: -1, oran: 0.55, boy: 0.24, asili: true },
+  havuz: { taraf: 1, oran: 0.34, boy: 0.15 },
+  sandik: { taraf: 1, oran: 0.62, boy: 0.14 },
+  ayna: { taraf: 1, oran: 0.88, boy: 0.2 },
+  salincak: { taraf: -1, oran: 0.5, boy: 0.24, asili: true },
+  merdiven: { taraf: 1, oran: 0.5, boy: 0.24, asili: true },
+  fener: { taraf: -1, oran: 0.92, boy: 0.2, duvar: 0.3 },
+  can: { taraf: 1, oran: 0.92, boy: 0.2, duvar: 0.24 },
   isimlik: { tunekte: true, boy: 0.1 },
 };
 // Arka plan görselinde halının merkezi (oran olarak): tünek buraya oturur
@@ -122,24 +129,32 @@ export class KusEvi extends Phaser.Scene {
     const er = kutu('#kEylem'), kr = kutu('#kKart'), tr = kutu('#kTepsi');
     const taban = Math.round(Math.min(this.tunekTaban || t.y + O.alanH * 0.3, tr ? tr.top * DPR + 4 * DPR : Infinity));
     const sag = Math.round(er ? er.left * DPR : O.sol + O.en), ust = Math.round(kr ? kr.bottom * DPR : O.ust);
-    const anahtar = v ? [v.id, acikSusler(v).join(','), taban, sag, ust].join(':') : '';
+    const anahtar = v ? [v.id, acikSusler(v).join(','), taban, sag, ust, er ? Math.round(er.bottom) : 0].join(':') : '';
     if (anahtar === this.yuvaAnahtar) return;
     this.yuvaAnahtar = anahtar;
     (this.susler || []).forEach((r) => r.destroy());
     this.susler = [];
     if (!v) return;
-    const bosluk = { '-1': t.x - O.sol, 1: sag - t.x, 0: 0 };
+    // Yerdeki süsler için: eylem düğmeleri yere kadar inmiyorsa (dik telefon ekranı) sağ taraf duvara kadar kullanılır
+    const yerSag = er && er.bottom * DPR < taban - O.alanH * 0.25 ? O.sol + O.en : sag;
+    const bosluk = { '-1': t.x - O.sol, 1: sag - t.x, 0: 0 }, yerBosluk = { ...bosluk, 1: yerSag - t.x };
     for (const id of acikSusler(v)) {
       const Y = YUVA_YERI[id];
       if (!Y || !this.textures.exists('yuva_' + id)) continue;
       const r = this.add.image(0, 0, 'yuva_' + id);
-      const gen = Y.tunekte ? O.alanH * 0.16 : Y.taraf ? bosluk[Y.taraf] * 0.42 : O.alanH * 0.3;
+      const B = Y.asili || Y.duvar ? bosluk : yerBosluk;
+      const gen = Y.tunekte ? O.alanH * 0.16 : Y.taraf ? B[Y.taraf] * (Y.asili ? 0.42 : 0.3) : O.alanH * 0.3;
       r.setScale(Math.min(O.alanH * Y.boy / r.height, gen / r.width));
-      const x = t.x + Y.taraf * Y.oran * bosluk[Y.taraf] || t.x;
+      const x = t.x + Y.taraf * Y.oran * B[Y.taraf] || t.x;
       if (Y.tunekte) r.setOrigin(0.5, 0).setPosition(t.x, t.y + (taban - t.y) * 0.3).setDepth(t.y);
       else if (Y.asili) r.setOrigin(0.5, 0).setPosition(x, ust + 2 * DPR).setDepth(-5);
+      else if (Y.duvar) {
+        // Dirsek duvara değsin: sol duvarda görselin sol kenarı, sağ duvarda (aynalı) sağ kenarı o noktada
+        const kenarX = t.x + Y.taraf * bosluk[Y.taraf] * (Y.oran + 0.08);
+        r.setOrigin(Y.taraf < 0 ? 0 : 1, 0).setFlipX(Y.taraf > 0).setPosition(kenarX, ust + (taban - ust) * Y.duvar).setDepth(-5);
+      }
       else r.setOrigin(0.5, 1).setPosition(x, taban + O.alanH * (Y.y || 0)).setDepth(Y.on ? t.y : t.y - 3);
-      if (Y.asili || Y.tunekte) this.tweens.add({ targets: r, angle: { from: -2, to: 2 }, duration: 2400 + Math.random() * 800, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      if (Y.asili || Y.tunekte || Y.duvar) this.tweens.add({ targets: r, angle: { from: -2, to: 2 }, duration: 2400 + Math.random() * 800, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
       this.susler.push(r);
     }
   }

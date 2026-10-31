@@ -34,5 +34,41 @@
   "h": 312,
   "tabanX": 179.5,
   "tabanY": 311
+ },
+ "can": {
+  "w": 294,
+  "h": 360,
+  "tabanX": 215.0,
+  "tabanY": 359
+ },
+ "merdiven": {
+  "w": 358,
+  "h": 360,
+  "tabanX": 131.5,
+  "tabanY": 359
+ },
+ "sandik": {
+  "w": 322,
+  "h": 319,
+  "tabanX": 217.0,
+  "tabanY": 318
+ },
+ "fener": {
+  "w": 360,
+  "h": 357,
+  "tabanX": 123.5,
+  "tabanY": 356
+ },
+ "ayna": {
+  "w": 292,
+  "h": 352,
+  "tabanX": 142.0,
+  "tabanY": 351
+ },
+ "altinTunek": {
+  "w": 360,
+  "h": 318,
+  "tabanX": 179.5,
+  "tabanY": 317
  }
 }
