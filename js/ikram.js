@@ -14,7 +14,8 @@ export const IKRAMLAR = {
 };
 
 // Türlerin sevdiği ikramlar (Gemini'nin yazdığı "sevdiği yem" bilgisine göre)
-export const FAVORI = { ev_sercesi: 'dari', saka: 'ay', kanarya: 'bal', muhabbet: 'dari', sultan: 'ay', cennet: 'meyve', ketzal: 'meyve' };
+export const FAVORI = { ev_sercesi: 'dari', saka: 'ay', kanarya: 'bal', muhabbet: 'dari', sultan: 'ay', cennet: 'meyve', ketzal: 'meyve',
+  mavigerdan: 'dari', yalicapkini: 'meyve', kizilgerdan: 'meyve', agackakan: 'bal', dag_ispinozu: 'ay', tirmasik: 'bal' };
 
 // Kuşun kendi sevdiği ikram (eski kuşlarda türünün sevdiği)
 export const favoriIkram = (k) => k.favori || FAVORI[k.tur];

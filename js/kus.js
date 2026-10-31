@@ -125,6 +125,9 @@ function gagaCiz(ust, alt, P, sk) {
   if (sk.gaga === 'kanca') {
     sekil(ust, [{ x: -3, y: -6 }, { x: 5, y: -6.5 }, { x: 10, y: -2 }, { x: 10, y: 3 }, { x: 7, y: 6 }, { x: 5.5, y: 2 }, { x: -3, y: 2 }], P.gaga);
     sekil(alt, [{ x: 0, y: 0 }, { x: 7, y: 0 }, { x: 5, y: 4 }, { x: 0, y: 4 }], koyulastir(P.gaga, 0.9));
+  } else if (sk.gaga === 'uzun') { // yalıçapkını, ağaçkakan, tırmaşık: uzun sivri gaga
+    sekil(ust, [{ x: -2, y: -4.5 }, { x: 18, y: 0.8 }, { x: -2, y: 2 }], P.gaga);
+    sekil(alt, [{ x: 0, y: 0 }, { x: 15, y: 0 }, { x: 0, y: 3 }], koyulastir(P.gaga, 0.88));
   } else {
     sekil(ust, [{ x: -2, y: -4.5 }, { x: 11, y: 0.5 }, { x: -2, y: 2 }], P.gaga);
     sekil(alt, [{ x: 0, y: 0 }, { x: 9, y: -0.5 }, { x: 0, y: 3.2 }], koyulastir(P.gaga, 0.88));

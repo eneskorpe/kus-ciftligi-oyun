@@ -7,6 +7,7 @@ import { gorevOlay, gunluguYenile } from './gorevler.js';
 import { BINALAR } from './binalar.js';
 import { bagEkle, bakimYap, gelirCarpani, kalp, bugunYikandiMi } from './bag.js';
 import { otusGelir, getirTik } from './egitim.js';
+import { kesifteMi, kesifYeri, durbunHakki, BOLGELER } from './kule.js';
 
 export const MAKS_SV = 5;
 export const GELISTIRME_FIYATI = [0, 0, 300, 800, 2000, 5000]; // hedef seviyeye göre
@@ -19,7 +20,7 @@ export const kapasite = () => 6 + 4 * (D.binalar.kusevi.sv - 1);
 export const yemlikKapasite = () => 20 * D.binalar.yemlik.sv;
 export const kusBul = (id) => D.kuslar.find((k) => k.id === id);
 export const banyodaMi = (k) => (D.banyo || []).some((b) => b.kusId === k.id);
-export const mesgulMu = (k) => (!!D.kulucka && (D.kulucka.aId === k.id || D.kulucka.bId === k.id)) || (!!D.klinik && D.klinik.kusId === k.id) || banyodaMi(k); // kuluçkada, klinikte ya da banyoda
+export const mesgulMu = (k) => (!!D.kulucka && (D.kulucka.aId === k.id || D.kulucka.bId === k.id)) || (!!D.klinik && D.klinik.kusId === k.id) || banyodaMi(k) || kesifteMi(k); // kuluçkada, klinikte, banyoda ya da keşifte
 
 export const BINA_ETKI = {
   tuzak: (sv) => `Süre −%${(sv - 1) * 10}, mutasyon şansı +%${(sv - 1) * 4}${sv >= 2 ? ', ay çekirdeği açık' : ''}`,
@@ -28,6 +29,7 @@ export const BINA_ETKI = {
   kres: (sv) => `${kresYeri(sv)} yavru yeri, büyüme süresi −%${(sv - 1) * 10}, her besleme tüyü ${(0.012 + 0.003 * (sv - 1)).toFixed(3)} iyileştirir`,
   siparis: (sv) => `Panoda ${siparisYeri(sv)} sipariş, ödül +%${(sv - 1) * 10}, yeni sipariş daha çabuk gelir${sv >= 3 ? ', kusursuz tüy siparişleri' : ''}`,
   banyo: (sv) => `${banyoYeri(sv)} kuş aynı anda yıkanır${sv >= 2 ? ', köpüklü banyo' : ''}${sv >= 4 ? ', gül suyu' : ''}${sv >= 5 ? ', altın damla' : ''}`,
+  kule: (sv) => `${kesifYeri(sv)} keşif yeri, keşif süresi −%${(sv - 1) * 10}, günde ${durbunHakki(sv)} dürbün bakışı, bölgeler: ${Object.values(BOLGELER).filter((B) => sv >= B.sv).map((B) => B.ad).join(', ')}${sv >= 5 ? ', kuş bulma şansı +%10' : ''}`,
   tarla: (sv) => `Hasat +%${(sv - 1) * 25}, süre −%${(sv - 1) * 10}${sv >= 2 ? ', kenevir açık' : ''}`,
   kulucka: (sv) => `Kuluçka süresi −%${(sv - 1) * 10}, yavru tüyü daha iyi`,
   kusevi: (sv) => `Kapasite ${6 + 4 * (sv - 1)} kuş`,
@@ -87,7 +89,7 @@ export function kuluckaAc() {
   return kus;
 }
 
-function kesfet(tur) {
+export function kesfet(tur) {
   if (D.kesifler.includes(tur)) return false;
   D.kesifler.push(tur);
   xpEkle(100);

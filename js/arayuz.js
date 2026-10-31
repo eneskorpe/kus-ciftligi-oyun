@@ -1,7 +1,10 @@
 // Arayüz: üst menü, bina panelleri, kuş seçme, Kuşlarım, Ansiklopedi ve yeni kuş kartı.
-import { TURLER, kondisyonAdi, paletOlustur } from './turler.js';
+import { kulePaneli } from './kuleArayuz.js';
+import { BOLGELER } from './kule.js';
+import { kusMini } from './kusMini.js';
+import { TURLER, kondisyonAdi } from './turler.js';
 import { D, simdi, dinle, degisti, bildirimAyarla, xpGerek, sureYazi } from './durum.js';
-import { YEMLER, MUT_ADI, fenotip, kusGen, kusDegeri, tarifBul } from './genetik.js';
+import { YEMLER, MUT_ADI, fenotip, kusDegeri, tarifBul } from './genetik.js';
 import * as M from './mekanik.js';
 import { BINALAR, YENI_BINALAR } from './binalar.js';
 import * as G from './gorevler.js';
@@ -84,7 +87,6 @@ function hudGuncelle() {
 }
 
 // --- Küçük yardımcılar ---
-const hex = (n) => '#' + n.toString(16).padStart(6, '0');
 // Kuşun renklerinden küçük bir jeton (başı ve gövdesi)
 // Kuş portresi: oyunun çizimli türlerinde gerçek kuş resmi (renk mutasyonu yaklaşık bir filtreyle), diğerlerinde renk jetonu
 const MUT_FILTRE = { lutino: 'sepia(1) saturate(4) hue-rotate(5deg) brightness(1.15)', albino: 'grayscale(1) brightness(1.35)', mavi: 'hue-rotate(150deg) saturate(.9)' };
@@ -94,8 +96,9 @@ export function jeton(k, boy = 44) {
     const f = MUT_FILTRE[fenotip(k.genler)];
     return `<span class="jeton resim" style="width:${boy}px;height:${boy}px"><img src="assets/kuslar/${k.tur}/tasarim.png" alt=""${f ? ` style="filter:${f}"` : ''}></span>`;
   }
-  const P = paletOlustur(kusGen(k));
-  return `<span class="jeton" style="width:${boy}px;height:${boy}px;background:linear-gradient(160deg, ${hex(P.bas)} 0 46%, ${hex(P.govde)} 46% 78%, ${hex(P.kanat)} 78%)"></span>`;
+  // Gemini çizimi henüz olmayan türler (ör. Gözlem Kulesi türleri): renklerinden küçük CSS kuş
+  const f = MUT_FILTRE[fenotip(k.genler)];
+  return `<span class="jeton resim" style="width:${boy}px;height:${boy}px"><span${f ? ` style="filter:${f}"` : ''}>${kusMini(k.tur, boy * 0.86)}</span></span>`;
 }
 export const cinsiyet = (k) => (k.cinsiyet === 'e' ? '<b class="erkek">♂</b>' : '<b class="disi">♀</b>');
 export const cubuk = (oran, renk) => `<span class="cubuk"><i style="width:${Math.round(oran)}%;background:${renk}"></i></span>`;
@@ -109,7 +112,7 @@ export const huyYazi = (k, uzun = false) => { const H = HUYLAR[k.huy];
   if (!H) return '';
   if (!huyAcik(k)) return `<span class="huy gizli" title="Huyu ${HUY_KALP} kalpte ortaya çıkar">🎭 ${uzun ? `??? (${HUY_KALP} kalpte)` : '?'}</span>`;
   return `<span class="huy" title="${H.ad}: ${H.etki}">${H.ikon}${uzun ? ' ' + H.ad : ''}</span>`; };
-function kusSatiri(k) {
+export function kusSatiri(k) {
   const R = k.hasta && M.RAHATSIZLIKLAR[k.hasta.tur], durum = R ? ` <span class="hastaEtiket" title="${R.etki}">${R.ikon} ${R.ad}</span>` : k.koruma > simdi() ? ' <span title="Check-up koruması">🛡️</span>' : '';
   return `${jeton(k)}<span class="ks"><b>${k.ad}</b> ${cinsiyet(k)} <small>${TURLER[k.tur].ad}</small> ${kalpYazi(k)} ${huyAcik(k) ? huyYazi(k) : ''}${durum}<br>
     <small>${MUT_ADI[fenotip(k.genler)]} · ${kondisyonAdi(k.tuy)} (${k.tuy.toFixed(3)})</small><br>
@@ -156,7 +159,7 @@ function panelCiz() {
   $('#panelSeviye').style.display = t.sabit ? 'none' : '';
   $('#panelAciklama').textContent = t.aciklama;
   const I = D.insaat;
-  let icerik = B.sv === 0 ? '' : ({ tuzak: tuzakPaneli, kulucka: kuluckaPaneli, kusevi: kuseviPaneli, yemlik: yemlikPaneli, kunduz: kunduzPaneli, tarla: tarlaPaneli, degirmen: degirmenPaneli, klinik: klinikPaneli, siparis: siparisPaneli, kres: kresPaneli, banyo: banyoPaneli }[tip] || yakindaPaneli)();
+  let icerik = B.sv === 0 ? '' : ({ tuzak: tuzakPaneli, kulucka: kuluckaPaneli, kusevi: kuseviPaneli, yemlik: yemlikPaneli, kunduz: kunduzPaneli, tarla: tarlaPaneli, degirmen: degirmenPaneli, klinik: klinikPaneli, siparis: siparisPaneli, kres: kresPaneli, banyo: banyoPaneli, kule: () => kulePaneli(panelCiz) }[tip] || yakindaPaneli)();
   if (t.sabit) { /* geliştirilmeyen bina */ } else if (I && I.tip === tip) { // Kunduz Usta bu binada çalışıyor
     icerik += `<div class="gelistir" style="display:block">${ilerleme(I, I.bitis - I.bas, I.yeni ? '🦫 Kunduz Usta binayı inşa ediyor:' : `🦫 Kunduz Usta Sv. ${I.sv} için çalışıyor:`, 'insaat')}</div>`;
   } else if (B.sv < M.MAKS_SV && !t.islevYok) {
@@ -391,6 +394,7 @@ function ansiklopediAc() {
   const ipucu = (tur) => {
     if (tur === 'cennet') return 'Avustralyalı geveze bir kuşla sarı tüylü bir şarkıcının aşkından doğduğu söylenir...';
     if (tur === 'ketzal') return metinler.ketzalIpuclari.join(' ');
+    if (TURLER[tur].bolge) return `Tuzağa gelmez. Gözlem Kulesi'nden ${BOLGELER[TURLER[tur].bolge].e} keşif gönder...`;
     return 'Tuzağa doğru yemi koyarsan belki gelir...';
   };
   modalAc(`${kapat()}<h3>📖 Kuş Ansiklopedisi (${D.kesifler.length} / ${Object.keys(TURLER).length})</h3>` + Object.entries(TURLER).map(([tur, t]) => {
@@ -401,7 +405,7 @@ function ansiklopediAc() {
 }
 
 // Yeni kuş kartı: tuzaktan ya da yumurtadan çıkan kuş
-function kartAc(kus, kaynak) {
+export function kartAc(kus, kaynak) {
   if (!kus) return;
   const doluysa = D.kuslar.length >= M.kapasite();
   kartAcik = true; // kart dışına dokununca kapanmasın, kuş kaybolmasın

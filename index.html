@@ -242,6 +242,40 @@
     .yaprak { width: 58px; height: 58px; font-size: 30px; border-radius: 16px !important; transition: transform .15s; }
     .yaprak.oynuyor { transform: translateY(-8px) rotate(-8deg); }
     .egitimSonuc { font-size: 34px; margin: 6px 0; }
+    /* CSS mini kuş (kusMini.js): Gemini çizimi olmayan türler, dürbün ve Gözlem Defteri */
+    .miniKus { position: relative; display: inline-block; width: 1em; height: 1em; vertical-align: middle; }
+    .miniKus i { position: absolute; display: block; border: .035em solid #3a2a35; box-sizing: border-box; }
+    .mk-kuyruk { left: .02em; top: .58em; width: .34em; height: .14em; border-radius: .08em; background: var(--kuyruk); transform: rotate(28deg); }
+    .mk-kuyruk.uzun { width: .5em; left: -.12em; top: .66em; }
+    .mk-govde { left: .16em; top: .36em; width: .62em; height: .5em; border-radius: 50%; background: var(--govde); }
+    .mk-karin { left: .4em; top: .54em; width: .36em; height: .3em; border-radius: 50%; background: var(--karin); border: 0 !important; }
+    .mk-kanat { left: .22em; top: .44em; width: .38em; height: .26em; border-radius: 50% 50% 50% 20%; background: linear-gradient(90deg, var(--kanatUc) 0 25%, var(--kanat) 25%); transform: rotate(-12deg); }
+    .mk-bas { left: .46em; top: .14em; width: .4em; height: .4em; border-radius: 50%; background: linear-gradient(180deg, var(--tepe) 0 30%, var(--bas) 30%); }
+    .mk-gerdan { left: .64em; top: .42em; width: .2em; height: .16em; border-radius: 50%; background: var(--gerdan); border: 0 !important; }
+    .mk-goz { left: .68em; top: .26em; width: .08em; height: .1em; border-radius: 50%; background: #1d1d1d; border: 0 !important; }
+    .mk-gaga { left: .84em; top: .3em; width: 0; height: 0; border-style: solid !important; border-width: .05em 0 .05em .14em !important; border-color: transparent transparent transparent var(--gaga) !important; }
+    .mk-gaga.uzun { border-left-width: .26em !important; }
+    .mk-gaga.kanca { border-width: .07em 0 .07em .12em !important; }
+    .miniKus.golge { filter: brightness(0) opacity(.35); }
+    .jeton.resim > span { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; }
+    /* Gözlem Kulesi dürbünü (kuleArayuz.js) */
+    .durbun { position: relative; height: 230px; border-radius: 50% / 46%; overflow: hidden; border: 6px solid #3a2a35; margin: 6px auto; max-width: 420px;
+      box-shadow: inset 0 0 30px rgba(0,0,0,.35); background-size: cover; background-position: center; }
+    .durbun.bolge-gol { background-image: url(assets/kule/gol.jpg), linear-gradient(#bfe6ff 0 42%, #7fc46a 42% 52%, #5aa6d6 52% 82%, #6fb85a 82%); }
+    .durbun.bolge-orman { background-image: url(assets/kule/orman.jpg), linear-gradient(#cfe8c8 0 30%, #4f8f45 30% 60%, #3d7a37 60% 85%, #6a4a30 85%); }
+    .durbun.bolge-dag { background-image: url(assets/kule/dag.jpg), linear-gradient(#d6ebff 0 35%, #a9b4c0 35% 60%, #8d969f 60% 82%, #7a9a5a 82%); }
+    .saklanma { position: absolute; transform: translate(-50%, -50%); width: 64px; height: 76px; overflow: hidden; }
+    .saklanma .sus { position: absolute; left: 0; bottom: 0; width: 64px; font-size: 46px; line-height: 1; text-align: center; pointer-events: none; z-index: 2; }
+    .saklanma .kusYuva { position: absolute; left: 9px; bottom: 4px; z-index: 1; transition: transform .25s ease-out; transform: translateY(46px); cursor: pointer; }
+    .saklanma.cikti .kusYuva { transform: translateY(-14px); }
+    .saklanma.cekildi .kusYuva { transform: translateY(-14px) scale(1.15); }
+    .durbun .flas { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 5; }
+    .durbun .flas.yak { animation: flas .35s ease-out; }
+    @keyframes flas { from { opacity: .85; } to { opacity: 0; } }
+    .fotolar { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 8px 0; }
+    .foto { display: flex; flex-direction: column; align-items: center; background: #fff; padding: 6px 8px 4px; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,.18); transform: rotate(-2deg); }
+    .foto:nth-child(2n) { transform: rotate(2deg); }
+    .defterKus { width: 46px; display: inline-flex; justify-content: center; }
   </style>
 </head>
 <body>

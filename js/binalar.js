@@ -32,7 +32,7 @@ export const BINALAR = {
     aciklama: 'Köylüler belirli kuşlar ister. Siparişi teslim edersen altın ve XP kazanırsın.' },
   kres: { ad: 'Kuş Kreşi', boyut: [2, 2], ikon: '🐣', yeni: true, acilis: 10, fiyat: 4000, dk: 20, renk: 0xffe3ec, cati: 0xf29bb5,
     aciklama: 'Yumurtadan çıkan minik yavrular burada büyür.' },
-  kule: { ad: 'Gözlem Kulesi', boyut: [2, 2], ikon: '🔭', yeni: true, acilis: 12, fiyat: 6000, dk: 30, renk: 0xc9b79a, cati: 0x4f7fbf, yuksek: true, islevYok: true,
+  kule: { ad: 'Gözlem Kulesi', boyut: [2, 2], ikon: '🔭', yeni: true, acilis: 12, fiyat: 6000, dk: 30, renk: 0xc9b79a, cati: 0x4f7fbf, yuksek: true,
     aciklama: 'Göle, dağa ve ormana keşif gönderirsin. Her bölgede farklı kuş türleri yaşar.' },
   muze: { ad: 'Kuş Müzesi', boyut: [3, 3], ikon: '🏛️', yeni: true, acilis: 15, fiyat: 10000, dk: 45, renk: 0xf1ead8, cati: 0x9a7bc4, islevYok: true,
     aciklama: 'Nadir kuşlarını sergilersin. Her sergilenen kuş gelir ve rozet kazandırır.' },

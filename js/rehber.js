@@ -100,7 +100,8 @@ const TANITIM = {
     'Pano asıldı! Köylüler belli bir tür, renk ya da tüy kalitesinde kuş ister. Uygun kuşun varsa teslim et, güzel ödüller kap. Panonun üstünde 📜 görürsen uygun kuşun var demektir.'],
   kres: ['Minik yavrular için artık Kuş Kreşi kurabilirsin!',
     'Kreş hazır! Yumurtadan çıkan yavruyu kreşe gönder. Büyürken üç kez beslersen tüyü daha da güzel olur. Üstelik Kuş Evi\'nde yer kaplamaz.'],
-  kule: ['Gözlem Kulesi artık kurulabilir! Oradan göle, dağa ve ormana bakarız; oralarda bambaşka kuşlar yaşıyor.'],
+  kule: ['Gözlem Kulesi artık kurulabilir! Oradan göle, dağa ve ormana bakarız; oralarda bambaşka kuşlar yaşıyor.',
+    'Kule kuruldu! Dürbünle göle bak, çalıların arasından başını uzatan kuşların fotoğrafını çek; hepsi Gözlem Defteri’ne yazılır. Sonra bir kuşunu keşfe gönder: yanında yeni bir arkadaşla dönebilir! Kuleyi geliştirdikçe orman ve dağ da açılır.'],
   muze: ['En güzel kuşlarını sergileyeceğin Kuş Müzesi artık kurulabilir!'],
   lab: ['Genetik Laboratuvarı açıldı! İki kuşun yavrusunun nasıl olabileceğini önceden görebileceksin.'],
 };

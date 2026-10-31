@@ -51,6 +51,49 @@ export const TURLER = {
     sekil: { kuyruk: 'serit', kuyrukBoy: 95, gaga: 'koni', yanakBoy: 0, ibik: 'tuylu' },
     yumurta: { renk: '#1f9e5a', benek: '#f5d36a' },
   },
+  // --- Gözlem Kulesi bölge türleri (kule.js BOLGELER): tuzağa gelmezler, keşifle bulunurlar ---
+  mavigerdan: {
+    ad: 'Mavigerdan', nadirlik: 'Yaygın', boyut: 0.92, bolge: 'gol',
+    renk: { govde: '#8a6a4f', karin: '#efe3d2', bas: '#866650', tepe: '#7a5c45', gerdan: '#2f6fd6', kanat: '#7d5f46',
+      kanatUc: '#4f3a2a', sokum: '#d9693a', kuyruk: '#6b4a34', gaga: '#2e2a2a', bacak: '#6e5a50' },
+    sekil: { kuyruk: 'yelpaze', kuyrukBoy: 22, gaga: 'koni', yanakBoy: 0 },
+    yumurta: { renk: '#d6e6d2', benek: '#9a7a5a' },
+  },
+  yalicapkini: {
+    ad: 'Yalıçapkını', nadirlik: 'Epik', boyut: 0.95, bolge: 'gol',
+    renk: { govde: '#1aa6d9', karin: '#f08a2e', bas: '#1592c4', tepe: '#0f7fb0', yanak: '#f08a2e', gerdan: '#fbfbf5',
+      kanat: '#1b8fc0', kanatUc: '#0f5f86', sokum: '#5fe0ff', kuyruk: '#127aa8', gaga: '#262222', bacak: '#e05a3a' },
+    sekil: { kuyruk: 'yelpaze', kuyrukBoy: 14, gaga: 'uzun', yanakBoy: 6 },
+    yumurta: { renk: '#fbfbf8', benek: null },
+  },
+  kizilgerdan: {
+    ad: 'Kızılgerdan', nadirlik: 'Yaygın', boyut: 0.92, bolge: 'orman',
+    renk: { govde: '#8a7458', karin: '#f2ece2', bas: '#8a7458', yanak: '#f07a2e', gerdan: '#f07a2e', kanat: '#7b6650',
+      kanatUc: '#5a4a3a', kuyruk: '#6f5c47', gaga: '#2e2a2a', bacak: '#a88870' },
+    sekil: { kuyruk: 'yelpaze', kuyrukBoy: 20, gaga: 'koni', yanakBoy: 8 },
+    yumurta: { renk: '#f4efe4', benek: '#c0663a' },
+  },
+  agackakan: {
+    ad: 'Ağaçkakan', nadirlik: 'Nadir', boyut: 1.05, bolge: 'orman',
+    renk: { govde: '#1f1d1f', karin: '#f1ece4', bas: '#f4f0ea', tepe: '#1f1d1f', ense: '#d8263a', kanat: '#1f1d1f',
+      kanatUc: '#2c2a2c', kanatBant: '#ffffff', sokum: '#e0283c', kuyruk: '#1f1d1f', gaga: '#4a4448', bacak: '#7a7070' },
+    sekil: { kuyruk: 'yelpaze', kuyrukBoy: 22, gaga: 'uzun', yanakBoy: 0 },
+    yumurta: { renk: '#fbfbf8', benek: null },
+  },
+  dag_ispinozu: {
+    ad: 'Dağ İspinozu', nadirlik: 'Nadir', boyut: 0.95, bolge: 'dag',
+    renk: { govde: '#2b2624', karin: '#fbf5ec', bas: '#2b2624', gerdan: '#f39a3a', kanat: '#2f2a28', kanatUc: '#1d1a19',
+      kanatBant: '#f39a3a', sokum: '#ffffff', kuyruk: '#2b2624', gaga: '#e8b44a', bacak: '#c9a090' },
+    sekil: { kuyruk: 'yelpaze', kuyrukBoy: 22, gaga: 'koni', yanakBoy: 0 },
+    yumurta: { renk: '#cfe0e6', benek: '#7a5a4a' },
+  },
+  tirmasik: {
+    ad: 'Duvar Tırmaşıkkuşu', nadirlik: 'Epik', boyut: 0.95, bolge: 'dag',
+    renk: { govde: '#9aa2a8', karin: '#6c7276', bas: '#a7aeb3', gerdan: '#2a2a2e', kanat: '#e0284a', kanatUc: '#1e1e22',
+      kanatBant: '#f5f5f5', kuyruk: '#2a2a2e', gaga: '#2a2a2e', bacak: '#3a3a3e' },
+    sekil: { kuyruk: 'yelpaze', kuyrukBoy: 18, gaga: 'uzun', yanakBoy: 0 },
+    yumurta: { renk: '#f8f8f4', benek: '#8a6a6a' },
+  },
 };
 
 export const MUTASYONLAR = { normal: 'Normal', lutino: 'Lutino', albino: 'Albino', mavi: 'Mavi seri', alaca: 'Alaca' };

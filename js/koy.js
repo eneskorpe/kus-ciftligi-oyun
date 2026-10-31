@@ -4,6 +4,7 @@ import { TURLER, tohumluRastgele, kondisyonAdi } from './turler.js';
 import { D, dinle, birak, kaydet, saat } from './durum.js';
 import { kusGen } from './genetik.js';
 import * as M from './mekanik.js';
+import { kesifHazirMi } from './kule.js';
 import { arayuzKur, bildirim } from './arayuz.js';
 import { efektleriKur } from './efekt.js';
 import { gorselleriYukle } from './kusGorsel.js';
@@ -308,6 +309,7 @@ class Koy extends Phaser.Scene {
       } else if (b.tip === 'kusevi' && D.binalar.kusevi.birikim >= M.gelirKapasite() * 0.2) balon = 'altin_yigini';
       else if (b.tip === 'yemlik' && D.binalar.yemlik.stok <= 2) balon = 'bos_yem';
       else if (b.tip === 'siparis' && !b.temel && M.siparisHazirMi()) balon = 'siparis';
+      else if (b.tip === 'kule' && !b.temel && kesifHazirMi()) balon = 'kesif';
       else if (b.tip === 'kres' && !b.temel && (M.kresHazirMi() || M.kresAcMi())) balon = M.kresHazirMi() ? 'yavru' : 'biberon';
       if (oran !== null) {
         // Çerçevenin iç krem alanı: yatayda %7-%93, dikeyde %29-%74 (cubuk_cerceve.png)

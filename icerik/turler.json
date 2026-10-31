@@ -55,6 +55,54 @@
       "kisilik": "Gizemli ve asil",
       "sevdigiYem": "Vahşi mini avokado ve orman meyveleri",
       "yumurta": "Derin zümrüt yeşili renginde, üzerinde altın tozları parıldayan efsanevi yumurta."
+    },
+    "mavigerdan": {
+      "ad": "Mavigerdan",
+      "tanim": "Göl kıyısındaki sazlıkların utangaç şarkıcısıdır. Göğsündeki parlak mavi önlüğü güneşte bir an parlar, sonra kamışların arasına kayboluverir.",
+      "gercekBilgi": "Mavigerdanlar sulak alanlarda yaşar; erkeklerin gerdanındaki mavi leke, kur yaparken kabartılarak gösterilir.",
+      "kisilik": "Utangaç ama meraklı",
+      "sevdigiYem": "Kıyıdaki küçük böcekler ve tohumlar",
+      "yumurta": "Yeşilimsi zemin üstünde soluk kahve benekli yumurta."
+    },
+    "yalicapkini": {
+      "ad": "Yalıçapkını",
+      "tanim": "Gölün üstünde mavi bir şimşek gibi süzülür. Bir dalın ucunda sabırla bekler, sonra suya dalıp gagasında ganimetiyle geri döner.",
+      "gercekBilgi": "Yalıçapkınları suya saniyede birkaç metre hızla dalar; gözlerini koruyan özel bir zar sayesinde suyun altında da görebilirler.",
+      "kisilik": "Sabırlı ve gösterişli",
+      "sevdigiYem": "Taze meyve dilimleri (oyunda), doğada küçük balıklar",
+      "yumurta": "Parlak, bembeyaz yuvarlak yumurta."
+    },
+    "kizilgerdan": {
+      "ad": "Kızılgerdan",
+      "tanim": "Ormanın en cana yakın kuşudur. Turuncu göğsünü kabartıp bahçıvanın peşinden zıplar, toprak kazılınca ilk o koşar.",
+      "gercekBilgi": "Kızılgerdanlar kışın da öter ve bölgelerini şarkılarıyla korur; insanlara çok çabuk alışırlar.",
+      "kisilik": "Cana yakın ve cesur",
+      "sevdigiYem": "Meyve ve küçük solucanlar",
+      "yumurta": "Krem zemin üstünde kızıl benekli yumurta."
+    },
+    "agackakan": {
+      "ad": "Ağaçkakan",
+      "tanim": "Orman onun tak-tak sesiyle uyanır. Kırmızı başlığı ve siyah beyaz ceketiyle ağaç gövdesinde dimdik durur, kabukların altındaki gizli hazineleri arar.",
+      "gercekBilgi": "Ağaçkakanların kafatası darbeleri emen süngerimsi bir yapıya sahiptir; saniyede 20 kez gagalayabilirler.",
+      "kisilik": "Çalışkan ve inatçı",
+      "sevdigiYem": "Bal ve ağaç kabuğundaki böcekler",
+      "yumurta": "Parlak beyaz, pürüzsüz yumurta."
+    },
+    "dag_ispinozu": {
+      "ad": "Dağ İspinozu",
+      "tanim": "Kayalık yamaçlarda sürüyle dolaşır. Turuncu omuzları ve kara başlığıyla karlı tepelerde bile neşesini kaybetmez.",
+      "gercekBilgi": "Dağ ispinozları kışın binlerce kişilik sürüler halinde göç eder ve kayın tohumlarıyla beslenir.",
+      "kisilik": "Sosyal ve dayanıklı",
+      "sevdigiYem": "Ay çekirdeği ve dağ tohumları",
+      "yumurta": "Mavimsi zemin üstünde kahve benekli yumurta."
+    },
+    "tirmasik": {
+      "ad": "Duvar Tırmaşıkkuşu",
+      "tanim": "Sarp kayaların dikey yüzeyinde bir kelebek gibi kanat açar. Gri tüylerinin altında saklı kıpkırmızı kanatları, dağın en nadir manzarasıdır.",
+      "gercekBilgi": "Duvar tırmaşıkkuşu yüksek dağların kaya duvarlarında yaşar; kanatlarını sürekli açıp kapatması yüzünden 'kaya kelebeği' diye anılır.",
+      "kisilik": "Gizemli ve zarif",
+      "sevdigiYem": "Bal ve kaya çatlaklarındaki böcekler",
+      "yumurta": "Beyaz zemin üstünde seyrek kızıl benekli yumurta."
     }
   },
   "ketzalIpuclari": [
