@@ -84,7 +84,7 @@ class Koy extends Phaser.Scene {
     potYukle(this);
     this.load.image('doku_cimen', 'assets/doku/cimen.png');
     this.load.image('doku_yol', 'assets/doku/yol.png');
-    for (const tip of ['kulucka', 'tuzak', 'kusevi', 'yemlik', 'agac', 'kunduz', ...KADEME_GORSELLERI]) this.load.image('bina_' + tip, `assets/binalar/${tip}.png`);
+    for (const tip of ['kulucka', 'tuzak', 'kusevi', 'yemlik', 'agac', 'kunduz', 'tarla', ...KADEME_GORSELLERI]) this.load.image('bina_' + tip, `assets/binalar/${tip}.png`);
     for (const ad of ['govde', 'bas', 'bas_mutlu', 'on_kol', 'arka_kol', 'bacak', 'kuyruk', 'tahta', 'alet_kutusu']) this.load.image('kunduz_' + ad, `assets/kunduz/${ad}.png`); // Kunduz Usta
     for (const ad of ['iskele_merdivenli', 'iskele_kucuk', 'malzeme', 'toz']) this.load.image('insaat_' + ad, `assets/insaat/${ad}.png`); // inşaat
     this.load.image('manzara_dag', 'assets/manzara/dag.png'); // ormanın ardındaki tepeler ve dağlar
@@ -119,7 +119,10 @@ class Koy extends Phaser.Scene {
       if (tip !== 'fener' && n && n.type === 'Image') this.susNesneleri.push({ tip, i, j, n, anahtar: `${tip},${i},${j}` });
       return n;
     });
-    for (const [tip, i, j] of suslerGuncel()) if (tip === 'cicek') this.cicekKumesi(i + 0.5, j + 0.5, rnd);
+    // Çiçek kümesi engel değildir; üstüne bina kurulduysa binanın içinden çıkmasın diye çizilmez
+    const binaAlti = new Set();
+    for (const b of this.binalar) for (let a = b.i; a < b.i + b.tanim.boyut[0]; a++) for (let c = b.j; c < b.j + b.tanim.boyut[1]; c++) binaAlti.add(a + ',' + c);
+    for (const [tip, i, j] of suslerGuncel()) if (tip === 'cicek') this.cicekKumesi(i + 0.5, j + 0.5, rnd, binaAlti.has(i + ',' + j));
     this.ormanKur(rnd);
     this.manzaraKur();
     this.koyObjeleri = [];
@@ -458,11 +461,11 @@ class Koy extends Phaser.Scene {
     }
   }
   // Aynı türden 2-4 çiçeklik küçük bir küme
-  cicekKumesi(i, j, rnd) {
+  cicekKumesi(i, j, rnd, gizli = false) {
     const ad = Phaser.Utils.Array.GetRandom(DEKOR_GRUP.cicek), n = 2 + Math.floor(rnd() * 3);
     for (let s = 0; s < n; s++) {
-      const p = izoEkran(i + (rnd() - 0.5) * 0.8, j + (rnd() - 0.5) * 0.8);
-      dekorKoy(this, ad, p.x, p.y, 34 + rnd() * 16, rnd() < 0.5);
+      const p = izoEkran(i + (rnd() - 0.5) * 0.8, j + (rnd() - 0.5) * 0.8), boy = 34 + rnd() * 16, ayna = rnd() < 0.5;
+      if (!gizli) dekorKoy(this, ad, p.x, p.y, boy, ayna); // gizli: rastgele sıra bozulmasın diye sayılar yine çekilir
     }
   }
   // Kuşların konabileceği yerler (dünya noktası): x, y konma noktası, taban: objenin yer çizgisi (derinlik için), tip

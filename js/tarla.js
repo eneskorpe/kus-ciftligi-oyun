@@ -59,12 +59,15 @@ export function tarlaKur(sahne) {
   emojiDoku(sahne, 'ui_biberon', '🍼'); // kreşte yavru acıktı
   const b = sahne.binalar.find((x) => x.tip === 'tarla' && !x.temel);
   if (!b) return () => {};
-  // Arsanın iç kısmında 4 sıra × 5 bitki
-  const k = b.k, m = lerpN(k.ust, k.alt, 0.5), ic = (n) => ({ x: m.x + (n.x - m.x) * 0.72, y: m.y + (n.y - m.y) * 0.72 });
+  // Arsanın iç kısmında 4 sıra × 5 bitki. Gemini görselinde yalnız toprak sıralarına (çit, kulübe ve patika dışında) dikilir:
+  // u sol-üst kenardan (çit) sağ-alt kenara, v sol-alt kenardan sağ-üst kenara (patika) doğru
+  const k = b.k, m = lerpN(k.ust, k.alt, 0.5), gorsel = b.nesne.type === 'Image';
+  const ic = (n) => (gorsel ? n : { x: m.x + (n.x - m.x) * 0.72, y: m.y + (n.y - m.y) * 0.72 });
   const [U, S, A, L] = [ic(k.ust), ic(k.sag), ic(k.alt), ic(k.sol)];
+  const [u0, u1, v0, v1] = gorsel ? [0.24, 0.98, 0.06, 0.62] : [0, 1, 0, 1];
   const noktalar = [];
   for (let r = 0; r < 4; r++) for (let c = 0; c < 5; c++) {
-    const u = (r + 0.5) / 4, v = (c + 0.5) / 5;
+    const u = u0 + (u1 - u0) * (r + 0.5) / 4, v = v0 + (v1 - v0) * (c + 0.5) / 5;
     noktalar.push(lerpN(lerpN(L, U, v), lerpN(A, S, v), u));
   }
   let ekin = null, bitkiler = [];
