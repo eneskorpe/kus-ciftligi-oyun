@@ -244,9 +244,11 @@ function elipsN(x, y, rx, ry) { const n = []; for (let i = 0; i < 24; i++) { con
 // Ara seviyelerde (Sv2 ve Sv4) binanın önüne kodla saksılar, Sv4'te bir de flama eklenir.
 export const KADEME_GORSELLERI = ['kulucka_2', 'kulucka_3', 'tuzak_2', 'tuzak_3', 'kusevi_2', 'kusevi_3', 'yemlik_2', 'yemlik_3', 'tarla_2', 'tarla_3', 'klinik_2', 'klinik_3', 'degirmen_2'];
 export const kademe = (sv) => (sv >= 5 ? 3 : sv >= 3 ? 2 : 1);
+// Kanatsız gövdesi olan kademede (değirmen: tarla.js dönen kanadı üstüne koyar) gövde görseli kullanılır
 export function binaDokusu(sahne, tip, sv) {
-  for (let n = kademe(sv); n > 1; n--) if (sahne.textures.exists(`bina_${tip}_${n}`)) return `${tip}_${n}`;
-  return tip;
+  let ad = tip;
+  for (let n = kademe(sv); n > 1; n--) if (sahne.textures.exists(`bina_${tip}_${n}`)) { ad = `${tip}_${n}`; break; }
+  return sahne.textures.exists(`bina_${ad}_govde`) ? `${ad}_govde` : ad;
 }
 
 export function binaKur(sahne, tip, i, j, rnd, temel = false, sv = 1) {

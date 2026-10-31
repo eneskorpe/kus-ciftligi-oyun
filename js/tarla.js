@@ -36,11 +36,12 @@ function emojiDoku(sahne, ad, emoji) {
 
 // Gemini değirmeninde dönen kanat (assets/degirmen/kanat.png, göbek ortada). Her kademenin kanatsız gövde görseli
 // (raw/bina_<kademe>_govde.png → bina_hazirla.py) geldikçe buraya yazılır: gobek görseldeki göbek noktası, en kanat çapı (görsel enine oran)
-export const DEGIRMEN_GOVDE = {};
-const KANAT_YERI = { degirmen: { gobek: [0.53, 0.316], en: 0.71 }, degirmen_2: { gobek: [0.525, 0.285], en: 0.66 } };
+// gobek gövde görselinde ölçülür (kanatsız gövde kanatlı halinden kısa olabilir)
+export const DEGIRMEN_GOVDE = { degirmen_2: true };
+const KANAT_YERI = { degirmen: { gobek: [0.53, 0.316], en: 0.71 }, degirmen_2: { gobek: [0.525, 0.246], en: 0.66 } };
 const ogutuyor = () => D.degirmen && simdi() < D.degirmen.bitis;
 
-// Değirmenin kanatları öğütürken hızlı, boşta ağır ağır döner. Görselli binada kanatsız gövdeye geçilip kanat üstüne konur;
+// Değirmenin kanatları öğütürken hızlı, boşta ağır ağır döner. Görselli binada kanatsız gövdenin üstüne konur;
 // gövde görseli henüz yoksa kanatlar boyalı ve sabit kalır. Görsel yoksa geçici çizimin çatısında kodla çizilen kanat döner
 export function degirmenKur(sahne) {
   const b = sahne.binalar.find((x) => x.tip === 'degirmen' && !x.temel);
@@ -48,9 +49,8 @@ export function degirmenKur(sahne) {
   if (b.nesne.type === 'Image') {
     const kanat = sahne.add.image(0, 0, 'degirmen_kanat').setVisible(false);
     return (dt) => {
+      // Gövde görselini binalar.js binaDokusu seçer (kademe değişince de); kanat yalnız gövdenin üstünde görünür
       const n = b.nesne, ad = n.texture.key.replace(/^bina_/, '').replace(/_govde$/, ''), Y = KANAT_YERI[ad];
-      // Kademe değişince (isci.js) yeni kademenin gövdesine geçilir
-      if (Y && DEGIRMEN_GOVDE[ad] && sahne.textures.exists(`bina_${ad}_govde`) && n.texture.key !== `bina_${ad}_govde`) n.setTexture(`bina_${ad}_govde`);
       const acik = !!Y && n.texture.key.endsWith('_govde') && n.visible;
       kanat.setVisible(acik);
       if (!acik) return;
