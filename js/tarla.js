@@ -34,10 +34,32 @@ function emojiDoku(sahne, ad, emoji) {
   x.fillText(emoji, 64, 70); c.refresh();
 }
 
-// Değirmenin kanatları: görseli gelene kadar geçici çizimin çatısında döner; öğütürken hızlı, boşta ağır ağır
+// Gemini değirmeninde dönen kanat (assets/degirmen/kanat.png, göbek ortada). Her kademenin kanatsız gövde görseli
+// (raw/bina_<kademe>_govde.png → bina_hazirla.py) geldikçe buraya yazılır: gobek görseldeki göbek noktası, en kanat çapı (görsel enine oran)
+export const DEGIRMEN_GOVDE = {};
+const KANAT_YERI = { degirmen: { gobek: [0.53, 0.316], en: 0.71 }, degirmen_2: { gobek: [0.525, 0.285], en: 0.66 } };
+const ogutuyor = () => D.degirmen && simdi() < D.degirmen.bitis;
+
+// Değirmenin kanatları öğütürken hızlı, boşta ağır ağır döner. Görselli binada kanatsız gövdeye geçilip kanat üstüne konur;
+// gövde görseli henüz yoksa kanatlar boyalı ve sabit kalır. Görsel yoksa geçici çizimin çatısında kodla çizilen kanat döner
 export function degirmenKur(sahne) {
   const b = sahne.binalar.find((x) => x.tip === 'degirmen' && !x.temel);
-  if (!b || b.nesne.type === 'Image') return () => {};
+  if (!b) return () => {};
+  if (b.nesne.type === 'Image') {
+    const kanat = sahne.add.image(0, 0, 'degirmen_kanat').setVisible(false);
+    return (dt) => {
+      const n = b.nesne, ad = n.texture.key.replace(/^bina_/, '').replace(/_govde$/, ''), Y = KANAT_YERI[ad];
+      // Kademe değişince (isci.js) yeni kademenin gövdesine geçilir
+      if (Y && DEGIRMEN_GOVDE[ad] && sahne.textures.exists(`bina_${ad}_govde`) && n.texture.key !== `bina_${ad}_govde`) n.setTexture(`bina_${ad}_govde`);
+      const acik = !!Y && n.texture.key.endsWith('_govde') && n.visible;
+      kanat.setVisible(acik);
+      if (!acik) return;
+      const sol = n.x - n.displayWidth * n.originX, ust = n.y - n.displayHeight * n.originY;
+      kanat.setPosition(sol + n.displayWidth * Y.gobek[0], ust + n.displayHeight * Y.gobek[1]).setDepth(n.depth + 0.5).setAlpha(n.alpha);
+      kanat.setScale(n.displayWidth * Y.en / kanat.width);
+      kanat.rotation += (ogutuyor() ? 2.4 : 0.35) * dt / 1000;
+    };
+  }
   const g = sahne.add.graphics().setPosition(b.tepe.x, b.tepe.y + 34).setDepth(b.nesne.depth + 2);
   for (let n = 0; n < 4; n++) {
     const a = n * Math.PI / 2, c = Math.cos(a), s = Math.sin(a), p = (u, v) => ({ x: c * u - s * v, y: s * u + c * v });
@@ -47,7 +69,7 @@ export function degirmenKur(sahne) {
     g.fillStyle(0xfff3dc); g.fillPoints([p(16, 4), p(60, 4), p(60, 16), p(16, 12)], true);
   }
   g.fillStyle(CIZGI); g.fillCircle(0, 0, 8); g.fillStyle(0xc4553f); g.fillCircle(0, 0, 5);
-  return (dt) => { g.rotation += (D.degirmen && simdi() < D.degirmen.bitis ? 3 : 0.35) * dt / 1000; };
+  return (dt) => { g.rotation += (ogutuyor() ? 3 : 0.35) * dt / 1000; };
 }
 
 export function tarlaKur(sahne) {

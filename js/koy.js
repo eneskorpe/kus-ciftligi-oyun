@@ -22,7 +22,7 @@ import { isciKur } from './isci.js';
 import { dereKur } from './su.js';
 import { muzikKur } from './muzik.js';
 import { duzenleKur } from './duzenle.js';
-import { tarlaKur, degirmenKur } from './tarla.js';
+import { tarlaKur, degirmenKur, DEGIRMEN_GOVDE } from './tarla.js';
 import { rahatsizlikKur } from './rahatsizlik.js';
 import { rehberKur } from './rehber.js';
 import { kalp } from './bag.js';
@@ -97,6 +97,8 @@ class Koy extends Phaser.Scene {
     for (const ad of KIR_CICEKLERI) this.load.image('kircicek_' + ad, `assets/kircicek/${ad}.png`);
     // Bina uyarı ikonları, balon çerçeveleri ve süre çubuğu
     for (const ad of ['selam', 'goster', 'okur', 'sevinc']) this.load.image('rehber_' + ad, `assets/rehber/poz_${ad}.png`); // Bilge Baykuş
+    this.load.image('degirmen_kanat', 'assets/degirmen/kanat.png'); // dönen değirmen kanadı (tarla.js degirmenKur)
+    for (const ad of Object.keys(DEGIRMEN_GOVDE)) this.load.image(`bina_${ad}_govde`, `assets/binalar/${ad}_govde.png`);
     for (const ad of ['kafes', 'yumurta', 'altin_yigini', 'bos_yem', 'balon', 'balon_hazir', 'cubuk_cerceve', 'cubuk_dolgu']) this.load.image('ui_' + ad, `assets/arayuz/${ad}.png`);
   }
 
