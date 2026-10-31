@@ -129,6 +129,10 @@ const DUYURULAR = {
     'Kuşların artık ders de alabiliyor! Kuş Evi’nde bir kuşunu seç ve 🎓 Eğit düğmesine dokun.',
     'Ötüş, hüner, getir... Papağanlar konuşmayı bile öğrenir! Dersler kısa birer oyun; her kuşa günde 3 ders.',
     'Her yetenek yıldızı kuşun değerini artırır. Ötüşü gelişen kuş daha çok altın kazandırır, getirmeyi öğrenen kuş sana hediyeler getirir!'] },
+  yuva: { hedef: { dom: '#dKusevi' }, satirlar: [
+    'Kuş Evi’nde her kuşunun artık kendi yuvası var! Kuşuna baktıkça yuvası süslerle dolacak.',
+    'Süsler parayla alınmaz: banyo, bakım serisi, yavru, yetenek yıldızları... Her başarı yeni bir süs açar. Kuş Defteri’ndeki 🏆 Yuva sekmesinden bakabilirsin.',
+    'Süslü yuvada kuşun daha mutlu olur. Ama unutma: kuşu satarsan yuvası da süsleri de onunla gider!'] },
 };
 let konusma = null; // { satirlar, n, yuz, poz, hedef, bitince, ipucu }
 let yazi = { tam: '', n: 0, t: 0 };

@@ -381,7 +381,7 @@ export function kuslarimAc() {
       ${dugme(sevBekle > 0 ? `💗 ${sureYazi(sevBekle)}` : '💗 Sev', () => { if (M.kusSev(k.id)) { oyun.events.emit('kusSevildi', k.id); ciz(); } }, sevBekle > 0 ? 'disabled' : '')}
       ${dugme(k.gorunur ? '👁 Köyde' : '🙈 Gizli', () => { if (!k.gorunur && gorunen >= 8) return bildirim('Köyde en fazla 8 kuş gezebilir'); k.gorunur = !k.gorunur; degisti(); ciz(); })}
       ${M.mesgulMu(k) ? `<small>${M.banyodaMi(k) ? '🛁 Banyoda' : '💞 Meşgul'}</small>` : dugme(sat.has(k.id) ? `Emin misin? ${kusDegeri(k)} 🪙` : `🪙 Sat · ${kusDegeri(k)}`, () => {
-        if (sat.has(k.id)) { M.kusSat(k.id); ciz(); } else { sat.add(k.id); ciz(); if (kalp(k) >= 3) bildirim(`🦉 ${k.ad} seni ${kalp(k)} kalp seviyor... Satarsan bu bağ da gider. Emin misin?`); }
+        if (sat.has(k.id)) { M.kusSat(k.id); ciz(); } else { sat.add(k.id); ciz(); const sus = (k.suslar || []).length; if (kalp(k) >= 3 || sus >= 3) bildirim(`🦉 ${k.ad} seni ${kalp(k)} kalp seviyor${sus ? ` ve yuvasında ${sus} başarı süsü var` : ''}... Satarsan hepsi onunla gider. Emin misin?`); }
       }, sat.has(k.id) ? 'class="tehlike"' : '')}</span></div>`;
   }).join(''));
   ciz();

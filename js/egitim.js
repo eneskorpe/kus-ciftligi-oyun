@@ -55,6 +55,7 @@ export function getirTik(k) {
   if (!y || k.getirGun === bugun()) return false;
   k.getirGun = bugun();
   if (Math.random() >= y * 0.2) return false;
+  k.hediyeSay = (k.hediyeSay || 0) + 1;
   const r = Math.random();
   if (y >= 5 && r < 0.12) { D.elmas += 1; bildir(`🎁 ${k.ad} sana parlak bir 💎 getirdi!`); }
   else if (r < 0.55 && D.binalar.tarla) { const n = 4 + y * 2; D.tohumlar.dari += n; bildir(`🎁 ${k.ad} ağzında ${n} 🌾 darıyla geldi!`); }

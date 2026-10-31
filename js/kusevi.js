@@ -8,6 +8,7 @@ import { gunDurumu } from './gunIsigi.js';
 import { D } from './durum.js';
 import { potBellek } from './pot.js';
 import * as M from './mekanik.js';
+import { YUVA_GORSELLERI, acikSusler } from './yuva.js';
 
 const DPR = Math.min(window.devicePixelRatio || 1, 2);
 const CIZGI = 0x3a2a35;
@@ -16,6 +17,16 @@ const CIZGI = 0x3a2a35;
 export const KENAR = { sol: 86, ust: 132, alt: 124 };
 // Hazırlanan Gemini görselleri (assets/kusevi/): 'ic', 'ic_gece', 'tunek'. Eklendikçe buraya yazılır.
 const KUSEVI_GORSELLERI = ['ic.jpg', 'ic_gece.jpg', 'tunek.png'];
+// Süslerin odadaki yeri. taraf: tüneğin solu (-1) ya da sağı (1); oran: tünekle o taraftaki boşluğun kenarı arasındaki yer;
+// boy: kuş alanı yüksekliğinin oranı. Asılı süs bilgi kartının altından sarkar, isimlik tüneğin direğine asılır
+const YUVA_YERI = {
+  saksi: { taraf: -1, oran: 0.74, boy: 0.22 },
+  besik: { taraf: -1, oran: 0.36, boy: 0.13 },
+  yastik: { taraf: 0, oran: 0, boy: 0.11, y: 0.02, on: true },
+  havuz: { taraf: 1, oran: 0.5, boy: 0.16 },
+  salincak: { taraf: -1, oran: 0.55, boy: 0.24, asili: true },
+  isimlik: { tunekte: true, boy: 0.1 },
+};
 // Arka plan görselinde halının merkezi (oran olarak): tünek buraya oturur
 const HALI = { x: 0.5, y: 0.875 };
 
@@ -25,11 +36,12 @@ export class KusEvi extends Phaser.Scene {
   preload() {
     gorselleriYukle(this);
     for (const id of ['dari', 'ay', 'meyve', 'bal', 'kalsiyum', 'test']) this.load.image('ikram_' + id, `assets/kusevi/ikram_${id}.png`);
+    for (const id of YUVA_GORSELLERI) this.load.image('yuva_' + id, `assets/yuva/${id}.png`);
     for (const dosya of KUSEVI_GORSELLERI) this.load.image('kusevi_' + dosya.split('.')[0], `assets/kusevi/${dosya}`);
   }
 
   create(veri) {
-    potBellek(this, /^(kus_|ikram_|kusevi_tunek)/); // yumuşak kenarlı küçültme (pot.js)
+    potBellek(this, /^(kus_|ikram_|kusevi_tunek|yuva_)/); // yumuşak kenarlı küçültme (pot.js)
     efektleriKur(this);
     const W = this.scale.width, H = this.scale.height;
     const sol = KENAR.sol * DPR, ust = KENAR.ust * DPR, alt = KENAR.alt * DPR;
@@ -46,8 +58,9 @@ export class KusEvi extends Phaser.Scene {
     this.tunekCiz(cx, tunekY, Math.min((W - sol) * 0.6, 110 * this.carpan * 2.2), H);
     this.tunek = { x: cx, y: tunekY, zeminY: tunekY };
     this.zemin = { x1: cx - 10, x2: cx + 10, y1: tunekY - 2, y2: tunekY + 2 };
+    this.oda = { sol, ust, cx, en: W - sol, alanH };
 
-    this.kus = null;
+    this.kus = null; this.susler = []; this.yuvaAnahtar = null;
     this.kusSec(veri && veri.id);
 
     // Dokunma: kısa dokunuş = sev, kuşun üstünde parmak gezdirme = okşa
@@ -96,8 +109,39 @@ export class KusEvi extends Phaser.Scene {
       ezX: 1, ezY: 1, cirp: 0, gozAcik: 1, mutlu: false, kanatAci: -0.25, gagaAc: 0, kuyrukAci: 0, ibikAci: 0 });
     k.golge.setVisible(false);
     k.bosSayac = 1500;
+    this.yuvaCiz();
     // Kuş Evi'ne girince küçük bir selam
     this.time.delayedCall(250, () => { if (k.durum === 'bos') k.kanatCirp(); });
+  }
+
+  // Kişisel yuva: seçili kuşun açılmış süsleri tüneğin çevresinde (yuva.js). Süs listesi değişince yeniden çizilir
+  yuvaCiz() {
+    const v = this.kusVeri(), O = this.oda, t = this.tunek;
+    // Arayüzün altında kalmasın: sağdaki eylem düğmeleri, üstteki bilgi kartı, alttaki ikram tepsisi (CSS pikseli → oyun pikseli)
+    const kutu = (s) => { const e = document.querySelector(s), r = e && e.getBoundingClientRect(); return r && r.width && r.height ? r : null; };
+    const er = kutu('#kEylem'), kr = kutu('#kKart'), tr = kutu('#kTepsi');
+    const taban = Math.round(Math.min(this.tunekTaban || t.y + O.alanH * 0.3, tr ? tr.top * DPR + 4 * DPR : Infinity));
+    const sag = Math.round(er ? er.left * DPR : O.sol + O.en), ust = Math.round(kr ? kr.bottom * DPR : O.ust);
+    const anahtar = v ? [v.id, acikSusler(v).join(','), taban, sag, ust].join(':') : '';
+    if (anahtar === this.yuvaAnahtar) return;
+    this.yuvaAnahtar = anahtar;
+    (this.susler || []).forEach((r) => r.destroy());
+    this.susler = [];
+    if (!v) return;
+    const bosluk = { '-1': t.x - O.sol, 1: sag - t.x, 0: 0 };
+    for (const id of acikSusler(v)) {
+      const Y = YUVA_YERI[id];
+      if (!Y || !this.textures.exists('yuva_' + id)) continue;
+      const r = this.add.image(0, 0, 'yuva_' + id);
+      const gen = Y.tunekte ? O.alanH * 0.16 : Y.taraf ? bosluk[Y.taraf] * 0.42 : O.alanH * 0.3;
+      r.setScale(Math.min(O.alanH * Y.boy / r.height, gen / r.width));
+      const x = t.x + Y.taraf * Y.oran * bosluk[Y.taraf] || t.x;
+      if (Y.tunekte) r.setOrigin(0.5, 0).setPosition(t.x, t.y + (taban - t.y) * 0.3).setDepth(t.y);
+      else if (Y.asili) r.setOrigin(0.5, 0).setPosition(x, ust + 2 * DPR).setDepth(-5);
+      else r.setOrigin(0.5, 1).setPosition(x, taban + O.alanH * (Y.y || 0)).setDepth(Y.on ? t.y : t.y - 3);
+      if (Y.asili || Y.tunekte) this.tweens.add({ targets: r, angle: { from: -2, to: 2 }, duration: 2400 + Math.random() * 800, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      this.susler.push(r);
+    }
   }
 
   update(zaman, dt) { if (this.kus) this.kus.update(zaman, Math.min(dt, 50)); }
@@ -183,6 +227,7 @@ export class KusEvi extends Phaser.Scene {
     if (this.textures.exists('kusevi_tunek')) {
       // Dal üstü y noktasında, taban halıda (alt tepsinin altında kalmasın); dal kuşun ayaklarını rahat taşısın
       const taban = Math.min(this.haliY || zeminY, H - KENAR.alt * DPR + 30 * DPR);
+      this.tunekTaban = taban;
       const t = this.add.image(x, taban, 'kusevi_tunek').setOrigin(0.5, 1).setDepth(y - 1);
       const DAL_UST = 0.02; // görselde dalın üst kenarı (yükseklik oranı)
       t.setScale(Math.max((taban - y) / (t.height * (1 - DAL_UST)), en * 1.15 / t.width));

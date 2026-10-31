@@ -1,0 +1,38 @@
+{
+ "isimlik": {
+  "w": 360,
+  "h": 296,
+  "tabanX": 79.4,
+  "tabanY": 295
+ },
+ "yastik": {
+  "w": 360,
+  "h": 271,
+  "tabanX": 171.0,
+  "tabanY": 270
+ },
+ "salincak": {
+  "w": 326,
+  "h": 360,
+  "tabanX": 164.8,
+  "tabanY": 359
+ },
+ "havuz": {
+  "w": 360,
+  "h": 282,
+  "tabanX": 180.5,
+  "tabanY": 281
+ },
+ "saksi": {
+  "w": 324,
+  "h": 360,
+  "tabanX": 167.5,
+  "tabanY": 359
+ },
+ "besik": {
+  "w": 360,
+  "h": 312,
+  "tabanX": 179.5,
+  "tabanY": 311
+ }
+}

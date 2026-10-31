@@ -7,6 +7,7 @@ import { IKRAMLAR, stok, ikramAl, ikramVer, favoriIkram, favoriBiliniyor } from 
 import { jeton, dugme, modalAc, cinsiyet, cubuk, rozet, kapat, metinler, bildirim, kalpYazi, bakimYazi, huyYazi } from './arayuz.js';
 import { canDostu, HUYLAR, huyAcik, HUY_KALP, kalp, BAG_ESIK } from './bag.js';
 import { egitimAc, egitimKur } from './egitimArayuz.js';
+import { SUSLER, kusSusleri, acikSusler, konforCarpani } from './yuva.js';
 import { YETENEKLER, yetenekVarMi, yildiz, yildizYazi, toplamYildiz } from './egitim.js';
 
 const $ = (s) => document.querySelector(s);
@@ -77,7 +78,7 @@ function ciz() {
   const tur = TURLER[k.tur], buff = k.buff || {};
   const etkiler = [k.hasta && M.RAHATSIZLIKLAR[k.hasta.tur].ikon, k.koruma > simdi() && '🛡️', buff.nadir && '🍯', buff.kalsiyum && '🧂', k.testli && '🧪'].filter(Boolean).join(' ');
   $('#kKart').classList.toggle('canDostu', canDostu(k)); // 10 kalp: altın çerçeve
-  $('#kKart').innerHTML = `<div class="kkUst"><b>${k.ad}</b> ${cinsiyet(k)} <span>${tur.ad}</span> ${rozet(k.tur)} ${kalpYazi(k)} ${huyYazi(k, true)} ${bakimYazi(k)}${toplamYildiz(k) ? ` <span class="yildizlar" title="Yetenek yıldızları">🎓★${toplamYildiz(k)}</span>` : ''}${etkiler ? `<span class="kkEtki" title="Aktif ikram etkileri">${etkiler}</span>` : ''}</div>
+  $('#kKart').innerHTML = `<div class="kkUst"><b>${k.ad}</b> ${cinsiyet(k)} <span>${tur.ad}</span> ${rozet(k.tur)} ${kalpYazi(k)} ${huyYazi(k, true)} ${bakimYazi(k)}${toplamYildiz(k) ? ` <span class="yildizlar" title="Yetenek yıldızları">🎓★${toplamYildiz(k)}</span>` : ''} <span class="yuvaRozet" data-kusevi="yuva" title="Yuva süsleri">🏆${acikSusler(k).length}</span>${etkiler ? `<span class="kkEtki" title="Aktif ikram etkileri">${etkiler}</span>` : ''}</div>
     <div class="kkAlt"><span>${MUT_ADI[fenotip(k.genler)]} · <b>${kondisyonAdi(k.tuy)}</b> (${k.tuy.toFixed(3)})</span>
     <span class="kkBar">😊 ${cubuk(k.mutluluk, '#ff8fb0')}</span><span class="kkBar">🌾 ${cubuk(k.tokluk, '#e9c46a')}</span></div>`;
   $('#kAvatar').innerHTML = D.kuslar.map((x) => {
@@ -85,6 +86,7 @@ function ciz() {
     return `<button class="kAv ${x.id === k.id ? 'secili' : ''}" data-is-av="${x.id}" title="${x.ad}">${jeton(x, 50)}${durum ? `<i>${durum}</i>` : ''}<small>${x.ad}</small></button>`;
   }).join('') + Array.from({ length: Math.max(0, M.kapasite() - D.kuslar.length) }, () => '<div class="kAv bos">＋</div>').join('');
   document.querySelectorAll('[data-is-av]').forEach((b) => { b.onclick = () => sec(+b.dataset.isAv); });
+  const s = sahne(); if (s && s.yuvaCiz) s.yuvaCiz(); // yeni süs açıldıysa yuvada görünsün
   $('#kTepsi').innerHTML = Object.entries(IKRAMLAR).map(([id, I]) => {
     const n = stok(id), fiyat = I.fiyat.altin ? `${I.fiyat.altin}🪙` : `${I.fiyat.elmas}💎`;
     return `<button class="kIkram ${n ? '' : 'yok'}" data-ikram="${id}" title="${I.ad}: ${I.aciklama}"><img src="assets/kusevi/ikram_${id}.png" alt="">
@@ -103,7 +105,7 @@ export function defterAc(sekme = defterSekme) {
   const k = secili();
   if (!k) return;
   defterSekme = sekme;
-  const sekmeler = [['soy', '🌳 Soy'], ['gen', '🧬 Genler'], ['ipucu', '💡 İpuçları']];
+  const sekmeler = [['soy', '🌳 Soy'], ['yuva', '🏆 Yuva'], ['gen', '🧬 Genler'], ['ipucu', '💡 İpuçları']];
   let icerik = '';
   if (sekme === 'soy') {
     const yas = sureYazi(simdi() - (k.dogum || simdi()));
@@ -115,6 +117,15 @@ export function defterAc(sekme = defterSekme) {
       <p>🍽️ En sevdiği ikram: <b>${favoriBiliniyor(k) ? `${fav.ikon} ${fav.ad}` : '??? (farklı ikramlar dene)'}</b></p>
       <p>🎓 Yetenekler: ${Object.entries(YETENEKLER).filter(([t]) => yetenekVarMi(k, t)).map(([t, Y]) => `${Y.ikon} ${yildizYazi(yildiz(k, t))}`).join(' · ')}</p>
       <p><small>${metinler.turler[k.tur] ? metinler.turler[k.tur].tanim : ''}</small></p>`;
+  } else if (sekme === 'yuva') {
+    // Başarı süsleri: parayla alınmaz, kuşa baktıkça açılır; satılırsa kuşla birlikte gider
+    const acik = acikSusler(k), konfor = Math.round((1 - konforCarpani(k)) * 100);
+    icerik = `<p>🏆 <b>${acik.length} / ${kusSusleri(k).length}</b> süs · 🏠 Konfor: mutluluğu <b>%${konfor}</b> daha yavaş azalır</p>` +
+      kusSusleri(k).map((id) => {
+        const S = SUSLER[id], tamam = acik.includes(id), [n, hedef] = S.ilerleme(k);
+        return `<div class="satir ${tamam ? '' : 'kilitli'}"><span class="ks"><b>${tamam ? S.ikon : '🔒'} ${S.ad}</b>${S.sadece ? ' <small>✨ türe özel</small>' : ''}<br>
+          <small>${S.sart}${tamam ? ' ✅' : hedef > 1 ? ` (${Math.min(n, hedef)}/${hedef})` : ''}</small></span></div>`;
+      }).join('') + '<p><small>Süsler parayla alınmaz, kuşuna baktıkça kazanılır. Kuşu satarsan yuvası ve süsleri de onunla gider.</small></p>';
   } else if (sekme === 'gen') {
     icerik = `<p>Görünen renk: <b>${MUT_ADI[fenotip(k.genler)]}</b> · Tüy: <b>${kondisyonAdi(k.tuy)}</b> · Desen #${k.tohum}</p>` +
       Object.entries(GEN_ADI).map(([g, ad]) => {
@@ -147,6 +158,7 @@ document.addEventListener('click', (e) => {
   if (!b || !acik) return;
   const s = sahne(), eylem = b.dataset.kusevi;
   if (eylem === 'defter') return defterAc();
+  if (eylem === 'yuva') return defterAc('yuva');
   if (eylem === 'egit') { const k = secili(); if (k) egitimAc(k); return; }
   if (!s || !s.kus || (s.kus.durum !== 'bos' && s.kus.durum !== 'oksaniyor')) return;
   if (eylem === 'sev') sev();

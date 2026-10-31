@@ -1,6 +1,7 @@
 // Oyun kuralları: tuzak, kuluçka, bakım, gelir, bina geliştirme, hızlandırma.
 import { TURLER } from './turler.js';
 import { D, simdi, DAKIKA, degisti, bildir, xpEkle, harca } from './durum.js';
+import { yuvaKontrol, konforCarpani } from './yuva.js';
 import { YEMLER, KULUCKA_DK, yabaniKus, yavruUret, kusOlustur, kusDegeri, geceMi, fenotip, MUT_ADI } from './genetik.js';
 import { gorevOlay, gunluguYenile } from './gorevler.js';
 import { BINALAR } from './binalar.js';
@@ -369,6 +370,7 @@ function banyoBitir(B) {
   if (!k) return;
   k.tuy = Math.max(0, +(k.tuy - S.tuy * (k.huy === 'suslu' ? 1.5 : 1)).toFixed(3)); // süslü kuş banyodan daha parlak çıkar
   k.mutluluk = Math.min(100, k.mutluluk + S.mutluluk);
+  k.banyoSay = (k.banyoSay || 0) + 1;
   bagEkle(k, 'banyo'); bakimYap(k, 'banyo');
   xpEkle(4);
   gorevOlay('banyo');
@@ -560,6 +562,7 @@ export function tik() {
       K.cocuk = yavruUret(a, b, { kuluckaSv: D.binalar.kulucka.sv, gece: geceMi() });
       // 7 kalp bağlı ebeveyn yavrusuna daha güzel tüy verir
       for (const e of [a, b]) if (kalp(e) >= 7) K.cocuk.tuy = Math.max(0, K.cocuk.tuy - 0.02);
+      for (const e of [a, b]) e.yavruSay = (e.yavruSay || 0) + 1; // ilk yavru: yumurta kabuğu beşik süsü
       // Kalsiyum taşı: kuluçka %30 kısa (bir kez kullanılır)
       const kals = (a.buff && a.buff.kalsiyum) || (b.buff && b.buff.kalsiyum);
       for (const k of [a, b]) if (k.buff) delete k.buff.kalsiyum;
@@ -575,7 +578,7 @@ export function tik() {
     let buldu = false;
     for (const k of D.kuslar) {
       k.tokluk = Math.max(0, k.tokluk - 4 * saat * (k.huy === 'obur' ? 1.5 : 1));
-      k.mutluluk = Math.max(0, k.mutluluk - 3 * saat * (neseli && k.huy !== 'neseli' ? 0.8 : 1));
+      k.mutluluk = Math.max(0, k.mutluluk - 3 * saat * (neseli && k.huy !== 'neseli' ? 0.8 : 1) * konforCarpani(k));
       // Meraklı kuş köyde gezerken ara sıra bir şey bulur (bir seferde en çok bir buluş bildirilir)
       if (!buldu && k.huy === 'merakli' && k.gorunur && !mesgulMu(k) && Math.random() < 1 - Math.pow(0.85, saat)) {
         buldu = true;
@@ -589,6 +592,7 @@ export function tik() {
       else if (k.mutluluk < 30 || k.tokluk < 20) k.tuy = Math.min(1, k.tuy + 0.006 * saat);
       if (rahatsizlikTik(k, t, saat)) degisim = true;
       if (getirTik(k)) degisim = true; // Getir yeteneği: günde bir hediye şansı
+      if (yuvaKontrol(k)) degisim = true; // başarı süsleri
       if (k.mutluluk >= 50) D.binalar.kusevi.birikim += GELIR_SAAT[TURLER[k.tur].nadirlik] * saat * (k.hasta && k.hasta.tur === 'halsiz' ? 0.5 : 1) * gelirCarpani(k) * otusGelir(k);
     }
     D.binalar.kusevi.birikim = Math.min(gelirKapasite(), D.binalar.kusevi.birikim);
