@@ -78,7 +78,10 @@ export function tarlaKur(sahne) {
       ekin = T && T.ekin;
       bitkiler = ekin ? noktalar.map((p) => { const g = sahne.add.graphics().setPosition(p.x, p.y).setDepth(b.nesne.depth + 1 + (p.y - k.ust.y) * 0.001); bitkiCiz(g, ekin); return g; }) : []; // arsanın üstünde, arkadakiler önce
     }
-    if (!T) return;
+    // 2. ve 3. kademe görselinde ekinler zaten boyalı: kodla çizilen bitkiler gizlenir (süre çubuğu ve hasat balonu kalır)
+    const boyali = b.nesne.type === 'Image' && b.nesne.texture.key !== 'bina_tarla';
+    bitkiler.forEach((g) => g.setVisible(!boyali));
+    if (!T || boyali) return;
     const oran = Math.min(1, (simdi() - T.bas) / Math.max(1, T.bitis - T.bas)), z = sahne.time.now / 1000;
     bitkiler.forEach((g, n) => {
       g.setScale(0.25 + 0.75 * oran);
