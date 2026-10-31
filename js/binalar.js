@@ -247,7 +247,7 @@ export const kademe = (sv) => (sv >= 5 ? 3 : sv >= 3 ? 2 : 1);
 // Kanatsız gövdesi olan kademede (değirmen: tarla.js dönen kanadı üstüne koyar) gövde görseli kullanılır
 export function binaDokusu(sahne, tip, sv) {
   let ad = tip;
-  for (let n = kademe(sv); n > 1; n--) if (sahne.textures.exists(`bina_${tip}_${n}`)) { ad = `${tip}_${n}`; break; }
+  for (let n = kademe(sv); n > 1; n--) if (sahne.textures.exists(`bina_${tip}_${n}`) || sahne.textures.exists(`bina_${tip}_${n}_govde`)) { ad = `${tip}_${n}`; break; }
   return sahne.textures.exists(`bina_${ad}_govde`) ? `${ad}_govde` : ad;
 }
 
