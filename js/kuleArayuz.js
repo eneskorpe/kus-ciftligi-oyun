@@ -9,7 +9,16 @@ import { kusMini } from './kusMini.js';
 
 const $ = (s) => document.querySelector(s);
 let secBolge = 'gol', yenile = () => {};
-const BOLGE_SUSU = { gol: ['🌾', '🪷', '🌿', '🪨'], orman: ['🌳', '🌲', '🍄', '🌿'], dag: ['🪨', '⛰️', '🌲', '🪨'] };
+// Dürbünde kuşların saklandığı yerler: köyün çizim süsleri (assets/dekor). Görseller 2'nin katı tuvallere yerleşik (pot.json asıl boyut)
+const BOLGE_SUSU = { gol: ['saz', 'cimen_uzun', 'cali_kucuk', 'saz', 'tas_kucuk'], orman: ['egrelti', 'cali_oval', 'kutuk', 'cali_cicekli'],
+  dag: ['kaya_yosunlu', 'tas_grubu', 'kaya_egrelti', 'cimen_orta'] };
+let DEKOR_POT = {};
+fetch('assets/dekor/pot.json').then((r) => r.json()).then((j) => { DEKOR_POT = j; }).catch(() => {});
+const potBoyu = (n) => 2 ** Math.ceil(Math.log2(n));
+function susCiz(ad) {
+  const [w, h] = DEKOR_POT[ad + '.png'] || [1, 1], en = 74, boy = Math.min(72, en * h / w);
+  return `<span class="sus" style="width:${en}px;height:${boy}px;background-image:url(assets/dekor/${ad}.png);background-size:${potBoyu(w) / w * 100}% ${potBoyu(h) / h * 100}%"></span>`;
+}
 
 // --- Bina paneli (arayuz.js panelCiz çağırır) ---
 export function kulePaneli(panelCiz) {
@@ -54,7 +63,7 @@ export function durbunAc(bolge) {
   const d = oyunDurum = { bolge, cekilen: [], zaman: [], sure: 20 };
   modalKilitle(true);
   modalAc(`<h3>🔭 ${B.ad} · Dürbün</h3><p id="durbunMesaj">Başını uzatan kuşlara dokun, fotoğrafını çek! <b id="durbunSure">20</b> sn · 📷 <b id="durbunSay">0</b></p>
-    <div class="durbun bolge-${bolge}" id="durbun">${YER.map(([x, y], i) => `<div class="saklanma" style="left:${x}%;top:${y}%" data-yer="${i}"><span class="kusYuva"></span><span class="sus">${susler[i % susler.length]}</span></div>`).join('')}<div class="flas"></div></div>`);
+    <div class="durbun bolge-${bolge}" id="durbun">${YER.map(([x, y], i) => `<div class="saklanma" style="left:${x}%;top:${y}%" data-yer="${i}"><span class="kusYuva"></span>${susCiz(susler[i % susler.length])}</div>`).join('')}<div class="flas"></div></div>`);
   const dogur = () => {
     if (oyunDurum !== d) return;
     const bos = [...document.querySelectorAll('.saklanma')].filter((e) => !e.classList.contains('dolu'));
