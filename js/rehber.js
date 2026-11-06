@@ -21,48 +21,48 @@ const ADIMLAR = [
     'Gel, sana her şeyi adım adım göstereyim. Ben anlatayım, sen yap; birlikte öğrenelim!'] },
   { yuz: 'dusun', poz: 'goster', hedef: { bina: 'tuzak' }, bekle: 'tuzakKur', tamam: () => !!D.tuzak, metin: [
     'Önce yeni kuşlar bulalım. Şu gördüğün Tuzak Kulübesi. Merak etme, kuşlara hiç zarar vermez; içine yem koyarız, onlar da misafirliğe gelir.'],
-  ipucu: 'Tuzak Kulübesi\'ne dokun ve 🌱 Kuş tohumu ile tuzak kur.' },
+  ipucu: 'Tuzak Kulübesi\'ne dokun ve 🌱 Kuş tohumu ile tuzak kur.', dugme: ['Kuş tohumu'] },
   { yuz: 'saskin', poz: 'goster', hedef: { bina: 'tuzak' }, bekle: 'hizlandir:tuzak', tamam: () => !D.tuzak || M.kalanSure(D.tuzak) <= 0, metin: [
     'Kuşların gelmesi biraz sürer... Ama beklemek zorunda değiliz!',
     'Yukarıdaki parlak taşları gördün mü? Onlar 💎 elmas. Elmasla bekleme sürelerini anında bitirirsin. Hadi ilkini birlikte kullanalım!'],
-  ipucu: 'Tuzak Kulübesi\'ne dokun ve ⚡ Bitir düğmesine bas.' },
+  ipucu: 'Tuzak Kulübesi\'ne dokun ve ⚡ Bitir düğmesine bas.', dugme: ['Bitir'] },
   { yuz: 'mutlu', poz: 'sevinc', hedef: { bina: 'tuzak' }, bekle: 'tuzakAc', tamam: () => !D.tuzak, metin: [
     'İşte bu kadar hızlı! Bak, tuzağa bir kuş gelmiş bile.'],
-  ipucu: 'Tuzak Kulübesi\'ne dokun ve 🎁 Tuzağı aç.' },
+  ipucu: 'Tuzak Kulübesi\'ne dokun ve 🎁 Tuzağı aç.', dugme: ['Tuzağı aç'] },
   { yuz: 'saskin', poz: 'sevinc', bekle: ['kusEkle', 'sat'], metin: [
     'Ooo, bak kim gelmiş! Her kuşun kendine has bir rengi, tüyü ve huyu vardır. Kartında hepsi yazıyor.'],
-  ipucu: 'Karttaki 🏡 Köye al düğmesine dokun.' },
+  ipucu: 'Karttaki 🏡 Köye al düğmesine dokun.', dugme: ['Köye al'] },
   { yuz: 'mutlu', poz: 'selam', bekle: 'sev', metin: [
     'Kuşlar sevgiyle büyür. Mutlu kuş şarkı söyler, altın kazandırır, yavru yapmaya da gönüllü olur.'],
   ipucu: 'Meydanda gezinen kuşlarından birine dokunup onu sev.' },
   { yuz: 'konus', poz: 'goster', hedef: { bina: 'banyo' }, tamam: () => (D.banyo || []).length > 0 || D.kuslar.some(bugunYikandiMi), metin: [
     'Bak, bu da Kuş Banyosu! Kuşların burada yıkanır, tüyleri pırıl pırıl parlar.',
     'Her kuşunla her gün biraz vakit geçir: ikram ver, yıkat, sev. Böylece aranızdaki bağ güçlenir 💗. Bağı güçlü kuş daha çok kazandırır ve çok daha değerli olur.'],
-  ipucu: "Kuş Banyosu'na dokun ve bir kuşunu 🛁 Yıkat." },
+  ipucu: "Kuş Banyosu'na dokun ve bir kuşunu 🛁 Yıkat.", dugme: ['Yıkat'] },
   { yuz: 'konus', poz: 'goster', hedef: { bina: 'yemlik' }, bekle: 'yemlikDoldur', tamam: () => M.yemlikFiyati() === 0, metin: [
     'Karnı tok kuş, mutlu kuştur! Kuşların acıkınca Yemlik\'e gidip kendileri yer. Yem biterse acıkıp üzülürler.'],
-  ipucu: 'Yemlik\'e dokun ve 🌾 Doldur düğmesine bas.' },
+  ipucu: 'Yemlik\'e dokun ve 🌾 Doldur düğmesine bas.', dugme: ['Doldur'] },
   { yuz: 'dusun', poz: 'okur', hedef: { bina: 'kusevi' }, metin: [
     'Mutlu kuşların Kuş Evi\'nde altın biriktirir. Kuş ne kadar nadirse o kadar çok kazandırır.',
     'Kuş Evi\'nin üstünde altın yığını görünce dokun ve topla. Altınlarla köyünü büyüteceksin.'] },
   { yuz: 'konus', poz: 'goster', hedef: { bina: 'kulucka' }, bekle: 'ciftlestir', tamam: () => !!D.kulucka, metin: [
     'Şimdi en sevdiğim kısım: yavrular! Bir erkek ♂ ve bir dişi ♀ kuşu Kuluçka\'da buluşturursan yumurta yaparlar.',
     'Yalnız ikisinin de mutlu ve tok olması gerek. Aç ya da küskün kuş çiftleşmek istemez.'],
-  ipucu: 'Kuluçka\'ya dokun, bir erkek ve bir dişi seç, sonra 💞 Çiftleştir.' },
+  ipucu: 'Kuluçka\'ya dokun, bir erkek ve bir dişi seç, sonra 💞 Çiftleştir.', dugme: ['Çiftleştir', 'Seç'] },
   { yuz: 'mutlu', poz: 'goster', hedef: { bina: 'kulucka' }, bekle: 'hizlandir:kulucka', tamam: () => !D.kulucka || D.kulucka.asama === 'kulucka', metin: [
     'Ne tatlılar! Biraz baş başa kalmaları lazım... ama biz meraklıyız, değil mi? Bir elmasla hızlandıralım!'],
-  ipucu: 'Kuluçka\'ya dokun ve ⚡ Bitir düğmesine bas.' },
+  ipucu: 'Kuluçka\'ya dokun ve ⚡ Bitir düğmesine bas.', dugme: ['Bitir'] },
   { yuz: 'saskin', poz: 'okur', hedef: { bina: 'kulucka' }, bekle: 'hizlandir:kulucka', tamam: () => !D.kulucka || M.kalanSure(D.kulucka) <= 0, metin: [
     'Yumurta kuluçkaya yattı! Yavru, renk genlerini anne ve babasından alır. Bazen hiç beklemediğin bir renk çıkar.',
     'Ben yavruyu görmek için sabırsızlanıyorum. Bir elmas daha harcayıp hemen çatlatalım!'],
-  ipucu: 'Kuluçka\'ya dokun ve ⚡ Bitir düğmesine bas.' },
+  ipucu: 'Kuluçka\'ya dokun ve ⚡ Bitir düğmesine bas.', dugme: ['Bitir'] },
   { yuz: 'mutlu', poz: 'sevinc', hedef: { bina: 'kulucka' }, bekle: 'yumurta', tamam: () => !D.kulucka, metin: [
     'Yumurta çatlamak üzere! Bazı türleri buluşturursan bambaşka bir tür bile doğabilir... Bu sır şimdilik aramızda! 🤫'],
-  ipucu: 'Kuluçka\'ya dokun ve 🥚 Yumurtayı çatlat.' },
+  ipucu: 'Kuluçka\'ya dokun ve 🥚 Yumurtayı çatlat.', dugme: ['Yumurtayı çatlat'] },
   { yuz: 'konus', poz: 'goster', hedef: { bina: 'tuzak' }, tamam: () => !!D.insaat || ['tuzak', 'kulucka', 'kusevi', 'yemlik'].some((t) => D.binalar[t].sv >= 2), metin: [
     'Köyün ustası Kunduz Usta\'yı gördün mü? Binaları o büyütür, yeni binaları da o kurar.',
     'Geliştirilen bina daha hızlı çalışır ve yeni şeyler açar. Tuzak Kulübesi Sv. 2 olunca ay çekirdeği bile kullanabilirsin!'],
-  ipucu: 'Tuzak Kulübesi\'ne dokun ve ⬆️ Sv. 2 düğmesine bas.',
+  ipucu: 'Tuzak Kulübesi\'ne dokun ve ⬆️ Sv. 2 düğmesine bas.', dugme: ['⬆️'],
   // İlk geliştirme mutlaka yapılabilsin: seviye ya da altın eksikse baykuş tamamlar
   once: () => {
     if (D.seviye < M.SV_GEREK[2]) { D.xp = xpGerek(D.seviye); xpEkle(0); }
@@ -70,7 +70,7 @@ const ADIMLAR = [
   } },
   { yuz: 'saskin', poz: 'goster', hedef: { bina: 'tuzak' }, bekle: 'hizlandir:insaat', tamam: () => !D.insaat, atla: () => !D.insaat, metin: [
     'Usta işe koyuldu bile! Büyük binalar uzun sürer ama elmas burada da işe yarar.'],
-  ipucu: 'Tuzak Kulübesi\'ne dokun ve ⚡ Bitir düğmesine bas.' },
+  ipucu: 'Tuzak Kulübesi\'ne dokun ve ⚡ Bitir düğmesine bas.', dugme: ['Bitir'] },
   { yuz: 'dusun', poz: 'okur', metin: [
     'Gördün mü? Elmasla hiç beklemeden ilerlersin. Elmas kazanmak da kolay: her seviye atladığında, görevlerde ve ödüllerde gelir.',
     'Bir yerde bekleme süresi görürsen ⚡ düğmesini hatırla!'] },
@@ -170,6 +170,7 @@ function devam() {
   if (!k) return;
   if (yazi.n < yazi.tam.length) { yazi.n = yazi.tam.length; return; } // önce yazı bitsin
   k.n++;
+  if (k.n >= k.satirlar.length && k.ipucu && k.bitince === adimBitti) hedefiAc(k.hedef);
   if (k.n < k.satirlar.length || k.ipucu) return satirYaz();
   kapat();
   k.bitince && k.bitince();
@@ -187,9 +188,21 @@ function adimBaslat() {
   const A = ADIMLAR[R.adim];
   if (!A) { R.adim = 'bitti'; degisti(); return; }
   if (A.atla && A.atla()) { R.adim++; degisti(); return adimBaslat(); } // bu adımın konusu yok (ör. inşaat başlamadı)
-  A.oldu = false;
   if (A.once) { A.once(); degisti(); }
+  pencereToparla(A.hedef);
   goster({ satirlar: A.metin, n: 0, yuz: A.yuz, poz: A.poz, hedef: A.hedef, ipucu: A.ipucu, bitirYazi: A.odul ? 'Teşekkürler! 🎁' : null, bitince: adimBitti });
+}
+// Baykuş başka bir yeri anlatmaya başlayınca açık kalan başka binanın paneli kapanır (oyuncu yanlış pencerede kalmasın)
+const panelBina = () => ($('#binaPanel').classList.contains('acik') ? Object.keys(BINALAR).find((t) => BINALAR[t].ad === $('#panelAd').textContent) : null);
+function pencereToparla(h) {
+  const acik = panelBina();
+  if (acik && h && (h.dom || (h.bina && h.bina !== acik))) $('#panelKapat').click();
+}
+// Konuşma bitip iş sırası gelince hedef binanın paneli kendiliğinden açılır (Devam oyuncuyu doğru yere götürür)
+function hedefiAc(h) {
+  if (!h || !h.bina || !sahne || panelBina() === h.bina || $('#modal').classList.contains('acik')) return;
+  const b = sahne.binalar.find((v) => v.tip === h.bina);
+  if (b) sahne.game.events.emit('binaSecildi', b);
 }
 function adimBitti() {
   const A = ADIMLAR[R.adim];
@@ -201,12 +214,16 @@ function adimBitti() {
   if (baykus) baykus.zipla = 1;
   setTimeout(sirayaBak, 700);
 }
-// Beklenen olay oldu: ipucu gösteriliyorsa adım biter (konuşma sürerken olursa konuşma bitince hemen geçilir)
-olayDinle((tip) => {
-  if (R.adim === 'bitti' || !konusma || konusma.bitince !== adimBitti) return;
-  const A = ADIMLAR[R.adim];
-  if ([].concat(A.bekle).includes(tip)) { A.oldu = true; if (konusma.n >= konusma.satirlar.length) { kapat(); adimBitti(); } }
-});
+// Öğretici sürerken olan her olay hatırlanır: oyuncu baykuşu beklemeden (Devam'a basmadan, hatta bir iki adım önden)
+// işi yaptıysa o adım kendiliğinden geçilir. Bir adımı bitiren olay harcanır (aynı olayı bekleyen sonraki adım için yeniden gerekir)
+const gorulen = new Set();
+olayDinle((tip) => { if (R.adim !== 'bitti') gorulen.add(tip); });
+function adimYapildiMi(A) {
+  const bekle = [].concat(A.bekle || []);
+  const olay = bekle.find((t) => gorulen.has(t));
+  if (olay || (A.tamam && A.tamam())) { bekle.forEach((t) => gorulen.delete(t)); return true; }
+  return false;
+}
 // Sırada ne var: öğretici adımı, yoksa bekleyen bina tanıtımı
 function sirayaBak() {
   if (konusma || document.body.classList.contains('kusevi-modu') || document.body.classList.contains('duzen-modu')) return;
@@ -236,7 +253,9 @@ function okGuncelle(zaman) {
   const ok = $('#rehberOk'), h = konusma && konusma.hedef;
   const B = document.body.classList, kapali = !h || $('#modal').classList.contains('acik') || $('#binaPanel').classList.contains('acik') || B.contains('kusevi-modu') || B.contains('duzen-modu');
   let x, y;
-  if (!kapali && h.dom) {
+  const v = vurguEl && vurguEl.isConnected && vurguEl.getBoundingClientRect();
+  if (v && v.width) { x = v.left + v.width / 2; y = v.top + 4; } // açık penceredeki basılacak düğme
+  else if (!kapali && h.dom) {
     const r = $(h.dom).getBoundingClientRect();
     if (r.width) { x = r.left + r.width / 2; y = r.top; }
   } else if (!kapali && h.bina && sahne) {
@@ -284,13 +303,40 @@ export function rehberKur(s) {
 
 kutuKur();
 setInterval(() => {
-  // İpucu beklerken olay daha önce olduysa ya da durum zaten sağlanmışsa adım biter
-  if (konusma && konusma.bitince === adimBitti && konusma.n >= konusma.satirlar.length) {
+  // Beklenen iş yapıldıysa (konuşma sürerken ya da önceden) adım Devam'a basılmış gibi biter
+  if (konusma && konusma.bitince === adimBitti) {
     const A = ADIMLAR[R.adim];
-    if (A && (A.oldu || (A.tamam && A.tamam()))) { kapat(); adimBitti(); }
+    if (A && (A.bekle || A.tamam) && adimYapildiMi(A)) { kapat(); adimBitti(); }
   }
   // Yazı makinesi
   if (yazi.n < yazi.tam.length) { yazi.n = Math.min(yazi.tam.length, yazi.n + 3); $('#rehberMetin').textContent = yazi.tam.slice(0, yazi.n); }
   else if ($('#rehberMetin').textContent !== yazi.tam && yazi.tam) $('#rehberMetin').textContent = yazi.tam;
 }, 30);
 setInterval(() => { if (sahne) sirayaBak(); }, 3000);
+
+// Basılacak düğme: ipucu sırasında açık penceredeki ilgili düğme nabız gibi parlar (elmasla hızlandırma dahil)
+let vurguEl = null;
+function vurguBul() {
+  const k = konusma, A = k && k.bitince === adimBitti && k.n >= k.satirlar.length && ADIMLAR[R.adim];
+  if (!A || !A.dugme) return null;
+  const alanlar = [$('#modal').classList.contains('acik') && $('#modalIc'), $('#binaPanel').classList.contains('acik') && $('#binaPanel')].filter(Boolean);
+  for (const anahtar of A.dugme) {
+    for (const alan of alanlar) {
+      const dugmeler = [...alan.querySelectorAll('button')].filter((b) => !b.disabled && b.offsetParent);
+      const d = dugmeler.find((b) => b.textContent.includes(anahtar));
+      if (d) return d;
+      // Düğmenin yazısı değil satırı anahtarı taşıyorsa (ör. yem satırı): o satırdaki ilk düğme
+      const satir = [...alan.querySelectorAll('.yem, .satir, .yuva')].find((e) => e.textContent.includes(anahtar));
+      const sd = satir && [...satir.querySelectorAll('button')].find((b) => !b.disabled);
+      if (sd) return sd;
+    }
+  }
+  return null;
+}
+setInterval(() => {
+  const yeni = vurguBul();
+  if (yeni === vurguEl) return;
+  if (vurguEl) vurguEl.classList.remove('rehberVurgu');
+  vurguEl = yeni;
+  if (vurguEl) vurguEl.classList.add('rehberVurgu');
+}, 150);
