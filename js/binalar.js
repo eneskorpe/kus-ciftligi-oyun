@@ -242,7 +242,7 @@ function elipsN(x, y, rx, ry) { const n = []; for (let i = 0; i < 24; i++) { con
 // temel: bina henüz inşa ediliyor (Sv 0), yerinde inşaat alanı çizilir
 // --- Seviye görselleri: 3 kademe (Sv1-2, Sv3-4, Sv5). Görseli gelen kademeler buraya yazılır (assets/binalar/<tip>_<kademe>.png).
 // Ara seviyelerde (Sv2 ve Sv4) binanın önüne kodla saksılar, Sv4'te bir de flama eklenir.
-export const KADEME_GORSELLERI = ['kulucka_2', 'kulucka_3', 'tuzak_2', 'tuzak_3', 'kusevi_2', 'kusevi_3', 'yemlik_2', 'yemlik_3', 'tarla_2', 'tarla_3', 'klinik_2', 'klinik_3', 'degirmen_2', 'siparis_2', 'siparis_3', 'kres_2', 'kres_3', 'banyo_2', 'banyo_3', 'kule_2', 'kule_3', 'muze_2'];
+export const KADEME_GORSELLERI = ['kulucka_2', 'kulucka_3', 'tuzak_2', 'tuzak_3', 'kusevi_2', 'kusevi_3', 'yemlik_2', 'yemlik_3', 'tarla_2', 'tarla_3', 'klinik_2', 'klinik_3', 'degirmen_2', 'siparis_2', 'siparis_3', 'kres_2', 'kres_3', 'banyo_2', 'banyo_3', 'kule_2', 'kule_3', 'muze_2', 'muze_3'];
 export const kademe = (sv) => (sv >= 5 ? 3 : sv >= 3 ? 2 : 1);
 // Kanatsız gövdesi olan kademede (değirmen: tarla.js dönen kanadı üstüne koyar) gövde görseli kullanılır
 export function binaDokusu(sahne, tip, sv) {
