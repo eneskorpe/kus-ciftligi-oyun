@@ -171,5 +171,11 @@ async function getirOyunu(k) {
 
 // Pencere kapanınca süren oyun bırakılır (ders hakkı harcanmış olur)
 document.addEventListener('click', (e) => { if (e.target.closest('.kapat') && aktif) oyunuBitir(); });
-new MutationObserver(() => { if (!$('#modal').classList.contains('acik')) { $('#modal').classList.remove('egitimModu'); if (aktif) oyunuBitir(); } })
+// Sınıf yalnız varsa silinir: olmayan sınıfı silmek de değişiklik sayılır ve gözlemciyi sonsuza dek yeniden tetikler (oyun donar)
+new MutationObserver(() => {
+  const m = $('#modal');
+  if (m.classList.contains('acik')) return;
+  if (m.classList.contains('egitimModu')) m.classList.remove('egitimModu');
+  if (aktif) oyunuBitir();
+})
   .observe($('#modal'), { attributes: true, attributeFilter: ['class'] });
