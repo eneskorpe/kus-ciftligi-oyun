@@ -25,9 +25,26 @@ function parcaKopya(sahne, b, ad, [x, y, w, h, ox, oy]) {
 }
 const yerDonustur = (n, px, py) => ({ x: n.x + (px - n.originX * n.width) * n.scaleX, y: n.y + (py - n.originY * n.height) * n.scaleY });
 
+// Gözlem Kulesi 3. kademenin sıcak hava balonu (tools/balon_ayir.py ayırır): ipin kesildiği yerden hafifçe sallanıp süzülür.
+// pivot: bina görselinde ipin kesildiği nokta (oran), balonda: aynı noktanın balon görselindeki yeri
+const KULE_BALON = { pivot: [0.742, 0.287], balonda: [0, 0.93] };
+
 export function binaCanlilikKur(sahne, binalar) {
   const bul = (tip) => binalar.find((b) => b.tip === tip && b.nesne.type === 'Image');
   const r = Phaser.Math.Between;
+
+  // Gözlem Kulesi: 3. kademede balon rüzgârda süzülür (kademe değişirse görünür ya da gizlenir)
+  const kule = bul('kule');
+  if (kule && sahne.textures.exists('bina_kule_3_balon')) {
+    const n = kule.nesne, B = KULE_BALON;
+    const p = yerDonustur(n, B.pivot[0] * n.width, B.pivot[1] * n.height);
+    const balon = sahne.add.image(p.x, p.y, 'bina_kule_3_balon').setOrigin(...B.balonda).setScale(n.scaleX).setDepth(n.depth + 1);
+    (kule.ekler = kule.ekler || []).push(balon);
+    sahne.tweens.add({ targets: balon, angle: { from: -3.5, to: 4 }, duration: 2600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    const goster = () => balon.setVisible(n.texture.key === 'bina_kule_3' && n.visible && !kule.tasiniyor);
+    goster();
+    sahne.time.addEvent({ delay: 400, loop: true, callback: goster });
+  }
 
   // Kuluçkahane: yumurta kuluçkadayken yumurtalar ara sıra sallanır (iki yuva ayrı zamanlarda)
   const kulucka = bul('kulucka');
