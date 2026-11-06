@@ -248,7 +248,9 @@ function okGuncelle(zaman) {
   }
   if (x === undefined) { ok.style.display = 'none'; return; }
   ok.style.display = 'block';
-  ok.style.transform = `translate(${x - 22}px, ${y - 58 - Math.abs(Math.sin(zaman / 220)) * 12}px)`;
+  // Zıplayan ok: yukarıdayken uzar, hedefe değince hafifçe basılır (yumuşak, sevimli bir sekme)
+  const s = Math.abs(Math.sin(zaman / 260)), bas = Math.max(0, 0.25 - s) * 4;
+  ok.style.transform = `translate(${x - 24}px, ${y - 62 - s * 14}px) scale(${1 + 0.08 * bas}, ${1 - 0.12 * bas + 0.03 * s})`;
 }
 
 // --- Köydeki baykuş: anlatılan binanın önünde durur; konuşma yoksa görünmez ---
