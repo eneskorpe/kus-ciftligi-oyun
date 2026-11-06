@@ -90,7 +90,7 @@ function hudGuncelle() {
 // Kuşun renklerinden küçük bir jeton (başı ve gövdesi)
 // Kuş portresi: oyunun çizimli türlerinde gerçek kuş resmi (renk mutasyonu yaklaşık bir filtreyle), diğerlerinde renk jetonu
 const MUT_FILTRE = { lutino: 'sepia(1) saturate(4) hue-rotate(5deg) brightness(1.15)', albino: 'grayscale(1) brightness(1.35)', mavi: 'hue-rotate(150deg) saturate(.9)' };
-const RESIMLI = ['kanarya', 'ev_sercesi', 'saka', 'muhabbet', 'sultan', 'cennet', 'ketzal'];
+const RESIMLI = ['kanarya', 'ev_sercesi', 'saka', 'muhabbet', 'sultan', 'cennet', 'ketzal', 'mavigerdan', 'yalicapkini'];
 export function jeton(k, boy = 44) {
   if (RESIMLI.includes(k.tur)) {
     const f = MUT_FILTRE[fenotip(k.genler)];

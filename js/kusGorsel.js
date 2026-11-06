@@ -5,14 +5,18 @@ import { pikselDonustur, TURLER } from './turler.js';
 import { YERLESIM } from './kusYerlesim.js';
 
 // Oyuncunun onayladığı çizimler. Listede olmayan türler köyde kod çizimiyle görünür, atölyede önizlenir.
-export const ONAYLI = ['kanarya', 'ev_sercesi', 'saka', 'muhabbet', 'sultan', 'cennet', 'ketzal'];
+export const ONAYLI = ['kanarya', 'ev_sercesi', 'saka', 'muhabbet', 'sultan', 'cennet', 'ketzal', 'mavigerdan', 'yalicapkini'];
 
 // Gaga: sadece tam (kapalı) gaga görseli kullanılır; alt çene ve ağız içi kodla çizilir (kus.js cenesiCiz).
 
 export const PARCALAR = ['govde', 'bas', 'gagaUst', 'gagaAlt', 'kanat', 'acikKanat', 'kuyruk', 'bacak'];
 
 // Otomatik yerleşimin üstüne elle yapılan düzeltmeler (Atölye'de 'Tasarımla karşılaştır' ile ayarlanır)
-const ELLE = {};
+const ELLE = {
+  // Kuyruk otomatik yerleşimde gövdenin dışında kalıyordu (uçarken boşluk görünüyordu): gövdenin içinden başlar, ucu aynı yerde
+  mavigerdan: { kuyruk: { x: -28, y: 17, en: 46 } },
+  yalicapkini: { kuyruk: { x: -25, y: 8.6, en: 37.5 } },
+};
 
 const birlestir = (a, b) => {
   if (!b) return a;
