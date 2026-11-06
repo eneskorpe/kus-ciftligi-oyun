@@ -84,7 +84,7 @@ class Koy extends Phaser.Scene {
     potYukle(this);
     this.load.image('doku_cimen', 'assets/doku/cimen.png');
     this.load.image('doku_yol', 'assets/doku/yol.png');
-    for (const tip of ['kulucka', 'tuzak', 'kusevi', 'yemlik', 'agac', 'kunduz', 'tarla', 'klinik', 'degirmen', 'siparis', 'kres', 'banyo', 'kule', 'kule_3_balon', 'muze', ...KADEME_GORSELLERI]) this.load.image('bina_' + tip, `assets/binalar/${tip}.png`);
+    for (const tip of ['kulucka', 'tuzak', 'kusevi', 'yemlik', 'agac', 'kunduz', 'tarla', 'klinik', 'degirmen', 'siparis', 'kres', 'banyo', 'kule', 'kule_3_balon', 'muze', 'lab', ...KADEME_GORSELLERI]) this.load.image('bina_' + tip, `assets/binalar/${tip}.png`);
     for (const ad of ['govde', 'bas', 'bas_mutlu', 'on_kol', 'arka_kol', 'bacak', 'kuyruk', 'tahta', 'alet_kutusu']) this.load.image('kunduz_' + ad, `assets/kunduz/${ad}.png`); // Kunduz Usta
     for (const ad of ['iskele_merdivenli', 'iskele_kucuk', 'malzeme', 'toz']) this.load.image('insaat_' + ad, `assets/insaat/${ad}.png`); // inşaat
     this.load.image('manzara_dag', 'assets/manzara/dag.png'); // ormanın ardındaki tepeler ve dağlar
