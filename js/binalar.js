@@ -22,7 +22,7 @@ export const BINALAR = {
   // islevYok: işlevi henüz yazılmadı (panelde "yakında"); renk/cati: Gemini görseli gelene kadarki geçici çizim
   tarla: { ad: 'Tohum Tarlası', boyut: [3, 3], ikon: '🌱', yeni: true, acilis: 3, fiyat: 400, dk: 3, renk: 0x9a6b3f,
     aciklama: 'Darı, ayçiçeği ve kenevir tohumu ekersin; süre dolunca hasat edip kuşların için yem elde edersin.' },
-  banyo: { ad: 'Kuş Banyosu', boyut: [1, 1], ikon: '🛁', susYok: true,
+  banyo: { ad: 'Kuş Banyosu', boyut: [2, 2], ikon: '🛁', susYok: true,
     aciklama: 'Kuşların burada yıkanır: tüyleri parlar, mutlu olurlar ve seninle bağları güçlenir. Her kuş günde bir kez yıkanabilir.' },
   klinik: { ad: 'Kuş Kliniği', boyut: [2, 2], ikon: '🩺', yeni: true, acilis: 5, fiyat: 1200, dk: 8, renk: 0xf4f1ea, cati: 0x7fc6d9,
     aciklama: 'Bakımsız kalıp rahatsızlanan kuşlar burada iyileşir. Sağlıklı kuşlara check-up yapılır, tüyleri bakılır.' },
@@ -258,8 +258,8 @@ export function binaKur(sahne, tip, i, j, rnd, temel = false, sv = 1) {
   if (temel) {
     nesne = sahne.add.graphics();
     yukseklik = temelCiz(nesne, k);
-  } else if (tip === 'banyo' && (nesne = dekorKoy(sahne, 'kus_banyosu', merkez(k).x, merkez(k).y + 6, 84 + 6 * (sv - 1)))) {
-    yukseklik = nesne.displayHeight - (k.alt.y - k.ust.y) / 2; // köydeki taş kuş banyosu: seviyeyle biraz büyür
+  } else if (tip === 'banyo' && !sahne.textures.exists('bina_' + ad) && (nesne = dekorKoy(sahne, 'kus_banyosu', merkez(k).x, merkez(k).y + 6, 84 + 6 * (sv - 1)))) {
+    yukseklik = nesne.displayHeight - (k.alt.y - k.ust.y) / 2; // görseli yoksa köydeki taş kuş banyosu: seviyeyle biraz büyür
   } else if (sahne.textures.exists('bina_' + ad) && meta && meta[ad]) {
     nesne = sahne.add.image(k.sol.x, k.sol.y, 'bina_' + ad);
     yukseklik = gorselOturt(nesne, meta[ad], k, tanim);

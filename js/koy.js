@@ -35,7 +35,7 @@ const DPR = Math.min(window.devicePixelRatio || 1, 2);
 
 // Harita yerleşimi (karo koordinatları)
 const YERLESIM = {
-  binalar: [['kulucka', 7, 3], ['tuzak', 2, 8], ['kusevi', 12, 5], ['yemlik', 8, 11], ['kunduz', 15, 10], ['banyo', 6, 12]],
+  binalar: [['kulucka', 7, 3], ['tuzak', 2, 8], ['kusevi', 12, 5], ['yemlik', 8, 11], ['kunduz', 15, 10], ['banyo', 5, 12]],
   susler: [['agac', 1, 2], ['agac', 4, 0], ['agac', 15, 2], ['agac', 16, 5], ['agac', 0, 12], ['agac', 3, 15], // (15,14) ağacı kaldırıldı: göletin önünü kapatıyordu
     ['agac', 12, 16], ['agac', 11, 1], // (17,10) ağacı kaldırıldı: Kunduz evinin su çarkını kapatıyordu ['agac', 6, 16], ['agac', 16, 16], ['agac', 1, 5],
     ['kaya', 5, 6], ['kaya', 2, 13], ['kaya', 10, 15],
@@ -84,7 +84,7 @@ class Koy extends Phaser.Scene {
     potYukle(this);
     this.load.image('doku_cimen', 'assets/doku/cimen.png');
     this.load.image('doku_yol', 'assets/doku/yol.png');
-    for (const tip of ['kulucka', 'tuzak', 'kusevi', 'yemlik', 'agac', 'kunduz', 'tarla', 'klinik', 'degirmen', 'siparis', 'kres', ...KADEME_GORSELLERI]) this.load.image('bina_' + tip, `assets/binalar/${tip}.png`);
+    for (const tip of ['kulucka', 'tuzak', 'kusevi', 'yemlik', 'agac', 'kunduz', 'tarla', 'klinik', 'degirmen', 'siparis', 'kres', 'banyo', ...KADEME_GORSELLERI]) this.load.image('bina_' + tip, `assets/binalar/${tip}.png`);
     for (const ad of ['govde', 'bas', 'bas_mutlu', 'on_kol', 'arka_kol', 'bacak', 'kuyruk', 'tahta', 'alet_kutusu']) this.load.image('kunduz_' + ad, `assets/kunduz/${ad}.png`); // Kunduz Usta
     for (const ad of ['iskele_merdivenli', 'iskele_kucuk', 'malzeme', 'toz']) this.load.image('insaat_' + ad, `assets/insaat/${ad}.png`); // inşaat
     this.load.image('manzara_dag', 'assets/manzara/dag.png'); // ormanın ardındaki tepeler ve dağlar
@@ -178,13 +178,13 @@ class Koy extends Phaser.Scene {
     this.duzen = duzenleKur(this, sabitYollar(), this.engel); // köyü düzenleme modu (bina taşıma)
     // Arsası büyüyen bina (ör. Sipariş Panosu 1×1 → 2×2) eski kayıtta başka bir şeyin üstüne taşabilir: en yakın uygun yere taşınır
     for (const b of this.binalar) {
-      if (!YENI_BINALAR.includes(b.tip) || this.duzen.uygunMu(b, b.i, b.j)) continue;
+      if (!(YENI_BINALAR.includes(b.tip) || b.tip === 'banyo') || this.duzen.uygunMu(b, b.i, b.j)) continue; // banyo da 1×1'den 2×2'ye büyüdü
       let en = null;
       for (let i = 0; i < HARITA; i++) for (let j = 0; j < HARITA; j++) {
         const d = Math.hypot(i - b.i, j - b.j);
         if ((!en || d < en.d) && this.duzen.uygunMu(b, i, j)) en = { i, j, d };
       }
-      if (en) { D.yerlesim[b.tip] = [en.i, en.j]; kaydet(); this.yenidenKur(); return; }
+      if (en) { D.yerlesim = D.yerlesim || {}; D.yerlesim[b.tip] = [en.i, en.j]; kaydet(); this.yenidenKur(); return; }
     }
     this.kameraKur();
     this.gorunurlukKur();
@@ -495,7 +495,9 @@ class Koy extends Phaser.Scene {
       const n = b.nesne, h = b.kutu.height;
       if (b.tip === 'banyo') { // havuzun iki kenarı: oyuncunun yıkattığı kuşlar buraya konar (b.banyoYerleri)
         const x0 = n.x - n.displayWidth * n.originX, y0 = n.y - n.displayHeight * n.originY, w = n.displayWidth, h = n.displayHeight;
-        ekle(x0 + w * 0.2, y0 + h * 0.13, n.y + 1, 'banyo'); ekle(x0 + w * 0.8, y0 + h * 0.13, n.y + 1, 'banyo');
+        // Gemini görselinde (bahçe havuzu) sol ve sağ kenar taşları; görsel yoksa taş heykelciğin çanağının iki kenarı
+        const [sx, sy, gx] = n.texture && n.texture.key.startsWith('bina_banyo') ? [0.16, 0.41, 0.83] : [0.2, 0.13, 0.8];
+        ekle(x0 + w * sx, y0 + h * sy, n.y + 1, 'banyo'); ekle(x0 + w * gx, y0 + h * sy, n.y + 1, 'banyo');
         b.banyoYerleri = L.slice(-2);
       } else if (b.tip === 'yemlik' && n.getBounds) { const s = n.getBounds(); ekle(s.centerX + s.width * 0.2, s.y + s.height * 0.43, b.k.alt.y + 1, 'yemlik'); } // tepsinin sağ kenarı
       else ekle(b.tepe.x, b.tepe.y + h * (b.tip === 'kusevi' ? 0.02 : 0.08), b.k.alt.y + 1);
@@ -603,7 +605,7 @@ class Koy extends Phaser.Scene {
 
     // Binaların arsa köşelerinde birer çalı
     for (const b of this.binalar) {
-      if (b.tanim.boyut[0] < 2 || b.tip === 'kunduz') continue; // Kunduz evinin köşesinde su çarkı var
+      if (b.tanim.boyut[0] < 2 || b.tip === 'kunduz' || b.tip === 'banyo') continue; // Kunduz evinin köşesinde su çarkı var; banyo havuzunun kenarına kuşlar konar
       const k = b.k;
       dekorKoy(this, 'cali_kucuk', k.sol.x - 10, k.sol.y + 6, 70, false);
       dekorKoy(this, b.tip === 'tuzak' ? 'aycicegi' : 'cicek_kasa', k.sag.x + 4, k.sag.y + 8, b.tip === 'tuzak' ? 58 : 64, true);
