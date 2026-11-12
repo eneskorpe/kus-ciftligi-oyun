@@ -73,8 +73,8 @@ export class KusEvi extends Phaser.Scene {
     // Görselli tünekte direk halıya basar; tünek dalının yüksekliği alana göre
     const tunekY = ust + alanH * (this.textures.exists('kusevi_tunek') ? 0.6 : 0.72);
     // Kuş ölçeği: kuş yaklaşık 80 birim boyunda, 100 birim enindedir. Kuş odanın içinde küçük bir canlı gibi dursun:
-    // boyu alanın en çok %30'u, eni odanın en çok %34'ü (telefonda ekranın yaklaşık üçte biri)
-    this.carpan = Math.min(alanH * 0.3 / (80 * 2.2), (W - sol) * 0.34 / (100 * 2.2));
+    // boyu alanın en çok %25'i, eni odanın en çok %27'si (telefonda ekranın yaklaşık dörtte biri)
+    this.carpan = Math.min(alanH * 0.25 / (80 * 2.2), (W - sol) * 0.27 / (100 * 2.2));
     this.tunekCiz(cx, tunekY, Math.min((W - sol) * 0.6, 110 * this.carpan * 2.2), H);
     this.tunek = { x: cx, y: tunekY, zeminY: tunekY };
     this.zemin = { x1: cx - 10, x2: cx + 10, y1: tunekY - 2, y2: tunekY + 2 };
