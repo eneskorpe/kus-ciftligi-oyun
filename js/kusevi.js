@@ -5,10 +5,10 @@ import { efektleriKur } from './efekt.js';
 import { gorselleriYukle } from './kusGorsel.js';
 import { kusGen } from './genetik.js';
 import { gunDurumu } from './gunIsigi.js';
-import { D } from './durum.js';
+import { D, bildir } from './durum.js';
 import { potBellek } from './pot.js';
 import * as M from './mekanik.js';
-import { YUVA_GORSELLERI, acikSusler } from './yuva.js';
+import { YUVA_GORSELLERI, acikSusler, kusSusleri, SUSLER } from './yuva.js';
 
 const DPR = Math.min(window.devicePixelRatio || 1, 2);
 const CIZGI = 0x3a2a35;
@@ -26,27 +26,31 @@ function arayuzKenari() {
 }
 // Hazırlanan Gemini görselleri (assets/kusevi/): 'ic', 'ic_gece', 'tunek'. Eklendikçe buraya yazılır.
 const KUSEVI_GORSELLERI = ['ic.jpg', 'ic_gece.jpg', 'tunek.png'];
-// Süslerin odadaki yeri. taraf: tüneğin solu (-1) ya da sağı (1); oran: tünekle o taraftaki boşluğun kenarı arasındaki yer;
-// boy: kuş alanı yüksekliğinin oranı. asili: bilgi kartının altından sarkar; duvar: duvara çakılı (y: karttan tabana oran,
-// görseldeki dirsek solda, sağ duvarda aynalanır); isimlik tüneğin direğine asılır
-const YUVA_YERI = {
-  saksi: { taraf: -1, oran: 0.84, boy: 0.22 },
-  altinTunek: { taraf: -1, oran: 0.56, boy: 0.17 },
-  besik: { taraf: -1, oran: 0.3, boy: 0.13 },
-  yastik: { taraf: 0, oran: 0, boy: 0.11, y: 0.02, on: true },
-  havuz: { taraf: 1, oran: 0.34, boy: 0.15 },
-  sandik: { taraf: 1, oran: 0.62, boy: 0.14 },
-  ayna: { taraf: 1, oran: 0.88, boy: 0.2 },
-  salincak: { taraf: -1, oran: 0.5, boy: 0.24, asili: true },
-  merdiven: { taraf: 1, oran: 0.5, boy: 0.24, asili: true },
-  fener: { taraf: -1, oran: 0.92, boy: 0.2, duvar: 0.3 },
-  can: { taraf: 1, oran: 0.92, boy: 0.2, duvar: 0.24 },
-  isimlik: { tunekte: true, boy: 0.1 },
-  ozel_cennet: { kemer: true, uzama: 1.35 },
-  ozel_ketzal: { kemer: true, uzama: 1.12 }, // taş oymalar uzayınca belli olur
+// --- Kaydırılan oda (yuva) ---
+// Ölçü birimi U: kuşun eni. Oda soldan sağa köşelere bölünür; her süsün sabit bir yeri ve kuşa göre boyu vardır.
+// x: odanın sol kenarından U cinsinden; yer: zemin (yere basar), tavan (tavandan sarkar), duvar (duvarda, y: tavandan yere oran),
+// tunek (tüneğin direğinde), kemer (tüneği çerçeveler); boy: U cinsinden yükseklik
+const ODA_EN = 11.6;
+const KOSELER = [
+  { ad: 'Dinlenme köşesi', x: 1.3 }, { ad: 'Oyun köşesi', x: 6.05 }, { ad: 'Bakım köşesi', x: 8.3 }, { ad: 'Hazine rafı', x: 10.45 },
+];
+const TUNEK_X = 3.6;
+const SUS_YERI = {
+  saksi: { x: 0.45, yer: 'zemin', boy: 0.75 },
+  yastik: { x: 1.25, yer: 'zemin', boy: 0.42 },
+  besik: { x: 2.05, yer: 'zemin', boy: 0.5 },
+  isimlik: { yer: 'tunek', boy: 0.32 },
+  salincak: { x: 5.3, yer: 'tavan', boy: 1.3 },
+  merdiven: { x: 6.4, yer: 'tavan', boy: 1.45 },
+  can: { x: 7.1, yer: 'duvar', y: 0.16, boy: 0.55 },
+  havuz: { x: 7.9, yer: 'zemin', boy: 0.62 }, // kuş içine sığacak kadar
+  ayna: { x: 8.8, yer: 'zemin', boy: 0.85 },
+  fener: { x: 9.45, yer: 'duvar', y: 0.18, boy: 0.7 },
+  sandik: { x: 10.05, yer: 'zemin', boy: 0.55 },
+  altinTunek: { x: 10.95, yer: 'zemin', boy: 0.8 },
+  ozel_cennet: { yer: 'kemer', uzama: 1.35 },
+  ozel_ketzal: { yer: 'kemer', uzama: 1.12 }, // taş oymalar uzayınca belli olur
 };
-// Arka plan görselinde halının merkezi (oran olarak): tünek buraya oturur
-const HALI = { x: 0.5, y: 0.875 };
 
 export class KusEvi extends Phaser.Scene {
   constructor() { super('kusevi'); }
@@ -66,34 +70,47 @@ export class KusEvi extends Phaser.Scene {
     const sol = this.kenar.sol * DPR, ust = this.kenar.ust * DPR, alt = this.kenar.alt * DPR;
     this.gece = gunDurumu().gece;
     this.gunIsigi = { gece: this.gece };
-    this.arkaPlan(W, H);
-
-    // Tünek: kuş alanının ortasında, alt tepsinin biraz üstünde
-    const alanH = H - ust - alt, cx = sol + (W - sol) / 2;
-    // Görselli tünekte direk halıya basar; tünek dalının yüksekliği alana göre
-    const tunekY = ust + alanH * (this.textures.exists('kusevi_tunek') ? 0.6 : 0.72);
     // Kuş ölçeği: kuş yaklaşık 80 birim boyunda, 100 birim enindedir. Kuş odanın içinde küçük bir canlı gibi dursun:
-    // boyu alanın en çok %25'i, eni odanın en çok %27'si (telefonda ekranın yaklaşık dörtte biri)
+    // boyu alanın en çok %25'i, eni ekranın en çok %27'si (telefonda ekranın yaklaşık dörtte biri)
+    const alanH = H - ust - alt;
     this.carpan = Math.min(alanH * 0.25 / (80 * 2.2), (W - sol) * 0.27 / (100 * 2.2));
-    this.tunekCiz(cx, tunekY, Math.min((W - sol) * 0.6, 110 * this.carpan * 2.2), H);
-    this.tunek = { x: cx, y: tunekY, zeminY: tunekY };
-    this.zemin = { x1: cx - 10, x2: cx + 10, y1: tunekY - 2, y2: tunekY + 2 };
-    this.oda = { sol, ust, cx, en: W - sol, alanH };
+    const U = 100 * 2.2 * this.carpan;
+    // Oda: tavan arayüzün altında, yer çizgisi alt düğmelerin biraz üstünde; önünde yazıların durduğu bir zemin şeridi kalır
+    const C = ust, F = H - alt - U * 0.38, OX = sol;
+    this.oda = { U, C, F, OX, en: OX + ODA_EN * U, H, W, sol, ust, alanH };
+    this.arkaPlan(this.oda);
+    const tx = OX + TUNEK_X * U, ty = F - U * 1.2;
+    this.tunekCiz(tx, ty, U * 1.25, F);
+    this.tunek = { x: tx, y: ty, zeminY: ty };
+    this.zemin = { x1: tx - 10, x2: tx + 10, y1: ty - 2, y2: ty + 2 };
+    this.kameraKur();
 
     this.kus = null; this.susler = []; this.yuvaAnahtar = null;
     this.kusSec(veri && veri.id);
 
-    // Dokunma: kısa dokunuş = sev, kuşun üstünde parmak gezdirme = okşa
-    let basla = null, yol = 0;
-    this.input.on('pointerdown', (p) => { if (this.kus && this.kus.dokunduMu(p.worldX, p.worldY)) { basla = { x: p.x, y: p.y }; yol = 0; } });
+    // Dokunma: kuşa kısa dokunuş = sev, kuşun üstünde parmak gezdirme = okşa; başka yerde sürükleme = odayı kaydır
+    let basla = null, yol = 0, kaydir = null;
+    this.input.on('pointerdown', (p) => {
+      if (this.kus && this.kus.dokunduMu(p.worldX, p.worldY)) { basla = { x: p.x, y: p.y }; yol = 0; return; }
+      kaydir = { x: p.x, s: this.cameras.main.scrollX, oynadi: false };
+      this.cameras.main.panEffect.reset();
+    });
     this.input.on('pointermove', (p) => {
-      if (!basla || !p.isDown) return;
-      yol += Math.hypot(p.x - p.prevPosition.x, p.y - p.prevPosition.y);
-      if (yol > 30 * DPR) this.kus.oksan();
+      if (!p.isDown) return;
+      if (basla) { yol += Math.hypot(p.x - p.prevPosition.x, p.y - p.prevPosition.y); if (yol > 30 * DPR) this.kus.oksan(); return; }
+      if (kaydir) { const dx = p.x - kaydir.x; if (Math.abs(dx) > 8 * DPR) kaydir.oynadi = true; this.cameras.main.scrollX = kaydir.s - dx; }
     });
     this.input.on('pointerup', () => {
       if (basla && yol <= 30 * DPR) this.game.events.emit('kuseviSev');
       basla = null;
+      this.surukledi = !!(kaydir && kaydir.oynadi);
+      kaydir = null;
+    });
+    // Siluete dokununca o süsün nasıl açılacağı yazar
+    this.input.on('gameobjectup', (p, n) => {
+      if (this.surukledi || !n.susId) return;
+      const S = SUSLER[n.susId], v = this.kusVeri(), [a, h] = v ? S.ilerleme(v) : [0, 1];
+      bildir(`🔒 ${S.ikon} ${S.ad}: ${S.sart}${h > 1 ? ` (${Math.min(a, h)}/${h})` : ''}`);
     });
 
     // Mutsuzsa ara sıra küser
@@ -139,54 +156,76 @@ export class KusEvi extends Phaser.Scene {
     this.time.delayedCall(250, () => { if (k.durum === 'bos') k.kanatCirp(); });
   }
 
-  // Kişisel yuva: seçili kuşun açılmış süsleri tüneğin çevresinde (yuva.js). Süs listesi değişince yeniden çizilir
+  // Kamera yalnız yatay kayar; başlangıçta tünek ortada. Kenarlardaki oklar odanın devamını gösterir
+  kameraKur() {
+    const O = this.oda, cam = this.cameras.main;
+    cam.setBounds(0, 0, Math.max(O.en + O.U * 0.2, O.W), O.H);
+    cam.centerOn(this.tunek.x, O.H / 2);
+    const ok = (yazi, x) => this.add.text(x, (O.C + O.F) / 2, yazi, { fontFamily: 'Nunito, sans-serif', fontSize: `${28 * DPR}px`, color: '#fff8e6',
+      stroke: '#3a2a35', strokeThickness: 6 * DPR }).setOrigin(0.5).setScrollFactor(0).setDepth(200000).setInteractive({ useHandCursor: true });
+    // Bilgisayar düzeninde sağdaki düğme sütununun solunda dursun
+    const ey = document.querySelector('#kEylem'), er = ey && ey.getBoundingClientRect();
+    const sagX = !this.kenar.dar && er && er.width ? er.left * DPR - 22 * DPR : O.W - 22 * DPR;
+    this.okSol = ok('◀', O.sol + 22 * DPR); this.okSag = ok('▶', sagX);
+    this.okSol.on('pointerup', () => !this.surukledi && cam.pan(cam.midPoint.x - O.W * 0.7, O.H / 2, 450, 'Sine.easeInOut'));
+    this.okSag.on('pointerup', () => !this.surukledi && cam.pan(cam.midPoint.x + O.W * 0.7, O.H / 2, 450, 'Sine.easeInOut'));
+  }
+
+  // Kişisel yuva: süslerin her birinin odada sabit bir yeri var. Açılmışlar yerinde, açılmamışlar soluk siluet (dokununca şartı yazar).
+  // Yeni bir süs açılınca kamera oraya kayar ve süs hafifçe zıplayarak yerine oturur
   yuvaCiz() {
-    const v = this.kusVeri(), O = this.oda, t = this.tunek;
-    // Arayüzün altında kalmasın: sağdaki eylem düğmeleri, üstteki bilgi kartı, alttaki ikram tepsisi (CSS pikseli → oyun pikseli)
-    const kutu = (s) => { const e = document.querySelector(s), r = e && e.getBoundingClientRect(); return r && r.width && r.height ? r : null; };
-    const dar = this.kenar && this.kenar.dar, er = dar ? null : kutu('#kEylem'), kr = kutu('#kKart'), tr = dar ? kutu('#kEylem') : kutu('#kTepsi');
-    const taban = Math.round(Math.min(this.tunekTaban || t.y + O.alanH * 0.3, tr ? tr.top * DPR + 4 * DPR : Infinity));
-    const sag = Math.round(er ? er.left * DPR : O.sol + O.en), ust = Math.round(kr ? kr.bottom * DPR : O.ust);
-    const anahtar = v ? [v.id, acikSusler(v).join(','), taban, sag, ust, er ? Math.round(er.bottom) : 0].join(':') : '';
+    const v = this.kusVeri(), O = this.oda, t = this.tunek, U = O.U;
+    const acik = v ? acikSusler(v) : [], anahtar = v ? v.id + ':' + acik.join(',') : '';
     if (anahtar === this.yuvaAnahtar) return;
-    this.yuvaAnahtar = anahtar;
+    const onceki = this.yuvaKus === (v && v.id) ? this.acikOnce || [] : null;
+    this.yuvaAnahtar = anahtar; this.yuvaKus = v && v.id; this.acikOnce = acik;
     (this.susler || []).forEach((r) => r.destroy());
     this.susler = [];
     if (!v) return;
-    // Yerdeki süsler için: eylem düğmeleri yere kadar inmiyorsa (dik telefon ekranı) sağ taraf duvara kadar kullanılır
-    const yerSag = er && er.bottom * DPR < taban - O.alanH * 0.25 ? O.sol + O.en : sag;
-    const bosluk = { '-1': t.x - O.sol, 1: sag - t.x, 0: 0 }, yerBosluk = { ...bosluk, 1: yerSag - t.x };
-    for (const id of acikSusler(v)) {
-      const Y = YUVA_YERI[id];
+    let yeni = null;
+    for (const id of kusSusleri(v)) {
+      const Y = SUS_YERI[id];
       if (!Y || !this.textures.exists('yuva_' + id)) continue;
-      const r = this.add.image(0, 0, 'yuva_' + id);
-      const B = Y.asili || Y.duvar ? bosluk : yerBosluk;
-      const gen = Y.tunekte ? O.alanH * 0.16 : Y.taraf ? B[Y.taraf] * (Y.asili ? 0.42 : 0.3) : O.alanH * 0.3;
-      r.setScale(Math.min(O.alanH * Y.boy / r.height, gen / r.width));
-      const x = t.x + Y.taraf * Y.oran * B[Y.taraf] || t.x;
-      if (Y.kemer) {
-        // Türe özel kemer tüneği çerçeveler: tabandan kuşun başının üstüne kadar (dar ekranda odanın eni kadar)
-        const boy = taban - (t.y - O.alanH * 0.4), en = O.en * 0.95;
-        // Dik telefon ekranında en dar kalır: kemer boyuna biraz uzatılır (bambu direkler uzamayı belli etmez, taş kapı az uzar)
-        const sx = Math.min(boy / r.height, en / r.width), sy = Math.min(boy / r.height, sx * Y.uzama);
-        r.setScale(sx, sy).setOrigin(0.5, 1).setPosition(t.x, taban + 2 * DPR).setDepth(t.y - 4);
-        this.susler.push(r);
-        continue;
+      const acikMi = acik.includes(id), r = this.add.image(0, 0, 'yuva_' + id);
+      if (Y.yer === 'kemer') {
+        if (!acikMi) { r.destroy(); continue; } // türe özel kemer açılmadan görünmez (tüneği kapatmasın)
+        const boy = O.F - (t.y - U * 0.95), sx = Math.min(boy / r.height, U * 3 / r.width), sy = Math.min(boy / r.height, sx * Y.uzama);
+        r.setScale(sx, sy).setOrigin(0.5, 1).setPosition(t.x, O.F + U * 0.04).setDepth(t.y - 4);
+      } else {
+        r.setScale(U * Y.boy / r.height);
+        const x = O.OX + (Y.x || 0) * U;
+        if (Y.yer === 'tunek') r.setOrigin(0.5, 0).setPosition(t.x, t.y + (O.F - t.y) * 0.32).setDepth(t.y);
+        else if (Y.yer === 'tavan') r.setOrigin(0.5, 0).setPosition(x, O.C - U * 0.05).setDepth(-5);
+        else if (Y.yer === 'duvar') r.setOrigin(0.5, 0).setPosition(x, O.C + (O.F - O.C) * Y.y).setDepth(-5);
+        else r.setOrigin(0.5, 1).setPosition(x, O.F + U * 0.06).setDepth(O.F - 1);
+        if (acikMi && (Y.yer === 'tavan' || Y.yer === 'tunek')) this.tweens.add({ targets: r, angle: { from: -2, to: 2 }, duration: 2400 + Math.random() * 800, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
       }
-      if (Y.tunekte) r.setOrigin(0.5, 0).setPosition(t.x, t.y + (taban - t.y) * 0.3).setDepth(t.y);
-      else if (Y.asili) r.setOrigin(0.5, 0).setPosition(x, ust + 2 * DPR).setDepth(-5);
-      else if (Y.duvar) {
-        // Dirsek duvara değsin: sol duvarda görselin sol kenarı, sağ duvarda (aynalı) sağ kenarı o noktada
-        const kenarX = t.x + Y.taraf * bosluk[Y.taraf] * (Y.oran + 0.08);
-        r.setOrigin(Y.taraf < 0 ? 0 : 1, 0).setFlipX(Y.taraf > 0).setPosition(kenarX, ust + (taban - ust) * Y.duvar).setDepth(-5);
-      }
-      else r.setOrigin(0.5, 1).setPosition(x, taban + O.alanH * (Y.y || 0)).setDepth(Y.on ? t.y : t.y - 3);
-      if (Y.asili || Y.tunekte || Y.duvar) this.tweens.add({ targets: r, angle: { from: -2, to: 2 }, duration: 2400 + Math.random() * 800, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      if (!acikMi) {
+        // Siluet: koyu ve saydam; üstünde kilit
+        r.setTint(0x3a2a35).setAlpha(0.22).setInteractive({ useHandCursor: true });
+        r.susId = id;
+        const b = r.getBounds();
+        this.susler.push(this.add.text(b.centerX, b.centerY, '🔒', { fontSize: `${Math.max(14, U * 0.18)}px` }).setOrigin(0.5).setDepth(r.depth + 1).setAlpha(0.8));
+      } else if (onceki && !onceki.includes(id)) yeni = r;
       this.susler.push(r);
+    }
+    if (yeni) {
+      // Yeni açılan süs: kamera oraya kayar, süs zıplayarak belirir
+      const cam = this.cameras.main, sx = yeni.scaleX, sy = yeni.scaleY;
+      cam.pan(yeni.x, O.H / 2, 600, 'Sine.easeInOut');
+      yeni.setScale(0.01);
+      this.tweens.add({ targets: yeni, scaleX: sx, scaleY: sy, delay: 450, duration: 500, ease: 'Back.easeOut' });
     }
   }
 
-  update(zaman, dt) { if (this.kus) this.kus.update(zaman, Math.min(dt, 50)); }
+  update(zaman, dt) {
+    if (this.kus) this.kus.update(zaman, Math.min(dt, 50));
+    if (this.okSol) {
+      const cam = this.cameras.main, b = cam.getBounds(), a = 0.75 + Math.sin(zaman / 300) * 0.25;
+      this.okSol.setVisible(cam.scrollX > b.x + 4).setAlpha(a);
+      this.okSag.setVisible(cam.scrollX + cam.width < b.right - 4).setAlpha(a);
+    }
+  }
 
   // İkram, ekranın altından kuşun gagasına doğru süzülür ve küçülerek kaybolur
   ikramUcur(id) {
@@ -207,90 +246,63 @@ export class KusEvi extends Phaser.Scene {
       } });
   }
   // --- Çizimler ---
-  arkaPlan(W, H) {
-    const anahtar = this.gece > 0.5 && this.textures.exists('kusevi_ic_gece') ? 'kusevi_ic_gece' : 'kusevi_ic';
-    if (this.textures.exists(anahtar)) {
-      const r = this.add.image(W / 2, H / 2, anahtar).setDepth(-10);
-      r.setScale(Math.max(W / r.width, H / r.height));
-      this.haliY = H / 2 + (HALI.y - 0.5) * r.displayHeight;
-      return;
-    }
-    const g = this.add.graphics().setDepth(-10), gece = this.gece;
-    const karart = (renk) => Phaser.Display.Color.Interpolate.ColorWithColor(Phaser.Display.Color.ValueToColor(renk), Phaser.Display.Color.ValueToColor(0x2a2340), 100, gece * 55);
+  // Geniş oda (geçici kod çizimi; Gemini panoraması gelince değişecek): tahta duvar, köşelere göre pencere, kiriş ve raf, zemin ve halılar
+  arkaPlan(O) {
+    const g = this.add.graphics().setDepth(-10), gece = this.gece, U = O.U, en = Math.max(O.en + U * 0.2, O.W), F = O.F, H = O.H;
+    const karart = (renk) => Phaser.Display.Color.Interpolate.ColorWithColor(Phaser.Display.Color.ValueToColor(renk), Phaser.Display.Color.ValueToColor(0x2a2340), 100, gece * 35);
     const r = (renk) => { const c = karart(renk); return Phaser.Display.Color.GetColor(c.r, c.g, c.b); };
-    const zeminY = H * 0.86;
+    const X = (u) => O.OX + u * U;
     // Duvar: dikey tahtalar
-    g.fillStyle(r(0xd9a35c)); g.fillRect(0, 0, W, zeminY);
-    const tahta = 70 * DPR;
-    for (let x = 0, n = 0; x < W; x += tahta, n++) {
-      g.fillStyle(r(n % 2 ? 0xd29a52 : 0xdcaa64)); g.fillRect(x, 0, tahta, zeminY);
-      g.fillStyle(r(0xb07a3c)); g.fillRect(x, 0, 3 * DPR, zeminY);
-      g.fillStyle(r(0xc48c4a), 0.6); g.fillCircle(x + tahta * 0.5, zeminY * (0.2 + (n * 37 % 60) / 100), 4 * DPR);
+    const tahta = U * 0.42;
+    for (let x = 0, n = 0; x < en; x += tahta, n++) {
+      g.fillStyle(r(n % 2 ? 0xd29a52 : 0xdcaa64)); g.fillRect(x, 0, tahta, F);
+      g.fillStyle(r(0xb07a3c)); g.fillRect(x, 0, Math.max(2, U * 0.015), F);
     }
-    // Tavan kirişi
-    g.fillStyle(r(0x9a6334)); g.fillRect(0, 0, W, 34 * DPR);
-    g.fillStyle(r(0x7d4e28)); g.fillRect(0, 30 * DPR, W, 6 * DPR);
-    // Pencere (sağ üst): gündüz gökyüzü ve ağaçlar, gece yıldızlar ve ay
-    const pr = Math.min(W, H) * 0.17, px = W - pr * 1.25, py = H * 0.32;
-    g.fillStyle(r(0x8a5a30)); g.fillCircle(px, py, pr + 14 * DPR);
+    // Süpürgelik ve zemin
+    g.fillStyle(r(0x8a5a30)); g.fillRect(0, F - U * 0.1, en, U * 0.1);
+    g.fillStyle(r(0xa8743f)); g.fillRect(0, F, en, H - F);
+    for (let y = F + U * 0.12; y < H; y += U * 0.18) { g.fillStyle(r(0x93622f)); g.fillRect(0, y, en, Math.max(2, U * 0.012)); }
+    // Halılar: dinlenme köşesinde yuvarlak krem, tünek altında yeşil
+    g.fillStyle(r(0xe8d6b0)); g.fillEllipse(X(1.4), F + U * 0.05, U * 2.6, U * 0.5);
+    g.fillStyle(r(0x7fae5a)); g.fillEllipse(X(TUNEK_X), F + U * 0.05, U * 2.2, U * 0.45);
+    g.fillStyle(r(0x93c06c)); g.fillEllipse(X(TUNEK_X), F + U * 0.05, U * 1.6, U * 0.3);
+    // Oyun köşesi: tavan kirişi
+    g.fillStyle(r(0x7d4e28)); g.fillRect(X(4.7), O.C - U * 0.12, U * 2.6, U * 0.16);
+    // Bakım köşesi: yuvarlak pencere
+    const px = X(8.35), py = O.C + (F - O.C) * 0.38, pr = U * 0.55;
+    g.fillStyle(r(0x8a5a30)); g.fillCircle(px, py, pr + U * 0.07);
     g.fillStyle(gece > 0.5 ? 0x1d2a5c : 0x9ad4ff); g.fillCircle(px, py, pr);
-    if (gece > 0.5) {
-      g.fillStyle(0xfff3c4); g.fillCircle(px + pr * 0.35, py - pr * 0.35, pr * 0.18);
-      g.fillStyle(0x1d2a5c); g.fillCircle(px + pr * 0.43, py - pr * 0.42, pr * 0.15);
-      g.fillStyle(0xffffff, 0.8);
-      for (let i = 0; i < 9; i++) { const a = i * 2.4, d = pr * (0.2 + (i % 4) * 0.18); g.fillCircle(px + Math.cos(a) * d, py + Math.sin(a) * d * 0.6 - pr * 0.2, 1.6 * DPR); }
-    } else {
-      g.fillStyle(0xffffff, 0.9); g.fillEllipse(px - pr * 0.3, py - pr * 0.4, pr * 0.6, pr * 0.22);
-    }
+    if (gece > 0.5) { g.fillStyle(0xfff3c4); g.fillCircle(px + pr * 0.35, py - pr * 0.35, pr * 0.18); }
+    else { g.fillStyle(0xffffff, 0.9); g.fillEllipse(px - pr * 0.3, py - pr * 0.35, pr * 0.7, pr * 0.22); }
     g.fillStyle(gece > 0.5 ? 0x24402c : 0x6cc154);
-    for (const [dx, rr] of [[-0.55, 0.42], [0, 0.5], [0.55, 0.45]]) g.fillCircle(px + dx * pr, py + pr * 0.55, pr * rr);
-    g.lineStyle(10 * DPR, r(0x8a5a30)); g.lineBetween(px - pr, py, px + pr, py); g.lineBetween(px, py - pr, px, py + pr);
-    g.lineStyle(5 * DPR, CIZGI); g.strokeCircle(px, py, pr + 14 * DPR);
-    // Sol duvarda raf ve yuvalar
-    const rx = W * 0.02 + this.kenar.sol * DPR, ry = H * 0.36;
-    for (const yy of [ry, ry + H * 0.17]) {
-      g.fillStyle(r(0x8a5a30)); g.fillRect(rx, yy, W * 0.16, 12 * DPR);
-      g.fillStyle(r(0xe0b956)); g.fillEllipse(rx + W * 0.08, yy - 8 * DPR, W * 0.11, 22 * DPR);
-      g.fillStyle(r(0xc99a2e)); g.fillEllipse(rx + W * 0.08, yy - 10 * DPR, W * 0.07, 10 * DPR);
+    for (const [dx, rr] of [[-0.55, 0.42], [0, 0.5], [0.55, 0.45]]) g.fillCircle(px + dx * pr, py + pr * 0.6, pr * rr);
+    g.lineStyle(Math.max(3, U * 0.05), r(0x8a5a30)); g.lineBetween(px - pr, py, px + pr, py); g.lineBetween(px, py - pr, px, py + pr);
+    g.lineStyle(Math.max(2, U * 0.025), CIZGI); g.strokeCircle(px, py, pr + U * 0.07);
+    // Hazine rafı: duvarda iki raf tahtası
+    for (const f of [0.42, 0.66]) { g.fillStyle(r(0x8a5a30)); g.fillRect(X(9.7), O.C + (F - O.C) * f, U * 1.7, U * 0.07); }
+    // Köşe tabelaları: zeminin önünde küçük ahşap yazılar (oyuncu odanın öbür köşelerini keşfetsin)
+    for (const K of KOSELER) {
+      this.add.text(X(K.x), F + U * 0.2, K.ad, { fontFamily: 'Nunito, sans-serif', fontStyle: '800', fontSize: `${Math.max(11 * DPR, U * 0.12)}px`,
+        color: '#fff3d6', backgroundColor: '#8a5a30', padding: { x: U * 0.06, y: U * 0.02 } }).setOrigin(0.5).setDepth(-9).setAlpha(0.92);
     }
-    // Zemin ve halı
-    g.fillStyle(r(0xa8743f)); g.fillRect(0, zeminY, W, H - zeminY);
-    for (let y = zeminY + 18 * DPR; y < H; y += 26 * DPR) { g.fillStyle(r(0x93622f)); g.fillRect(0, y, W, 3 * DPR); }
-    g.fillStyle(r(0x7fae5a)); g.fillEllipse(W / 2 + this.kenar.sol * DPR / 2, zeminY + (H - zeminY) * 0.45, W * 0.62, (H - zeminY) * 0.6);
-    g.fillStyle(r(0x93c06c)); g.fillEllipse(W / 2 + this.kenar.sol * DPR / 2, zeminY + (H - zeminY) * 0.45, W * 0.48, (H - zeminY) * 0.42);
-    // Gece fener ışığı
-    if (gece > 0.5) {
-      g.fillStyle(0xffd27a, 0.12); g.fillCircle(W / 2, H * 0.25, Math.max(W, H) * 0.45);
-    }
+    // Gece: tavandan sıcak bir ışık
+    if (gece > 0.5) { g.fillStyle(0xffd27a, 0.1); g.fillCircle(X(TUNEK_X), O.C, U * 3); }
   }
 
-  tunekCiz(x, y, en, H) {
-    const zeminY = H * 0.86;
+  // Tünek: kuşa göre ölçekli (dalı kuşun ayaklarını rahat taşır), tabanı yerde
+  tunekCiz(x, y, en, F) {
     if (this.textures.exists('kusevi_tunek')) {
-      // Dal üstü y noktasında, taban halıda (alt tepsinin altında kalmasın); dal kuşun ayaklarını rahat taşısın
-      const taban = Math.min(this.haliY || zeminY, H - this.kenar.alt * DPR + 30 * DPR);
-      this.tunekTaban = taban;
-      const t = this.add.image(x, taban, 'kusevi_tunek').setOrigin(0.5, 1).setDepth(y - 1);
+      const t = this.add.image(x, F, 'kusevi_tunek').setOrigin(0.5, 1).setDepth(y - 1);
       const DAL_UST = 0.02; // görselde dalın üst kenarı (yükseklik oranı)
-      t.setScale(Math.max((taban - y) / (t.height * (1 - DAL_UST)), en * 1.15 / t.width));
-      t.y = y - t.displayHeight * DAL_UST + t.displayHeight;
+      t.setScale((F - y) / (t.height * (1 - DAL_UST)));
       return;
     }
     const g = this.add.graphics().setDepth(y), dal = en * 0.11;
-    // Direk ve taban
-    g.fillStyle(CIZGI); g.fillRoundedRect(x - dal * 0.55, y, dal * 1.1, zeminY - y + 10 * DPR, 6);
-    g.fillStyle(0x9a6a44); g.fillRoundedRect(x - dal * 0.42, y, dal * 0.84, zeminY - y + 6 * DPR, 5);
-    g.fillStyle(CIZGI); g.fillEllipse(x, zeminY + 8 * DPR, dal * 3.2, dal * 1.1);
-    g.fillStyle(0x8a5a30); g.fillEllipse(x, zeminY + 5 * DPR, dal * 2.9, dal * 0.85);
-    // Yatay dal
+    g.fillStyle(CIZGI); g.fillRoundedRect(x - dal * 0.55, y, dal * 1.1, F - y, 6);
+    g.fillStyle(0x9a6a44); g.fillRoundedRect(x - dal * 0.42, y, dal * 0.84, F - y - 2, 5);
+    g.fillStyle(CIZGI); g.fillEllipse(x, F, dal * 3.2, dal * 1.1);
+    g.fillStyle(0x8a5a30); g.fillEllipse(x, F - 2, dal * 2.9, dal * 0.85);
     g.fillStyle(CIZGI); g.fillRoundedRect(x - en / 2 - 4, y - dal * 0.2 - 4, en + 8, dal + 8, dal * 0.5);
     g.fillStyle(0xa5744b); g.fillRoundedRect(x - en / 2, y - dal * 0.2, en, dal, dal * 0.45);
-    g.fillStyle(0xc08a5c); g.fillRoundedRect(x - en / 2 + dal * 0.3, y - dal * 0.05, en - dal * 0.6, dal * 0.22, dal * 0.1);
-    g.fillStyle(0xe2c29a); g.fillEllipse(x + en / 2 - dal * 0.25, y + dal * 0.3, dal * 0.4, dal * 0.75);
-    // İp sargısı
-    g.fillStyle(0xd9b77a);
-    for (let i = 0; i < 3; i++) g.fillRoundedRect(x - dal * 0.6, y + dal * 0.85 + i * dal * 0.28, dal * 1.2, dal * 0.2, 3);
-    // Sarmaşık
-    for (let i = 0; i < 4; i++) { g.fillStyle(i % 2 ? 0x5fae4a : 0x4f9e3e); g.fillEllipse(x + (i % 2 ? dal * 0.5 : -dal * 0.4), y + dal * 2 + i * dal * 0.9, dal * 0.7, dal * 0.45); }
   }
 }
