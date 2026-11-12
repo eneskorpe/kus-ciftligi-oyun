@@ -13,8 +13,17 @@ import { YUVA_GORSELLERI, acikSusler } from './yuva.js';
 const DPR = Math.min(window.devicePixelRatio || 1, 2);
 const CIZGI = 0x3a2a35;
 
-// Arayüzün kapladığı alanlar (CSS pikseli): sol avatar şeridi, üst bilgi kartı, alt yem tepsisi
+// Arayüzün kapladığı alanlar (CSS pikseli): sol avatar şeridi, üst bilgi kartı, alt yem tepsisi. Ekran düzenine göre
+// (telefonda şerit üstte, düğmeler altta) DOM'dan ölçülür; ölçülemezse bu değerler kullanılır
 export const KENAR = { sol: 86, ust: 132, alt: 124 };
+function arayuzKenari() {
+  const kutu = (s) => { const e = document.querySelector(s), r = e && e.getBoundingClientRect(); return r && r.width && r.height ? r : null; };
+  const av = kutu('#kAvatar'), kart = kutu('#kKart'), ey = kutu('#kEylem'), tep = kutu('#kTepsi');
+  if (!av || !kart || !tep) return { ...KENAR, dar: false };
+  const dar = av.width > av.height; // kuş şeridi yatay: telefon düzeni
+  const altUst = Math.min(tep.top, dar && ey ? ey.top : Infinity);
+  return { sol: dar ? 0 : av.right, ust: kart.bottom + 4, alt: innerHeight - altUst + 4, dar };
+}
 // Hazırlanan Gemini görselleri (assets/kusevi/): 'ic', 'ic_gece', 'tunek'. Eklendikçe buraya yazılır.
 const KUSEVI_GORSELLERI = ['ic.jpg', 'ic_gece.jpg', 'tunek.png'];
 // Süslerin odadaki yeri. taraf: tüneğin solu (-1) ya da sağı (1); oran: tünekle o taraftaki boşluğun kenarı arasındaki yer;
@@ -53,7 +62,8 @@ export class KusEvi extends Phaser.Scene {
     potBellek(this, /^(kus_|ikram_|kusevi_tunek|yuva_)/); // yumuşak kenarlı küçültme (pot.js)
     efektleriKur(this);
     const W = this.scale.width, H = this.scale.height;
-    const sol = KENAR.sol * DPR, ust = KENAR.ust * DPR, alt = KENAR.alt * DPR;
+    this.kenar = arayuzKenari();
+    const sol = this.kenar.sol * DPR, ust = this.kenar.ust * DPR, alt = this.kenar.alt * DPR;
     this.gece = gunDurumu().gece;
     this.gunIsigi = { gece: this.gece };
     this.arkaPlan(W, H);
@@ -62,8 +72,9 @@ export class KusEvi extends Phaser.Scene {
     const alanH = H - ust - alt, cx = sol + (W - sol) / 2;
     // Görselli tünekte direk halıya basar; tünek dalının yüksekliği alana göre
     const tunekY = ust + alanH * (this.textures.exists('kusevi_tunek') ? 0.6 : 0.72);
-    // Kuş ölçeği: kuş yaklaşık 80 birim boyunda, 100 birim enindedir
-    this.carpan = Math.min(alanH * 0.36 / (80 * 2.2), (W - sol) * 0.55 / (100 * 2.2));
+    // Kuş ölçeği: kuş yaklaşık 80 birim boyunda, 100 birim enindedir. Kuş odanın içinde küçük bir canlı gibi dursun:
+    // boyu alanın en çok %30'u, eni odanın en çok %34'ü (telefonda ekranın yaklaşık üçte biri)
+    this.carpan = Math.min(alanH * 0.3 / (80 * 2.2), (W - sol) * 0.34 / (100 * 2.2));
     this.tunekCiz(cx, tunekY, Math.min((W - sol) * 0.6, 110 * this.carpan * 2.2), H);
     this.tunek = { x: cx, y: tunekY, zeminY: tunekY };
     this.zemin = { x1: cx - 10, x2: cx + 10, y1: tunekY - 2, y2: tunekY + 2 };
@@ -97,6 +108,11 @@ export class KusEvi extends Phaser.Scene {
   }
 
   yenidenKur() { this.scene.restart({ id: this.secili }); }
+  // Bilgi kartı dolunca (ilk açılışta boş ölçülmüş olabilir) arayüz alanı değiştiyse oda yeniden kurulur
+  kenarDenetle() {
+    const k = arayuzKenari(), e = this.kenar;
+    if (e && ['sol', 'ust', 'alt'].some((a) => Math.abs(k[a] - e[a]) > 10)) this.yenidenKur();
+  }
 
   kusVeri() { return M.kusBul(this.secili); }
 
@@ -128,7 +144,7 @@ export class KusEvi extends Phaser.Scene {
     const v = this.kusVeri(), O = this.oda, t = this.tunek;
     // Arayüzün altında kalmasın: sağdaki eylem düğmeleri, üstteki bilgi kartı, alttaki ikram tepsisi (CSS pikseli → oyun pikseli)
     const kutu = (s) => { const e = document.querySelector(s), r = e && e.getBoundingClientRect(); return r && r.width && r.height ? r : null; };
-    const er = kutu('#kEylem'), kr = kutu('#kKart'), tr = kutu('#kTepsi');
+    const dar = this.kenar && this.kenar.dar, er = dar ? null : kutu('#kEylem'), kr = kutu('#kKart'), tr = dar ? kutu('#kEylem') : kutu('#kTepsi');
     const taban = Math.round(Math.min(this.tunekTaban || t.y + O.alanH * 0.3, tr ? tr.top * DPR + 4 * DPR : Infinity));
     const sag = Math.round(er ? er.left * DPR : O.sol + O.en), ust = Math.round(kr ? kr.bottom * DPR : O.ust);
     const anahtar = v ? [v.id, acikSusler(v).join(','), taban, sag, ust, er ? Math.round(er.bottom) : 0].join(':') : '';
@@ -176,7 +192,7 @@ export class KusEvi extends Phaser.Scene {
   ikramUcur(id) {
     if (!this.kus || !this.textures.exists('ikram_' + id)) return;
     const k = this.kus, H = this.scale.height, bas = k.dunyaKonumu(k.gaga);
-    const r = this.add.image(bas.x + 30 * DPR, H - KENAR.alt * DPR, 'ikram_' + id).setDepth(100000);
+    const r = this.add.image(bas.x + 30 * DPR, H - this.kenar.alt * DPR, 'ikram_' + id).setDepth(100000);
     const s0 = 56 * DPR / Math.max(r.width, r.height);
     r.setScale(s0);
     // Gaganın ucunu her karede yeniden hesaplar: kuş yemek için başını eğerken ikram gagayı takip eder
@@ -231,7 +247,7 @@ export class KusEvi extends Phaser.Scene {
     g.lineStyle(10 * DPR, r(0x8a5a30)); g.lineBetween(px - pr, py, px + pr, py); g.lineBetween(px, py - pr, px, py + pr);
     g.lineStyle(5 * DPR, CIZGI); g.strokeCircle(px, py, pr + 14 * DPR);
     // Sol duvarda raf ve yuvalar
-    const rx = W * 0.02 + KENAR.sol * DPR, ry = H * 0.36;
+    const rx = W * 0.02 + this.kenar.sol * DPR, ry = H * 0.36;
     for (const yy of [ry, ry + H * 0.17]) {
       g.fillStyle(r(0x8a5a30)); g.fillRect(rx, yy, W * 0.16, 12 * DPR);
       g.fillStyle(r(0xe0b956)); g.fillEllipse(rx + W * 0.08, yy - 8 * DPR, W * 0.11, 22 * DPR);
@@ -240,8 +256,8 @@ export class KusEvi extends Phaser.Scene {
     // Zemin ve halı
     g.fillStyle(r(0xa8743f)); g.fillRect(0, zeminY, W, H - zeminY);
     for (let y = zeminY + 18 * DPR; y < H; y += 26 * DPR) { g.fillStyle(r(0x93622f)); g.fillRect(0, y, W, 3 * DPR); }
-    g.fillStyle(r(0x7fae5a)); g.fillEllipse(W / 2 + KENAR.sol * DPR / 2, zeminY + (H - zeminY) * 0.45, W * 0.62, (H - zeminY) * 0.6);
-    g.fillStyle(r(0x93c06c)); g.fillEllipse(W / 2 + KENAR.sol * DPR / 2, zeminY + (H - zeminY) * 0.45, W * 0.48, (H - zeminY) * 0.42);
+    g.fillStyle(r(0x7fae5a)); g.fillEllipse(W / 2 + this.kenar.sol * DPR / 2, zeminY + (H - zeminY) * 0.45, W * 0.62, (H - zeminY) * 0.6);
+    g.fillStyle(r(0x93c06c)); g.fillEllipse(W / 2 + this.kenar.sol * DPR / 2, zeminY + (H - zeminY) * 0.45, W * 0.48, (H - zeminY) * 0.42);
     // Gece fener ışığı
     if (gece > 0.5) {
       g.fillStyle(0xffd27a, 0.12); g.fillCircle(W / 2, H * 0.25, Math.max(W, H) * 0.45);
@@ -252,7 +268,7 @@ export class KusEvi extends Phaser.Scene {
     const zeminY = H * 0.86;
     if (this.textures.exists('kusevi_tunek')) {
       // Dal üstü y noktasında, taban halıda (alt tepsinin altında kalmasın); dal kuşun ayaklarını rahat taşısın
-      const taban = Math.min(this.haliY || zeminY, H - KENAR.alt * DPR + 30 * DPR);
+      const taban = Math.min(this.haliY || zeminY, H - this.kenar.alt * DPR + 30 * DPR);
       this.tunekTaban = taban;
       const t = this.add.image(x, taban, 'kusevi_tunek').setOrigin(0.5, 1).setDepth(y - 1);
       const DAL_UST = 0.02; // görselde dalın üst kenarı (yükseklik oranı)

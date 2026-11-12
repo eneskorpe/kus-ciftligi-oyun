@@ -16,6 +16,7 @@ const ELLE = {
   // Kuyruk otomatik yerleşimde gövdenin dışında kalıyordu (uçarken boşluk görünüyordu): gövdenin içinden başlar, ucu aynı yerde
   mavigerdan: { kuyruk: { x: -28, y: 17, en: 46 } },
   yalicapkini: { kuyruk: { x: -25, y: 8.6, en: 37.5 } },
+  kizilgerdan: { kuyruk: { x: -33, y: 10.9, en: 40.5 }, bas: { x: 6.5, y: -15, en: 57.5 } }, // baş arkadan gövdeden taşıyordu
 };
 
 const birlestir = (a, b) => {

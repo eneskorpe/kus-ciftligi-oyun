@@ -21,7 +21,7 @@ export function kuseviArayuzKur(o) {
   $('#dKusevi').onclick = () => gir();
   $('#dKoyeDon').onclick = () => cik();
   oyun.events.on('kuseviGir', (id) => gir(id));
-  oyun.events.on('kuseviHazir', () => ciz());
+  oyun.events.on('kuseviHazir', () => { ciz(); const s = sahne(); if (s) setTimeout(() => s.sys.isActive() && s.kenarDenetle(), 50); });
   oyun.events.on('kuseviSev', sev);
   dinle(() => { if (acik) ciz(); });
   setInterval(() => { if (acik) ciz(); }, 5000);

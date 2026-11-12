@@ -134,6 +134,15 @@
     .kIkram b { font-size: 11px; background: #3a2a35; color: #ffe7a8; border-radius: 99px; padding: 0 7px; }
     .kIkram.yok { opacity: .75; } .kIkram.yok b { background: #c9b48f; color: #3a2a35; }
     #dKoyeDon { position: fixed; right: 10px; bottom: max(12px, env(safe-area-inset-bottom)); }
+    /* Dar (telefon) ekranda Kuş Evi: kuş şeridi üstte yatay, bilgi kartı altında, eylem düğmeleri tepsinin üstünde bir sıra; oda arada geniş kalır */
+    @media (max-width: 700px) {
+      #kAvatar { left: 10px; right: 10px; width: auto; bottom: auto; height: 74px; flex-direction: row; overflow-x: auto; overflow-y: hidden; padding: 5px 6px; }
+      .kAv { width: 54px; } .kAv small { max-width: 50px; } .kAv.bos { width: 42px; height: 58px; }
+      #kKart { left: 10px; top: calc(max(10px, env(safe-area-inset-top)) + 134px); padding: 5px 10px; font-size: 13px; }
+      #kKart .kkUst b { font-size: 16px; }
+      #kEylem { top: auto; left: 10px; right: 10px; bottom: calc(max(12px, env(safe-area-inset-bottom)) + 94px); flex-direction: row; justify-content: center; }
+      #kEylem .ikonDugme { width: 54px; height: 54px; } #kEylem .ikonDugme img.ik { width: 30px; height: 30px; } #kEylem .ikonDugme span.ik { font-size: 23px; line-height: 30px; }
+    }
     .ikramBuyuk { width: 96px; height: 96px; object-fit: contain; }
     .sekmeler { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
     .sekmeler button { padding: 6px 10px !important; font-size: 13px !important; }
